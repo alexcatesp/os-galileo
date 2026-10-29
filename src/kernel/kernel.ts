@@ -24,8 +24,8 @@ export interface ContextoApp {
 export interface AppDef {
   id: string;
   nombre: string;
-  /** módulo al que pertenece («0485 · Programación»); sin módulo = aplicación del sistema */
-  modulo?: string;
+  /** carpeta del menú Aplicaciones: un módulo («0485 · Programación») o «Juegos»; sin carpeta = aplicación del sistema */
+  carpeta?: string;
   /** SVG de 48×48 */
   icono: string;
   ancho: number;

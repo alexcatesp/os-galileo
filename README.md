@@ -14,7 +14,7 @@ Sistema operativo **simulado** que corre en el navegador, para el alumnado del I
 - **Escritorio** con identidad Galileo (morado `#2a1770`, rojo `#da251c`): iconos, ventanas arrastrables, redimensionables, minimizables y maximizables, barra de tareas, menú de inicio con buscador y reloj.
 - **Móvil** (< 760 px): cuadrícula de iconos, apps a pantalla completa, pulsación larga para reordenar (el orden se guarda).
 - Núcleo: sistema de archivos virtual persistente (`localStorage`), procesos y registro de apps.
-- Apps: **Archivos** (explorador: navegar, crear, renombrar, borrar, abrir con doble clic), **Terminal** (`help`, `ls`, `cd`, `cat`, `mkdir`, `touch`, `rm [-r]`, `mv`, `cp`, `tree`, `echo > / >>`, `ps`, `open`; historial con flechas y Tab), **Bloc de notas**, **Calculadora**y **PseudoFlow**. GASA no se muestra por ahora; `apps/app-web.ts` permite añadirla (u otra web del mismo dominio) como app en una ventana.
+- Apps: **Archivos** (explorador: navegar, crear, renombrar, borrar, abrir con doble clic), **Terminal** (`help`, `ls`, `cd`, `cat`, `mkdir`, `touch`, `rm [-r]`, `mv`, `cp`, `tree`, `echo > / >>`, `ps`, `open`; historial con flechas y Tab), **Bloc de notas**, **Calculadora****PseudoFlow** y los juegos (**Sudoku**). GASA no se muestra por ahora; `apps/app-web.ts` permite añadirla (u otra web del mismo dominio) como app en una ventana.
 - Fondos de escritorio en `public/fondos/` (`src/kernel/fondos.ts`): cambia en cada entrada y cada 10 minutos; para añadir más, copiar la imagen y listarla en `FONDOS`.
 
 ![Escritorio](docs/escritorio.png) ![Móvil](docs/movil.png)
@@ -47,8 +47,14 @@ npm run build    # tsc + vite build → dist/
 ```
 `dist/` es estático y usa rutas relativas: se publica copiándolo a la raíz del subdominio.
 
+## Juegos (`src/apps/juegos/`)
+Carpeta **Inicio → Aplicaciones → Juegos** con juegos educativos.
+- **Sudoku** (`sudoku/`): tableros **4×4** (cajas 2×2) y **9×9** (3×3), cuatro niveles (Fácil, Medio, Difícil, Experto). Todos los tableros tienen **solución única**; Fácil y Medio se resuelven solo con «únicos» (candidato único y único lugar posible) y Difícil/Experto dejan menos pistas (9×9: 42 · 34 · 28 · 24). Resaltado de fila, columna, caja y número igual; **marcar repetidos**; **Comprobar** (marca lo que no coincide con la solución); deshacer y rehacer (Ctrl+Z / Ctrl+Y); teclado numérico en pantalla y teclado físico con flechas; temporizador y **estadísticas** (ganadas, mejor tiempo y media por tamaño y nivel). Guarda la partida en curso y las estadísticas en el navegador.
+- El generador (`generador.ts`) usa un resolutor con *backtracking* y la casilla con menos candidatos primero: el mismo algoritmo que puede acabar siendo un ejercicio de programación.
+- Pensado para añadir **control por el profesorado** (activar o desactivar la carpeta por grupo o franja horaria) cuando haya cuentas de alumnado; hoy no hay ninguno.
+
 ## Menú Inicio (escritorio)
-Las aplicaciones del sistema (Archivos, Terminal, Bloc de notas, Calculadora) están en el escritorio y en el menú. Las de cada módulo están en **Inicio → Aplicaciones → módulo** (submenú en cascada); se declaran con `modulo: "0485 · Programación"` en su `AppDef` y la búsqueda las encuentra todas. En el móvil siguen todas en la pantalla de inicio.
+Las aplicaciones del sistema (Archivos, Terminal, Bloc de notas, Calculadora) están en el escritorio y en el menú. Las de cada módulo están en **Inicio → Aplicaciones → módulo** (submenú en cascada); se declaran con `carpeta: "0485 · Programación"` en su `AppDef` (los juegos usan `carpeta: "Juegos"`) y la búsqueda las encuentra todas. En el móvil siguen todas en la pantalla de inicio.
 
 ## Arquitectura (`src/`)
 - `kernel/vfs.ts` — árbol de archivos y carpetas (`leer`, `escribir`, `listar`, `mkdir`, `borrar`). Interfaz preparada para migrar a IndexedDB.

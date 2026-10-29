@@ -49,7 +49,7 @@ function descargar(nombre: string, contenido: Blob): void {
 export const pseudoFlow: AppDef = {
   id: "pseudoflow",
   nombre: "PseudoFlow",
-  modulo: "0485 · Programación",
+  carpeta: "0485 · Programación",
   icono: `<svg viewBox="0 0 48 48"><rect x="3" y="3" width="42" height="42" rx="7" fill="#f4f1ff"/><rect x="15" y="6" width="18" height="8" rx="4" fill="#2a1770"/><path d="M24 14v5" stroke="#4a4470" stroke-width="2"/><path d="M24 19l9 7-9 7-9-7z" fill="#fff1c4" stroke="#b8860b" stroke-width="2"/><path d="M24 33v4M15 26H9v11h15" fill="none" stroke="#4a4470" stroke-width="2"/><rect x="17" y="37" width="14" height="6" rx="1.5" fill="#ebe7ff" stroke="#2a1770" stroke-width="1.6"/></svg>`,
   ancho: 1080,
   alto: 680,

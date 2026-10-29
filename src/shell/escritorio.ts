@@ -62,7 +62,7 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
   };
   const apps = so.listaApps();
   // en el escritorio solo las aplicaciones del sistema; las de cada módulo están en Inicio → Aplicaciones
-  for (const app of apps.filter((a) => !a.modulo)) {
+  for (const app of apps.filter((a) => !a.carpeta)) {
     const i = tarjeta(app, "icono");
     i.addEventListener("dblclick", () => abrir(app));
     // en pantallas táctiles un toque basta
@@ -75,7 +75,7 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
   const btnApps = q(".inicio-aplicaciones");
   const sub1 = q(".inicio-sub1");
   const sub2 = q(".inicio-sub2");
-  const modulos = [...new Set(apps.filter((a) => a.modulo).map((a) => a.modulo!))].sort();
+  const modulos = [...new Set(apps.filter((a) => a.carpeta).map((a) => a.carpeta!))].sort();
   btnApps.hidden = !modulos.length;
 
   const cerrarSubs = () => {
@@ -103,7 +103,7 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
     sub1.querySelectorAll(".abierto").forEach((x) => x.classList.remove("abierto"));
     ancla.classList.add("abierto");
     sub2.innerHTML = "";
-    for (const app of apps.filter((a) => a.modulo === modulo)) {
+    for (const app of apps.filter((a) => a.carpeta === modulo)) {
       const b = tarjeta(app, "sub-app");
       b.setAttribute("role", "menuitem");
       b.addEventListener("click", () => {
@@ -139,10 +139,10 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
     cerrarSubs();
     const buscando = filtro.trim() !== "";
     // sin búsqueda: las aplicaciones del sistema; buscando: todas, también las de los módulos
-    const visibles = apps.filter((a) => (buscando ? a.nombre.toLowerCase().includes(filtro.toLowerCase()) : !a.modulo));
+    const visibles = apps.filter((a) => (buscando ? a.nombre.toLowerCase().includes(filtro.toLowerCase()) : !a.carpeta));
     for (const app of visibles) {
       const b = tarjeta(app, "inicio-app");
-      if (app.modulo) b.title = app.modulo;
+      if (app.carpeta) b.title = app.carpeta;
       b.addEventListener("click", () => {
         cerrarMenu();
         abrir(app);
