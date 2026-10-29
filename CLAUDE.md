@@ -23,3 +23,7 @@ SO simulado en el navegador para el alumnado del IES Galileo (Vite + TypeScript,
 - En las pruebas con Playwright no usar `taskkill /IM node.exe`: matar solo el PID del puerto del servidor de prueba.
 - GASA **no** aparece entre las apps de momento (decisión de Alejandro, 29-10-2026); `apps/app-web.ts` queda listo para añadirla.
 - Móvil: sin zoom (meta viewport, `touch-action`, eventos `gesture*` y campos de 16 px); debe comportarse como un SO móvil real.
+- **Ejercicios de PseudoFlow (29-10-2026):** 75 ejercicios de la serie «Pensar antes de programar» de un compañero de Alejandro, solo con enunciados, datos de prueba y criterios. **Nunca incluir sus soluciones en el repositorio (es público).** Para validar cambios en el motor, el dialecto o los criterios hay que volver a pedir las soluciones (Parte 3A/3B) y pasarlas por `analizar` + `juzgar`: la última validación dio 282/282 pruebas y 0 incidencias.
+- Dialecto: **solo el propio** (decisión de Alejandro); sin tolerancia al estilo PSeInt. Texto libre, subprocesos y `SEGÚN` con `CASO a, b:` incluidos. Los huecos del listado son `‹…›`.
+- Menú Inicio con submenú **Aplicaciones → módulo** (`AppDef.modulo`); las apps de módulo no van en el escritorio. Cada módulo tendrá sus apps.
+- Al editar con la herramienta Edit: no pasar código con barras invertidas por scripts de Python/Bash (se estropean los escapes); usar Edit/Write.

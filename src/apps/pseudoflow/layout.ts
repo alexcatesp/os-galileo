@@ -11,7 +11,7 @@ const INTERLINEA = 17;
 const AZUL = "#2a1770";
 const TEXTO = "#1a1440";
 
-export type FormaTipo = "inicio" | "fin" | "proceso" | "es" | "decision";
+export type FormaTipo = "inicio" | "fin" | "proceso" | "es" | "decision" | "sub";
 
 interface Medida {
   lineas: string[];
@@ -68,6 +68,11 @@ class Dibujo {
         break;
       case "proceso":
         figura = `<rect x="${x - w / 2}" y="${y}" width="${w}" height="${h}" rx="3" fill="#ebe7ff" stroke="${AZUL}" stroke-width="2"/>`;
+        break;
+      case "sub":
+        figura =
+          `<rect x="${x - w / 2}" y="${y}" width="${w}" height="${h}" rx="3" fill="#e1f0ff" stroke="#1d5fa8" stroke-width="2"/>` +
+          `<path d="M${x - w / 2 + 9},${y} v${h} M${x + w / 2 - 9},${y} v${h}" stroke="#1d5fa8" stroke-width="2"/>`;
         break;
       case "es": {
         const s = 14;
@@ -156,6 +161,8 @@ function bloqueNodo(n: Nodo, lista: Lista, idx: number): Bloque {
     case "leer": return formaSimple("es", `Leer ${n.vars}`, item());
     case "escribir": return formaSimple("es", `Escribir ${n.expr}`, item());
     case "asignar": return formaSimple("proceso", `${n.variable} ← ${n.expr}`, item());
+    case "accion": return formaSimple("proceso", n.texto, item());
+    case "llamar": return formaSimple("sub", n.nombre, item());
     case "si": return decision(n.cond, n.entonces, n.sino, item());
     case "mientras": return bucleMientras(n.cond, secuencia(n.cuerpo, false), item());
     case "repetir": return bucleRepetir(n.hasta, n.cuerpo, item());
@@ -283,9 +290,10 @@ export interface Resultado {
   mas: PuntoMas[];
 }
 
-export function dibujar(raiz: Lista): Resultado {
-  const inicio = formaSimple("inicio", "Inicio", { nodo: null });
-  const fin = formaSimple("fin", "Fin", { nodo: null });
+/** Dibuja una lista de instrucciones; un subproceso empieza con su nombre y acaba en «Volver». */
+export function dibujar(raiz: Lista, titulo = "Inicio", cierre = "Fin"): Resultado {
+  const inicio = formaSimple("inicio", titulo, { nodo: null });
+  const fin = formaSimple("fin", cierre, { nodo: null });
   const cuerpo = secuencia(raiz, true);
   const margen = 30;
   const izq = Math.max(inicio.izq, cuerpo.izq, fin.izq) + margen;

@@ -1,4 +1,4 @@
-// Listado lateral del modo pseudocódigo: estructuras con huecos «…» que se rellenan,
+// Listado lateral del modo pseudocódigo: estructuras con huecos ‹…› que se rellenan,
 // y ejemplos de los algoritmos de la UT03 §1 de Programación.
 
 export interface Fragmento {
@@ -15,33 +15,33 @@ export const PALETA: GrupoPaleta[] = [
   {
     titulo: "Entrada y salida",
     items: [
-      { etiqueta: "LEER", ayuda: "Pide un dato por teclado", codigo: "LEER «variable»" },
-      { etiqueta: "ESCRIBIR", ayuda: "Muestra un texto o un valor", codigo: "ESCRIBIR «texto o variable»" },
+      { etiqueta: "LEER", ayuda: "Pide un dato por teclado", codigo: "LEER ‹variable›" },
+      { etiqueta: "ESCRIBIR", ayuda: "Muestra un texto o un valor", codigo: "ESCRIBIR ‹texto o variable›" },
     ],
   },
   {
     titulo: "Variables",
-    items: [{ etiqueta: "variable ← valor", ayuda: "Asigna un valor a una variable", codigo: "«variable» <- «valor»" }],
+    items: [{ etiqueta: "variable ← valor", ayuda: "Asigna un valor a una variable", codigo: "‹variable› <- ‹valor›" }],
   },
   {
     titulo: "Decisiones",
     items: [
-      { etiqueta: "SI … FIN SI", ayuda: "Hace algo solo si se cumple la condición", codigo: "SI «condición» ENTONCES\n  «acciones»\nFIN SI" },
-      { etiqueta: "SI … SI NO", ayuda: "Dos caminos: se cumple o no se cumple", codigo: "SI «condición» ENTONCES\n  «acciones»\nSI NO\n  «otras acciones»\nFIN SI" },
-      { etiqueta: "SEGÚN", ayuda: "Varios caminos según el valor", codigo: "SEGÚN «variable» HACER\n  CASO «valor»:\n    «acciones»\n  OTRO:\n    «acciones»\nFIN SEGÚN" },
+      { etiqueta: "SI … FIN SI", ayuda: "Hace algo solo si se cumple la condición", codigo: "SI ‹condición› ENTONCES\n  ‹acciones›\nFIN SI" },
+      { etiqueta: "SI … SI NO", ayuda: "Dos caminos: se cumple o no se cumple", codigo: "SI ‹condición› ENTONCES\n  ‹acciones›\nSI NO\n  ‹otras acciones›\nFIN SI" },
+      { etiqueta: "SEGÚN", ayuda: "Varios caminos según el valor", codigo: "SEGÚN ‹variable› HACER\n  CASO ‹valor›:\n    ‹acciones›\n  OTRO:\n    ‹acciones›\nFIN SEGÚN" },
     ],
   },
   {
     titulo: "Repeticiones",
     items: [
-      { etiqueta: "MIENTRAS", ayuda: "Repite mientras se cumpla la condición (puede no ejecutarse nunca)", codigo: "MIENTRAS «condición» HACER\n  «acciones»\nFIN MIENTRAS" },
-      { etiqueta: "REPETIR … HASTA", ayuda: "Repite hasta que se cumpla la condición (al menos una vez)", codigo: "REPETIR\n  «acciones»\nHASTA «condición»" },
-      { etiqueta: "PARA", ayuda: "Repite un número conocido de veces", codigo: "PARA «i» DESDE «1» HASTA «n» HACER\n  «acciones»\nFIN PARA" },
+      { etiqueta: "MIENTRAS", ayuda: "Repite mientras se cumpla la condición (puede no ejecutarse nunca)", codigo: "MIENTRAS ‹condición› HACER\n  ‹acciones›\nFIN MIENTRAS" },
+      { etiqueta: "REPETIR … HASTA", ayuda: "Repite hasta que se cumpla la condición (al menos una vez)", codigo: "REPETIR\n  ‹acciones›\nHASTA ‹condición›" },
+      { etiqueta: "PARA", ayuda: "Repite un número conocido de veces", codigo: "PARA ‹i› DESDE ‹1› HASTA ‹n› HACER\n  ‹acciones›\nFIN PARA" },
     ],
   },
   {
     titulo: "Algoritmo",
-    items: [{ etiqueta: "INICIO … FIN", ayuda: "Plantilla de algoritmo completo", codigo: "INICIO\n  «acciones»\nFIN" }],
+    items: [{ etiqueta: "INICIO … FIN", ayuda: "Plantilla de algoritmo completo", codigo: "INICIO\n  ‹acciones›\nFIN" }],
   },
 ];
 

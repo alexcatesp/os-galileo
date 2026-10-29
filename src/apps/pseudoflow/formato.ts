@@ -3,7 +3,7 @@
 import type { Lista, Nodo, Programa } from "./modelo";
 
 export function aTexto(p: Programa): string {
-  const out: string[] = ["INICIO"];
+  const out: string[] = [];
   const sangria = (n: number) => "  ".repeat(n);
   const emitir = (texto: string, nivel: number, nodo?: Nodo) => {
     out.push(sangria(nivel) + texto);
@@ -15,6 +15,8 @@ export function aTexto(p: Programa): string {
       case "leer": return emitir(`LEER ${n.vars}`, nivel, n);
       case "escribir": return emitir(`ESCRIBIR ${n.expr}`, nivel, n);
       case "asignar": return emitir(`${n.variable} <- ${n.expr}`, nivel, n);
+      case "accion": return emitir(n.texto, nivel, n);
+      case "llamar": return emitir(n.nombre, nivel, n);
       case "si":
         emitir(`SI ${n.cond} ENTONCES`, nivel, n);
         lista(n.entonces, nivel + 1);
@@ -49,8 +51,15 @@ export function aTexto(p: Programa): string {
         return emitir("FIN SEGÚN", nivel);
     }
   };
+  for (const s of p.subprocesos) {
+    emitir(`SUBPROCESO ${s.nombre}`, 0);
+    lista(s.cuerpo, 1);
+    emitir("FIN SUBPROCESO", 0);
+    out.push("");
+  }
+  emitir("INICIO", 0);
   lista(p.cuerpo, 1);
-  out.push("FIN");
+  emitir("FIN", 0);
   return out.join("\n") + "\n";
 }
 
@@ -58,7 +67,7 @@ export function aTexto(p: Programa): string {
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export function aXml(p: Programa): string {
-  const out: string[] = ['<?xml version="1.0" encoding="UTF-8"?>', '<diagrama version="1">'];
+  const out: string[] = ['<?xml version="1.0" encoding="UTF-8"?>', '<diagrama version="2">'];
   const lista = (l: Lista, nivel: number) => l.forEach((n) => nodo(n, nivel));
   const nodo = (n: Nodo, nivel: number) => {
     const s = "  ".repeat(nivel);
@@ -66,6 +75,8 @@ export function aXml(p: Programa): string {
       case "leer": return out.push(`${s}<leer variables="${esc(n.vars)}"/>`);
       case "escribir": return out.push(`${s}<escribir expresion="${esc(n.expr)}"/>`);
       case "asignar": return out.push(`${s}<asignar variable="${esc(n.variable)}" expresion="${esc(n.expr)}"/>`);
+      case "accion": return out.push(`${s}<accion texto="${esc(n.texto)}"/>`);
+      case "llamar": return out.push(`${s}<llamar nombre="${esc(n.nombre)}"/>`);
       case "si":
         out.push(`${s}<si condicion="${esc(n.cond)}">`, `${s}  <entonces>`);
         lista(n.entonces, nivel + 2);
@@ -96,6 +107,11 @@ export function aXml(p: Programa): string {
         out.push(`${s}  </otro>`, `${s}</segun>`);
     }
   };
+  for (const sp of p.subprocesos) {
+    out.push(`  <subproceso nombre="${esc(sp.nombre)}">`);
+    lista(sp.cuerpo, 2);
+    out.push("  </subproceso>");
+  }
   lista(p.cuerpo, 1);
   out.push("</diagrama>");
   return out.join("\n") + "\n";
@@ -107,27 +123,35 @@ export function deXml(xml: string): Programa {
   const raiz = doc.documentElement;
   if (raiz.tagName !== "diagrama") throw new Error("No es un diagrama de OS Galileo (falta <diagrama>)");
   const at = (e: Element, n: string) => e.getAttribute(n) ?? "";
+  const vacio = () => doc.createElement("x");
   const hijosDe = (e: Element): Lista =>
-    [...e.children].map((c): Nodo => {
-      switch (c.tagName) {
-        case "leer": return { t: "leer", vars: at(c, "variables") };
-        case "escribir": return { t: "escribir", expr: at(c, "expresion") };
-        case "asignar": return { t: "asignar", variable: at(c, "variable"), expr: at(c, "expresion") };
-        case "si": return {
-          t: "si", cond: at(c, "condicion"),
-          entonces: hijosDe(c.querySelector(":scope > entonces") ?? c.ownerDocument.createElement("x")),
-          sino: hijosDe(c.querySelector(":scope > sino") ?? c.ownerDocument.createElement("x")),
-        };
-        case "mientras": return { t: "mientras", cond: at(c, "condicion"), cuerpo: hijosDe(c) };
-        case "repetir": return { t: "repetir", hasta: at(c, "hasta"), cuerpo: hijosDe(c) };
-        case "para": return { t: "para", variable: at(c, "variable"), desde: at(c, "desde"), hasta: at(c, "hasta"), paso: at(c, "paso"), cuerpo: hijosDe(c) };
-        case "segun": return {
-          t: "segun", expr: at(c, "expresion"),
-          casos: [...c.querySelectorAll(":scope > caso")].map((k) => ({ valor: at(k, "valor"), cuerpo: hijosDe(k) })),
-          otro: hijosDe(c.querySelector(":scope > otro") ?? c.ownerDocument.createElement("x")),
-        };
-        default: throw new Error(`Elemento desconocido en el XML: <${c.tagName}>`);
-      }
-    });
-  return { cuerpo: hijosDe(raiz) };
+    [...e.children]
+      .filter((c) => c.tagName !== "subproceso")
+      .map((c): Nodo => {
+        switch (c.tagName) {
+          case "leer": return { t: "leer", vars: at(c, "variables") };
+          case "escribir": return { t: "escribir", expr: at(c, "expresion") };
+          case "asignar": return { t: "asignar", variable: at(c, "variable"), expr: at(c, "expresion") };
+          case "accion": return { t: "accion", texto: at(c, "texto") };
+          case "llamar": return { t: "llamar", nombre: at(c, "nombre") };
+          case "si": return {
+            t: "si", cond: at(c, "condicion"),
+            entonces: hijosDe(c.querySelector(":scope > entonces") ?? vacio()),
+            sino: hijosDe(c.querySelector(":scope > sino") ?? vacio()),
+          };
+          case "mientras": return { t: "mientras", cond: at(c, "condicion"), cuerpo: hijosDe(c) };
+          case "repetir": return { t: "repetir", hasta: at(c, "hasta"), cuerpo: hijosDe(c) };
+          case "para": return { t: "para", variable: at(c, "variable"), desde: at(c, "desde"), hasta: at(c, "hasta"), paso: at(c, "paso"), cuerpo: hijosDe(c) };
+          case "segun": return {
+            t: "segun", expr: at(c, "expresion"),
+            casos: [...c.querySelectorAll(":scope > caso")].map((k) => ({ valor: at(k, "valor"), cuerpo: hijosDe(k) })),
+            otro: hijosDe(c.querySelector(":scope > otro") ?? vacio()),
+          };
+          default: throw new Error(`Elemento desconocido en el XML: <${c.tagName}>`);
+        }
+      });
+  const subprocesos = [...raiz.children]
+    .filter((c) => c.tagName === "subproceso")
+    .map((c) => ({ nombre: at(c, "nombre"), cuerpo: hijosDe(c) }));
+  return { cuerpo: hijosDe(raiz), subprocesos };
 }

@@ -1,6 +1,6 @@
 // Evaluador de expresiones (sin eval) y ejecución paso a paso del modelo.
 
-import type { Lista, Nodo, Programa } from "./modelo";
+import type { Lista, Nodo, Programa, Subproceso } from "./modelo";
 import { normalizar } from "./parser";
 
 export type Valor = number | string | boolean;
@@ -206,9 +206,25 @@ export function formatear(v: Valor): string {
 export type Evento =
   | { tipo: "paso"; nodo: Nodo; fase?: "ini" | "cond" | "incr" }
   | { tipo: "leer"; nombre: string; nodo: Nodo }
+  | { tipo: "pregunta"; texto: string; nodo: Nodo }
   | { tipo: "fin" };
 
 const LIMITE = 20000;
+const PROFUNDIDAD = 60;
+const PALABRAS_OPERADOR = new Set(["Y", "O", "NO", "MOD", "DIV", "VERDADERO", "FALSO"]);
+
+/** En modo libre: ¿la condición es una frase («la tierra está seca») y no una expresión que se pueda calcular? */
+export function esTextoLibre(src: string, vars: Entorno): boolean {
+  let t: Tok[];
+  try {
+    t = tokenizar(src);
+  } catch {
+    return true;
+  }
+  const esPalabra = (x: Tok) => x.k === "id" && !PALABRAS_OPERADOR.has(normalizar(x.v));
+  for (let i = 0; i + 1 < t.length; i++) if (esPalabra(t[i]) && esPalabra(t[i + 1])) return true;
+  return t.length === 1 && esPalabra(t[0]) && !vars.has(t[0].v);
+}
 
 export class Maquina {
   vars: Entorno = new Map();
@@ -218,17 +234,23 @@ export class Maquina {
   pasos = 0;
   private gen: Generator<Evento, void, Valor | undefined>;
   esperando: string | null = null;
+  pregunta: string | null = null;
+  private subs: Map<string, Subproceso>;
+  private profundidad = 0;
 
-  constructor(programa: Programa) {
+  constructor(programa: Programa, private libre = false, private limite = LIMITE) {
+    this.subs = new Map(programa.subprocesos.map((s) => [normalizar(s.nombre), s]));
     this.gen = this.correr(programa.cuerpo);
   }
 
-  /** Avanza hasta el siguiente evento. Si el anterior fue una lectura, hay que pasar el valor. */
+  /** Avanza hasta el siguiente evento. Si el anterior fue una lectura o una pregunta, hay que pasar la respuesta. */
   siguiente(entrada?: Valor): Evento {
     const r = this.gen.next(entrada);
     this.esperando = null;
+    this.pregunta = null;
     if (r.done) return { tipo: "fin" };
     if (r.value.tipo === "leer") this.esperando = r.value.nombre;
+    if (r.value.tipo === "pregunta") this.pregunta = r.value.texto;
     return r.value;
   }
 
@@ -242,7 +264,21 @@ export class Maquina {
   }
 
   private tic(): void {
-    if (++this.pasos > LIMITE) throw new ErrorEjecucion(`Se superaron ${LIMITE} pasos: ¿hay un bucle infinito?`);
+    if (++this.pasos > this.limite) throw new ErrorEjecucion(`Se superaron ${this.limite} pasos: ¿hay un bucle infinito?`);
+  }
+
+  /** Evalúa una condición. Marca el paso; si es una frase en texto libre, pregunta «¿se cumple?» */
+  private *cond(src: string, nodo: Nodo): Generator<Evento, boolean, Valor | undefined> {
+    if (this.libre && esTextoLibre(src, this.vars)) {
+      const r = yield { tipo: "pregunta", texto: src, nodo };
+      return normalizar(String(r ?? "")).startsWith("S");
+    }
+    yield { tipo: "paso", nodo };
+    const v = evaluar(src, this.vars);
+    if (typeof v !== "boolean") {
+      throw new ErrorEjecucion(`«${src}» no es una pregunta de sí o no: da ${typeof v === "number" ? "un número" : "un texto"}`);
+    }
+    return v;
   }
 
   private *nodo(n: Nodo): Generator<Evento, void, Valor | undefined> {
@@ -267,26 +303,39 @@ export class Maquina {
         this.asignar(n.variable, evaluar(n.expr, this.vars));
         return;
       }
-      case "si": {
+      case "accion": {
         yield { tipo: "paso", nodo: n };
-        yield* this.correr(evaluar(n.cond, this.vars) ? n.entonces : n.sino);
+        return;
+      }
+      case "llamar": {
+        yield { tipo: "paso", nodo: n };
+        const s = this.subs.get(normalizar(n.nombre));
+        if (!s) throw new ErrorEjecucion(`No existe el subproceso «${n.nombre}»`);
+        if (++this.profundidad > PROFUNDIDAD) throw new ErrorEjecucion(`El subproceso «${n.nombre}» se llama a sí mismo sin parar`);
+        yield* this.correr(s.cuerpo);
+        this.profundidad--;
+        return;
+      }
+      case "si": {
+        const cumple: boolean = yield* this.cond(n.cond, n);
+        yield* this.correr(cumple ? n.entonces : n.sino);
         return;
       }
       case "mientras": {
         for (;;) {
           this.tic();
-          yield { tipo: "paso", nodo: n };
-          if (!evaluar(n.cond, this.vars)) return;
+          const sigue: boolean = yield* this.cond(n.cond, n);
+          if (!sigue) return;
           yield* this.correr(n.cuerpo);
         }
       }
       case "repetir": {
-        do {
+        for (;;) {
           this.tic();
           yield* this.correr(n.cuerpo);
-          yield { tipo: "paso", nodo: n };
-        } while (!evaluar(n.hasta, this.vars));
-        return;
+          const termina: boolean = yield* this.cond(n.hasta, n);
+          if (termina) return;
+        }
       }
       case "para": {
         yield { tipo: "paso", nodo: n, fase: "ini" };
@@ -307,10 +356,12 @@ export class Maquina {
       case "segun": {
         yield { tipo: "paso", nodo: n };
         const v = evaluar(n.expr, this.vars);
-        const caso = n.casos.find((c) => {
-          const w = evaluar(c.valor, this.vars);
-          return w === v || (typeof w !== "boolean" && typeof v !== "boolean" && String(w) === String(v));
-        });
+        const caso = n.casos.find((c) =>
+          separarComas(c.valor).some((valor) => {
+            const w = evaluar(valor, this.vars);
+            return w === v || (typeof w !== "boolean" && typeof v !== "boolean" && String(w) === String(v));
+          }),
+        );
         yield* this.correr(caso ? caso.cuerpo : n.otro);
       }
     }

@@ -21,8 +21,11 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
       <div class="inicio" hidden>
         <input class="inicio-buscar" placeholder="Buscar aplicaciones…" aria-label="Buscar aplicaciones" />
         <div class="inicio-apps"></div>
+        <button class="inicio-aplicaciones" aria-haspopup="menu">📁 <span>Aplicaciones</span> <i>▸</i></button>
         <div class="inicio-pie"><span class="inicio-usuario"></span><button class="apagar">⏻ Cerrar sesión</button></div>
       </div>
+      <div class="inicio-sub inicio-sub1" role="menu" hidden></div>
+      <div class="inicio-sub inicio-sub2" role="menu" hidden></div>
       <div class="barra">
         <button class="boton-inicio" aria-label="Inicio"><img src="./logo.svg" alt="" /></button>
         <div class="tareas"></div>
@@ -58,7 +61,8 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
     return b;
   };
   const apps = so.listaApps();
-  for (const app of apps) {
+  // en el escritorio solo las aplicaciones del sistema; las de cada módulo están en Inicio → Aplicaciones
+  for (const app of apps.filter((a) => !a.modulo)) {
     const i = tarjeta(app, "icono");
     i.addEventListener("dblclick", () => abrir(app));
     // en pantallas táctiles un toque basta
@@ -68,27 +72,96 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
     iconos.appendChild(i);
   }
   const lista = q(".inicio-apps");
+  const btnApps = q(".inicio-aplicaciones");
+  const sub1 = q(".inicio-sub1");
+  const sub2 = q(".inicio-sub2");
+  const modulos = [...new Set(apps.filter((a) => a.modulo).map((a) => a.modulo!))].sort();
+  btnApps.hidden = !modulos.length;
+
+  const cerrarSubs = () => {
+    sub1.hidden = true;
+    sub2.hidden = true;
+    btnApps.classList.remove("abierto");
+    sub1.querySelectorAll(".abierto").forEach((x) => x.classList.remove("abierto"));
+  };
+  const cerrarMenu = () => {
+    menu.hidden = true;
+    cerrarSubs();
+  };
+
+  /** coloca un submenú a la derecha de `ancla`, sin salirse por abajo (sobre la barra de tareas) */
+  function colocar(sub: HTMLElement, ancla: HTMLElement): void {
+    const r = raiz.getBoundingClientRect(), a = ancla.getBoundingClientRect();
+    sub.hidden = false;
+    sub.style.left = `${a.right - r.left + 6}px`;
+    const alto = sub.offsetHeight;
+    const maximo = r.height - 56 - alto;
+    sub.style.top = `${Math.max(4, Math.min(a.top - r.top - 6, maximo))}px`;
+  }
+
+  function abrirSub2(modulo: string, ancla: HTMLElement): void {
+    sub1.querySelectorAll(".abierto").forEach((x) => x.classList.remove("abierto"));
+    ancla.classList.add("abierto");
+    sub2.innerHTML = "";
+    for (const app of apps.filter((a) => a.modulo === modulo)) {
+      const b = tarjeta(app, "sub-app");
+      b.setAttribute("role", "menuitem");
+      b.addEventListener("click", () => {
+        cerrarMenu();
+        abrir(app);
+      });
+      sub2.appendChild(b);
+    }
+    colocar(sub2, ancla);
+  }
+
+  function abrirSub1(): void {
+    sub2.hidden = true;
+    sub1.innerHTML = modulos
+      .map((m) => `<button class="sub-modulo" role="menuitem" data-m="${m}">📁 <span>${m}</span> <i>▸</i></button>`)
+      .join("");
+    btnApps.classList.add("abierto");
+    colocar(sub1, btnApps);
+  }
+
+  // el ratón lo abre al pasar por encima y el clic (o el toque) también: nunca lo alterna, para no cerrarlo justo después
+  btnApps.addEventListener("click", () => sub1.hidden && abrirSub1());
+  btnApps.addEventListener("mouseenter", () => sub1.hidden && abrirSub1());
+  const sobreModulo = (e: Event) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>(".sub-modulo");
+    if (b) abrirSub2(b.dataset.m!, b);
+  };
+  sub1.addEventListener("click", sobreModulo);
+  sub1.addEventListener("mouseover", sobreModulo);
+
   const pintarMenu = (filtro = "") => {
     lista.innerHTML = "";
-    for (const app of apps.filter((a) => a.nombre.toLowerCase().includes(filtro.toLowerCase()))) {
+    cerrarSubs();
+    const buscando = filtro.trim() !== "";
+    // sin búsqueda: las aplicaciones del sistema; buscando: todas, también las de los módulos
+    const visibles = apps.filter((a) => (buscando ? a.nombre.toLowerCase().includes(filtro.toLowerCase()) : !a.modulo));
+    for (const app of visibles) {
       const b = tarjeta(app, "inicio-app");
+      if (app.modulo) b.title = app.modulo;
       b.addEventListener("click", () => {
         cerrarMenu();
         abrir(app);
       });
       lista.appendChild(b);
     }
+    btnApps.hidden = buscando || !modulos.length;
   };
   pintarMenu();
   q<HTMLInputElement>(".inicio-buscar").addEventListener("input", (e) => pintarMenu((e.target as HTMLInputElement).value));
 
-  const cerrarMenu = () => (menu.hidden = true);
   q(".boton-inicio").addEventListener("click", (e) => {
     e.stopPropagation();
-    menu.hidden = !menu.hidden;
-    if (!menu.hidden) q<HTMLInputElement>(".inicio-buscar").focus();
+    if (menu.hidden) {
+      menu.hidden = false;
+      q<HTMLInputElement>(".inicio-buscar").focus();
+    } else cerrarMenu();
   });
-  menu.addEventListener("pointerdown", (e) => e.stopPropagation());
+  for (const m of [menu, sub1, sub2]) m.addEventListener("pointerdown", (e) => e.stopPropagation());
   const fuera = () => cerrarMenu();
   raiz.addEventListener("pointerdown", fuera);
   q(".apagar").addEventListener("click", () => {

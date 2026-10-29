@@ -1,10 +1,11 @@
 import type { AppDef } from "../../kernel/kernel";
 import { aTexto, aXml, deXml } from "./formato";
 import { dibujar, type Resultado } from "./layout";
-import { contar, hijos, nuevoNodo, ubicar, type Lista, type Nodo, type Programa, type TipoNuevo } from "./modelo";
+import { contar, esListaReal, nuevoNodo, programaVacio, raices, recorrer, ubicar, type Nodo, type Programa, type TipoNuevo } from "./modelo";
 import { analizar, normalizar, type ErrorSintaxis } from "./parser";
 import { Maquina, ErrorEjecucion, formatear, type Evento } from "./ejecutor";
 import { EJEMPLOS, FICHAS, PALETA } from "./paleta";
+import { montarEjercicios } from "./ejercicios-ui";
 
 const RUTA_INICIAL = "/home/invitado/Documentos/algoritmo.psc";
 const PALABRAS = new Set(
@@ -16,7 +17,7 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 
 /** HTML de una línea de pseudocódigo con las palabras clave coloreadas */
 function resaltarLinea(l: string): string {
-  const re = /(\/\/.*$)|("[^"]*")|(«[^»]*»)|([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ_0-9]*)|(<-|←|<>|<=|>=)|(\d+(?:\.\d+)?)/g;
+  const re = /(\/\/.*$)|("[^"]*")|(‹[^›]*›)|([A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ_0-9]*)|(<-|←|<>|<=|>=)|(\d+(?:\.\d+)?)/g;
   let out = "", ult = 0, m: RegExpExecArray | null;
   while ((m = re.exec(l))) {
     out += esc(l.slice(ult, m.index));
@@ -45,14 +46,10 @@ function descargar(nombre: string, contenido: Blob): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function esListaReal(raiz: Lista, buscada: Lista): boolean {
-  if (raiz === buscada) return true;
-  return raiz.some((n) => hijos(n).some((h) => esListaReal(h, buscada)));
-}
-
 export const pseudoFlow: AppDef = {
   id: "pseudoflow",
   nombre: "PseudoFlow",
+  modulo: "0485 · Programación",
   icono: `<svg viewBox="0 0 48 48"><rect x="3" y="3" width="42" height="42" rx="7" fill="#f4f1ff"/><rect x="15" y="6" width="18" height="8" rx="4" fill="#2a1770"/><path d="M24 14v5" stroke="#4a4470" stroke-width="2"/><path d="M24 19l9 7-9 7-9-7z" fill="#fff1c4" stroke="#b8860b" stroke-width="2"/><path d="M24 33v4M15 26H9v11h15" fill="none" stroke="#4a4470" stroke-width="2"/><rect x="17" y="37" width="14" height="6" rx="1.5" fill="#ebe7ff" stroke="#2a1770" stroke-width="1.6"/></svg>`,
   ancho: 1080,
   alto: 680,
@@ -68,6 +65,7 @@ export const pseudoFlow: AppDef = {
         </div>
         <span class="dg-sep"></span>
         <button data-a="ejecutar" class="dg-ejecutar">▶ Ejecutar</button>
+        <button data-a="ejercicios" class="dg-btn-ej" title="Ejercicios ordenados por dificultad">📚 Ejercicios</button>
       </div>
       <div class="dg-barra dg-archivo">
         <input class="dg-ruta" spellcheck="false" aria-label="Ruta del archivo" />
@@ -75,15 +73,23 @@ export const pseudoFlow: AppDef = {
         <span class="dg-sep"></span>
         <button data-a="importar">Importar…</button>
         <button data-a="txt">Descargar TXT</button><button data-a="png">PNG</button><button data-a="xml">XML</button>
+        <span class="dg-sep"></span>
+        <label class="dg-libre" title="Admite pasos en lenguaje natural («Coger el cepillo») y condiciones como «la tierra está seca»"><input type="checkbox" data-a="libre" /> Texto libre</label>
         <input type="file" class="dg-fichero" accept=".xml,.psc,.txt,.diag" hidden />
       </div>
       <div class="dg-centro">
-        <aside class="dg-paleta" aria-label="Estructuras"></aside>
+        <aside class="dg-paleta" aria-label="Estructuras y ejercicios">
+          <div class="dg-lado-tabs"><button data-lado="est">Estructuras</button><button data-lado="ej">Ejercicios</button></div>
+          <div class="dg-lado-est"></div>
+          <div class="dg-lado-ej"></div>
+        </aside>
         <section class="dg-texto">
+          <div class="dg-ejer" hidden></div>
           <div class="pc-editor"><pre class="pc-fondo" aria-hidden="true"><div class="pc-lineas"></div></pre><textarea class="pc-texto" spellcheck="false" wrap="off" aria-label="Pseudocódigo"></textarea></div>
           <div class="dg-estado"></div>
         </section>
         <section class="dg-diagrama">
+          <div class="dg-pestanas" role="tablist" aria-label="Diagramas"></div>
           <div class="dg-lienzo" tabindex="0" aria-label="Diagrama de flujo"></div>
           <div class="dg-edicion"></div>
         </section>
@@ -93,6 +99,7 @@ export const pseudoFlow: AppDef = {
           <button data-e="paso">Paso</button><button data-e="auto">Automático</button><button data-e="reiniciar">Reiniciar</button>
           <span class="dg-ejec-estado"></span>
           <form class="dg-entrada" hidden><label>Valor para <b></b>: <input autocomplete="off" /></label><button>Enviar</button></form>
+          <div class="dg-pregunta" hidden><span></span> <button data-r="si">Sí</button><button data-r="no">No</button></div>
         </div>
         <div class="dg-ejec-paneles">
           <div><h4>Variables</h4><table class="dg-vars"></table></div>
@@ -110,13 +117,29 @@ export const pseudoFlow: AppDef = {
     ruta.value = RUTA_INICIAL;
 
     // ---------- estado ----------
-    let programa: Programa = { cuerpo: [] };
+    let programa: Programa = programaVacio();
     let error: ErrorSintaxis | null = null;
     let seleccion: Nodo | null = null;
     let modo: "texto" | "dividida" | "diagrama" = "dividida";
     let res: Resultado = dibujar([]);
+    /** modo de texto libre (ejercicios cotidianos) */
+    let libre = false;
+    /** diagrama que se ve: 0 = algoritmo principal, k = subproceso k */
+    let vista = 0;
+    const pestanas = q(".dg-pestanas");
     let lineaActiva = 0;
     let sucio = false;
+    /** quien guarda el borrador (los ejercicios) se entera de cada cambio hecho por la persona */
+    let alEscribirCb: (() => void) | null = null;
+    const notificar = () => alEscribirCb?.();
+    /** panel lateral: estructuras, ejercicios o ninguno (en pantallas estrechas, para ver el editor) */
+    let lado: "est" | "ej" | "no" = "est";
+    function fijarLado(l: typeof lado): void {
+      lado = l;
+      raiz.dataset.lado = l;
+      raiz.querySelectorAll<HTMLElement>("[data-lado]").forEach((b) => b.classList.toggle("on", b.dataset.lado === l));
+      raiz.querySelector('[data-a="ejercicios"]')?.classList.toggle("on", l === "ej");
+    }
 
     const titular = () => ventana.fijarTitulo(`${sucio ? "● " : ""}${ruta.value.split("/").pop()} — PseudoFlow`);
     const aviso = (m: string, mal = false) => {
@@ -136,18 +159,70 @@ export const pseudoFlow: AppDef = {
 
     function informar(): void {
       if (error) aviso(`Línea ${error.linea}: ${error.mensaje}`, true);
-      else aviso(`✓ Pseudocódigo correcto · ${contar(programa.cuerpo)} instrucciones`);
+      else aviso(`✓ Pseudocódigo correcto · ${contar(programa)} instrucciones`);
     }
 
     // ---------- diagrama ----------
     function pintarDiagrama(): void {
+      if (vista > programa.subprocesos.length) vista = 0;
       const antes = { x: lienzo.scrollLeft, y: lienzo.scrollTop };
-      res = dibujar(programa.cuerpo);
+      const lista = raices(programa)[vista];
+      res = vista === 0 ? dibujar(lista) : dibujar(lista, programa.subprocesos[vista - 1].nombre, "Volver");
       lienzo.innerHTML = res.svg;
       lienzo.scrollLeft = antes.x;
       lienzo.scrollTop = antes.y;
+      pintarPestanas();
       marcar();
     }
+
+    /** pestañas del diagrama: el algoritmo y cada subproceso */
+    function pintarPestanas(): void {
+      pestanas.innerHTML =
+        [`<button class="${vista === 0 ? "on" : ""}" data-v="0">Algoritmo</button>`]
+          .concat(programa.subprocesos.map((s, i) => `<button class="${vista === i + 1 ? "on" : ""}" data-v="${i + 1}">${esc(s.nombre)}</button>`))
+          .join("") +
+        (vista > 0 ? `<button class="quitar" data-v="quitar" title="Eliminar este subproceso">✕</button>` : "") +
+        `<button class="nuevo" data-v="nuevo">+ Subproceso</button>`;
+    }
+    pestanas.addEventListener("click", (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>("button");
+      if (!b) return;
+      const v = b.dataset.v!;
+      if (v === "nuevo") {
+        b.outerHTML = `<form class="nuevo-sub"><input placeholder="NombreSinEspacios" spellcheck="false" aria-label="Nombre del subproceso" /></form>`;
+        pestanas.querySelector("input")!.focus();
+        pestanas.querySelector("form")!.addEventListener("submit", (ev) => {
+          ev.preventDefault();
+          const nombre = pestanas.querySelector("input")!.value.trim();
+          if (!/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ_][A-Za-zÁÉÍÓÚÜÑáéíóúüñ_0-9]*$/.test(nombre)) return aviso("El nombre no puede tener espacios ni empezar por un número", true);
+          if (programa.subprocesos.some((s) => normalizar(s.nombre) === normalizar(nombre))) return aviso(`Ya existe «${nombre}»`, true);
+          programa.subprocesos.push({ nombre, cuerpo: [] });
+          vista = programa.subprocesos.length;
+          seleccion = null;
+          desdeModelo();
+          pintarFormulario();
+        });
+        return;
+      }
+      if (v === "quitar") {
+        const s = programa.subprocesos[vista - 1];
+        let usado = false;
+        recorrer(programa, (n) => {
+          if (n.t === "llamar" && normalizar(n.nombre) === normalizar(s.nombre)) usado = true;
+        });
+        if (usado) return aviso(`«${s.nombre}» se usa en el algoritmo: quita antes las llamadas`, true);
+        programa.subprocesos.splice(vista - 1, 1);
+        vista = 0;
+        seleccion = null;
+        desdeModelo();
+        pintarFormulario();
+        return;
+      }
+      vista = Number(v);
+      seleccion = null;
+      pintarDiagrama();
+      pintarFormulario();
+    });
     /** aplica las clases de selección y de paso actual a los símbolos */
     function marcar(): void {
       lienzo.querySelectorAll<SVGGElement>(".forma").forEach((g) => {
@@ -167,12 +242,13 @@ export const pseudoFlow: AppDef = {
       pintarDiagrama();
       informar();
       reiniciarEjecucion();
+      notificar();
     }
 
     /** cambió el texto: se analiza y, si es correcto, se redibuja el diagrama */
     let temporizador: number | undefined;
     function desdeTexto(): void {
-      const r = analizar(ta.value);
+      const r = analizar(ta.value, { libre });
       error = r.error;
       if (r.programa) {
         programa = r.programa;
@@ -188,6 +264,7 @@ export const pseudoFlow: AppDef = {
     }
     ta.addEventListener("input", () => {
       pintarTexto();
+      notificar();
       window.clearTimeout(temporizador);
       temporizador = window.setTimeout(desdeTexto, 200);
     });
@@ -200,9 +277,34 @@ export const pseudoFlow: AppDef = {
       titular();
     }
 
+    // ---------- ejercicios ----------
+    const casillaLibre = q<HTMLInputElement>('input[data-a="libre"]');
+    const ejer = montarEjercicios(
+      raiz,
+      q(".dg-lado-ej"),
+      q(".dg-ejer"),
+      {
+        cargar(codigo, l) {
+          libre = l;
+          casillaLibre.checked = l;
+          vista = 0;
+          seleccion = null;
+          cargarTexto(codigo);
+          pintarFormulario();
+        },
+        texto: () => ta.value,
+        alEscribir: (cb) => (alEscribirCb = cb),
+        libre: () => libre,
+      },
+      (abierto) => {
+        // en pantallas estrechas el ejercicio ocupa el sitio del listado
+        if (abierto && raiz.classList.contains("estrecho")) fijarLado("no");
+      },
+    );
+
     // ---------- paleta lateral ----------
-    const paleta = q(".dg-paleta");
-    paleta.innerHTML =
+    const ladoEst = q(".dg-lado-est");
+    ladoEst.innerHTML =
       PALETA.map(
         (g) => `<h4>${g.titulo}</h4>${g.items.map((f, i) => `<button class="frag" data-g="${g.titulo}" data-i="${i}" title="${f.ayuda}">${f.etiqueta}</button>`).join("")}`,
       ).join("") +
@@ -238,13 +340,13 @@ export const pseudoFlow: AppDef = {
         desde = ini;
         longitud = bloque.length;
       }
-      const a = fragmento ? ta.value.indexOf("«", desde) : -1;
-      if (a >= 0 && a < desde + longitud) ta.setSelectionRange(a, ta.value.indexOf("»", a) + 1);
+      const a = fragmento ? ta.value.indexOf("‹", desde) : -1;
+      if (a >= 0 && a < desde + longitud) ta.setSelectionRange(a, ta.value.indexOf("›", a) + 1);
       else ta.setSelectionRange(desde + longitud, desde + longitud);
       ta.focus();
       ta.dispatchEvent(new Event("input"));
     }
-    paleta.addEventListener("click", (e) => {
+    ladoEst.addEventListener("click", (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>("button");
       if (!b) return;
       if (b.dataset.ficha) return insertar(b.dataset.ficha, false);
@@ -257,9 +359,9 @@ export const pseudoFlow: AppDef = {
       if (e.key === "Tab" && !e.shiftKey) {
         e.preventDefault();
         const desde = ta.selectionEnd;
-        let a = ta.value.indexOf("«", desde);
-        if (a < 0) a = ta.value.indexOf("«");
-        if (a >= 0) ta.setSelectionRange(a, ta.value.indexOf("»", a) + 1);
+        let a = ta.value.indexOf("‹", desde);
+        if (a < 0) a = ta.value.indexOf("‹");
+        if (a >= 0) ta.setSelectionRange(a, ta.value.indexOf("›", a) + 1);
         else insertar("  ", false);
       } else if (e.key === "Enter") {
         e.preventDefault();
@@ -276,24 +378,28 @@ export const pseudoFlow: AppDef = {
     });
 
     // ---------- selección y edición en el diagrama ----------
-    function menuMas(boton: SVGGElement, lista: Lista, idx: number): void {
+    function menuMas(boton: SVGGElement, lista: Nodo[], idx: number): void {
       q(".dg-menu")?.remove();
-      if (!esListaReal(programa.cuerpo, lista)) return aviso("Este hueco pertenece a un SEGÚN: añade los casos en el pseudocódigo", true);
+      if (!esListaReal(programa, lista)) return aviso("Este hueco pertenece a un SEGÚN: añade los casos en el pseudocódigo", true);
       const m = document.createElement("div");
       m.className = "dg-menu";
-      const tipos: [TipoNuevo, string][] = [
+      const tipos: [TipoNuevo, string, string?][] = [
         ["leer", "Leer (entrada)"], ["escribir", "Escribir (salida)"], ["asignar", "Asignar (proceso)"],
         ["si", "Decisión SI"], ["mientras", "MIENTRAS"], ["repetir", "REPETIR … HASTA"], ["para", "PARA"],
       ];
-      m.innerHTML = tipos.map(([t, n]) => `<button data-t="${t}">${n}</button>`).join("");
+      if (libre) tipos.unshift(["accion", "Acción (texto libre)"]);
+      // un subproceso no puede llamarse a sí mismo desde su propio diagrama
+      for (const s of programa.subprocesos) if (vista === 0 || programa.subprocesos[vista - 1] !== s) tipos.push(["llamar", `Llamar a ${s.nombre}`, s.nombre]);
+      m.innerHTML = tipos.map(([t, n, d]) => `<button data-t="${t}"${d ? ` data-n="${esc(d)}"` : ""}>${esc(n)}</button>`).join("");
       const rb = boton.getBoundingClientRect(), rl = lienzo.getBoundingClientRect();
       m.style.left = `${rb.left - rl.left + lienzo.scrollLeft + 22}px`;
       m.style.top = `${rb.top - rl.top + lienzo.scrollTop - 10}px`;
       lienzo.appendChild(m);
       m.addEventListener("click", (e) => {
-        const t = (e.target as HTMLElement).dataset.t as TipoNuevo | undefined;
+        const boton = e.target as HTMLElement;
+        const t = boton.dataset.t as TipoNuevo | undefined;
         if (!t) return;
-        const n = nuevoNodo(t);
+        const n = nuevoNodo(t, boton.dataset.n ?? "");
         lista.splice(idx, 0, n);
         seleccion = n;
         m.remove();
@@ -325,7 +431,7 @@ export const pseudoFlow: AppDef = {
 
     function borrarSeleccion(): void {
       if (!seleccion) return;
-      const u = ubicar(programa.cuerpo, seleccion);
+      const u = ubicar(programa, seleccion);
       if (!u) return;
       u.lista.splice(u.idx, 1);
       seleccion = null;
@@ -334,7 +440,7 @@ export const pseudoFlow: AppDef = {
     }
     function mover(delta: number): void {
       if (!seleccion) return;
-      const u = ubicar(programa.cuerpo, seleccion);
+      const u = ubicar(programa, seleccion);
       if (!u) return;
       const j = u.idx + delta;
       if (j < 0 || j >= u.lista.length) return;
@@ -360,11 +466,13 @@ export const pseudoFlow: AppDef = {
           { etiqueta: "Paso (opcional)", valor: n.paso, poner: (v) => (n.paso = v) },
         ];
         case "segun": return [{ etiqueta: "Expresión", valor: n.expr, poner: (v) => (n.expr = v) }];
+        case "accion": return [{ etiqueta: "Texto de la acción", valor: n.texto, poner: (v) => (n.texto = v) }];
+        case "llamar": return [{ etiqueta: "Subproceso", valor: n.nombre, poner: (v) => (n.nombre = v) }];
       }
     }
 
     function pintarFormulario(): void {
-      if (!seleccion || !ubicar(programa.cuerpo, seleccion)) {
+      if (!seleccion || !ubicar(programa, seleccion)) {
         edicion.innerHTML = `<span class="dg-pista">Pulsa un símbolo para editarlo, o el <b>+</b> de una flecha para añadir uno nuevo.</span>`;
         return;
       }
@@ -378,6 +486,7 @@ export const pseudoFlow: AppDef = {
         inp.value = c.valor;
         inp.addEventListener("input", () => {
           c.poner(inp.value);
+          notificar();
           ta.value = aTexto(programa);
           error = null;
           sucio = true;
@@ -411,6 +520,13 @@ export const pseudoFlow: AppDef = {
     let auto: number | undefined;
     const lblEstado = q(".dg-ejec-estado");
     const formEntrada = q<HTMLFormElement>(".dg-entrada");
+    const preguntaEl = q(".dg-pregunta");
+    preguntaEl.addEventListener("click", (e) => {
+      const r = (e.target as HTMLElement).dataset.r;
+      if (!r) return;
+      preguntaEl.hidden = true;
+      avanzar(r === "si" ? "Sí" : "No");
+    });
     const salida = q(".dg-salida");
     const tablaVars = q<HTMLTableElement>(".dg-vars");
 
@@ -432,6 +548,7 @@ export const pseudoFlow: AppDef = {
       activo = null;
       lineaActiva = 0;
       formEntrada.hidden = true;
+      preguntaEl.hidden = true;
       lblEstado.textContent = error ? "Corrige el pseudocódigo para ejecutar" : "Listo para ejecutar";
       lblEstado.classList.remove("error");
       pintarMaquina();
@@ -447,7 +564,14 @@ export const pseudoFlow: AppDef = {
       } else {
         activo = { nodo: ev.nodo, fase: ev.tipo === "paso" ? ev.fase : undefined };
         lineaActiva = ev.nodo.linea ?? 0;
-        lblEstado.textContent = ev.tipo === "leer" ? `Esperando un valor para ${ev.nombre}` : `Línea ${lineaActiva}`;
+        lblEstado.textContent =
+          ev.tipo === "leer" ? `Esperando un valor para ${ev.nombre}` : ev.tipo === "pregunta" ? `Responde: ¿${ev.texto}?` : `Línea ${lineaActiva}`;
+        // si el paso está en otro diagrama (un subproceso), se muestra ese
+        const u = ubicar(programa, ev.nodo);
+        if (u && u.raiz !== vista) {
+          vista = u.raiz;
+          pintarDiagrama();
+        }
       }
       lblEstado.classList.remove("error");
       marcar();
@@ -457,18 +581,22 @@ export const pseudoFlow: AppDef = {
     }
     function avanzar(entrada?: string): void {
       if (error) return void (lblEstado.textContent = "Corrige el pseudocódigo para ejecutar");
-      if (!maquina) maquina = new Maquina(programa);
+      if (!maquina) maquina = new Maquina(programa, libre);
       try {
         const ev = maquina.siguiente(entrada);
         mostrar(ev);
+        formEntrada.hidden = ev.tipo !== "leer";
+        preguntaEl.hidden = ev.tipo !== "pregunta";
         if (ev.tipo === "leer") {
           pararAuto();
-          formEntrada.hidden = false;
           formEntrada.querySelector("b")!.textContent = ev.nombre;
           const inp = formEntrada.querySelector("input")!;
           inp.value = "";
           inp.focus();
-        } else formEntrada.hidden = true;
+        } else if (ev.tipo === "pregunta") {
+          pararAuto();
+          preguntaEl.querySelector("span")!.textContent = `¿${ev.texto}?`;
+        }
         if (ev.tipo === "fin") maquina = null;
       } catch (err) {
         pararAuto();
@@ -532,6 +660,7 @@ export const pseudoFlow: AppDef = {
     fichero.addEventListener("change", async () => {
       const f = fichero.files?.[0];
       if (!f) return;
+      ejer.cerrar();
       abrirContenido(await f.text(), f.name);
       fichero.value = "";
     });
@@ -563,10 +692,15 @@ export const pseudoFlow: AppDef = {
         aplicarModo();
         return;
       }
+      if (b.dataset.lado) return fijarLado(b.dataset.lado as typeof lado);
       switch (b.dataset.a) {
-        case "nuevo": return cargarTexto("INICIO\nFIN\n");
+        case "libre":
+          libre = (b as HTMLInputElement).checked;
+          return desdeTexto();
+        case "ejercicios": return fijarLado(lado === "ej" ? "est" : "ej");
+        case "nuevo": ejer.cerrar(); vista = 0; return cargarTexto("INICIO\nFIN\n");
         case "ejecutar": ejec.hidden = !ejec.hidden; b.classList.toggle("on", !ejec.hidden); if (!ejec.hidden) reiniciarEjecucion(); return;
-        case "abrir": return abrir();
+        case "abrir": ejer.cerrar(); return abrir();
         case "guardar": return guardar();
         case "importar": return fichero.click();
         case "txt": return descargar(`${ruta.value.split("/").pop()!.replace(/\.[^.]+$/, "")}.txt`, new Blob([ta.value], { type: "text/plain;charset=utf-8" }));
@@ -578,11 +712,16 @@ export const pseudoFlow: AppDef = {
     });
     raiz.querySelector<HTMLSelectElement>('[data-a="ejemplo"]')!.addEventListener("change", (e) => {
       const s = e.target as HTMLSelectElement;
-      if (s.value !== "") cargarTexto(EJEMPLOS[Number(s.value)].codigo);
+      if (s.value !== "") {
+        ejer.cerrar();
+        vista = 0;
+        cargarTexto(EJEMPLOS[Number(s.value)].codigo);
+      }
       s.value = "";
     });
 
     // ---------- arranque ----------
+    fijarLado("est");
     if (args.ruta) {
       ruta.value = args.ruta;
       abrir();
