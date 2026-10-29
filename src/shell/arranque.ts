@@ -44,7 +44,7 @@ export function iniciarSesion(raiz: HTMLElement, nombre: string): Promise<void> 
     raiz.innerHTML = `
       <div class="login">
         <div class="login-caja">
-          <div class="avatar" aria-hidden="true">${nombre[0] ?? "?"}</div>
+          <div class="avatar"><img src="./avatar-invitado.jpg" alt="Foto de perfil de ${nombre}" draggable="false" /></div>
           <h1>${nombre}</h1>
           <button class="entrar" autofocus>Entrar</button>
           <p>Acceso como invitado</p>

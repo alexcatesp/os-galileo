@@ -10,7 +10,7 @@ Sistema operativo **simulado** que corre en el navegador, para el alumnado del I
 - Prueba de concepto de `ai-os` (SO para Raspberry Pi 5): los dos proyectos son independientes por ahora.
 
 ## Estado (v0.1)
-- Arranque simulado y pantalla de acceso como **invitado** (sin cuenta).
+- Arranque simulado y pantalla de acceso como **invitado** (sin cuenta), con su foto de perfil (`public/avatar-invitado.jpg`, también en el menú de Inicio).
 - **Escritorio** con identidad Galileo (morado `#2a1770`, rojo `#da251c`): iconos, ventanas arrastrables, redimensionables, minimizables y maximizables, barra de tareas, menú de inicio con buscador y reloj.
 - **Móvil** (< 760 px): cuadrícula de iconos, apps a pantalla completa, pulsación larga para reordenar (el orden se guarda).
 - Núcleo: sistema de archivos virtual persistente (`localStorage`), procesos y registro de apps.

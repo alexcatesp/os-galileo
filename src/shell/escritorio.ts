@@ -41,7 +41,8 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
   let z = 10;
   let activa: number | null = null;
 
-  q(".inicio-usuario").textContent = so.usuario.visible;
+  q(".inicio-usuario").innerHTML = `<span class="mini-avatar"><img src="./avatar-invitado.jpg" alt="" draggable="false" /></span><span class="nombre-usuario"></span>`;
+  q(".nombre-usuario").textContent = so.usuario.visible;
 
   // --- reloj ---
   const reloj = q(".reloj");
