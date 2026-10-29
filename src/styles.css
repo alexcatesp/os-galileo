@@ -394,3 +394,55 @@ svg { display: block; }
 .sdk-stats th, .sdk-stats td { padding: 5px 8px; border-bottom: 1px solid #ddd8f5; text-align: left; }
 .sdk-stats thead th { color: #6a62a8; font-size: 11px; text-transform: uppercase; }
 .sdk { position: relative; }
+
+/* ---------- Binario ---------- */
+.bin { display: flex; flex-direction: column; height: 100%; background: #f4f1ff; color: #1a1440; }
+.bin button, .bin select, .bin input { font: inherit; font-size: 13px; color: #1a1440; border: 1px solid #c9c2ee; border-radius: 8px; background: #fff; padding: 6px 10px; }
+.bin button:hover:not(:disabled) { background: #f0ecff; }
+.bin button:disabled { opacity: 0.5; cursor: default; }
+.bin-tabs { display: flex; gap: 4px; padding: 8px 8px 0; background: #ece8fb; }
+.bin-tabs button { border-radius: 8px 8px 0 0; border-bottom: 0; }
+.bin-tabs button.on { background: var(--morado); color: #fff; border-color: var(--morado); }
+.bin-cuerpo { flex: 1; min-height: 0; overflow: auto; }
+.bin-modo { display: grid; gap: 10px; align-content: start; padding: 14px 16px 18px; }
+.bin-opciones { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; }
+.bin-opciones label { display: flex; align-items: center; gap: 6px; }
+.bin-enunciado { margin: 0; font-size: 14px; }
+.bin-grande { font-size: 28px; color: var(--morado); }
+.bin-bombillas { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; padding: 10px 0; }
+.bin .bin-bombilla { display: grid; justify-items: center; gap: 2px; width: 52px; padding: 6px 2px 4px; border-radius: 10px; cursor: pointer; }
+.bin-bombilla svg { width: 34px; height: 48px; }
+.bin-bombilla.on svg { filter: drop-shadow(0 0 8px rgba(255, 193, 7, 0.9)); }
+.bin-bombilla .peso { font: 700 13px Consolas, monospace; color: #6a62a8; }
+.bin-bombilla .bit { font: 700 12px Consolas, monospace; color: #1f9d4d; }
+.bin-bombillas.inerte .bin-bombilla { cursor: default; opacity: 1; }
+.bin-suma { margin: 0; text-align: center; font: 15px Consolas, monospace; min-height: 22px; }
+.bin-form { display: flex; gap: 8px; }
+.bin-form input { flex: 1; min-width: 0; font: 16px Consolas, monospace; }
+.bin .bin-ok, .bin .bin-primario { background: var(--morado); border-color: var(--morado); color: #fff; font-weight: 600; }
+.bin .bin-ok:hover:not(:disabled), .bin .bin-primario:hover { background: var(--morado-claro); }
+.bin-mensaje { margin: 0; min-height: 22px; font-size: 13px; color: #5b5486; }
+.bin-mensaje.ok { color: #1f7a3d; font-weight: 600; }
+.bin-mensaje.mal { color: #b3170f; font-weight: 600; }
+.bin-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.bin-marcador { margin-left: auto; font-size: 12px; color: #5b5486; }
+.bin-progreso { display: flex; justify-content: space-between; font-size: 12px; color: #5b5486; }
+.bin-reloj { font: 600 14px Consolas, monospace; }
+.bin-barra { height: 6px; border-radius: 3px; background: #ddd8f5; overflow: hidden; }
+.bin-barra i { display: block; height: 100%; background: #1f9d4d; transition: width 0.2s; }
+.bin-pregunta { margin: 16px 0 6px; font-size: 20px; text-align: center; }
+.bin .mono, .bin-mensaje .mono { font-family: Consolas, "Cascadia Mono", monospace; letter-spacing: 0.06em; }
+.bin-resultado { margin: 14px 0 0; text-align: center; font-size: 54px; font-weight: 700; color: var(--morado); }
+.bin-formula { padding: 14px; background: #fff; border: 1px solid #ddd8f5; border-radius: 10px; font: 18px/2.4 Consolas, monospace; overflow-x: auto; }
+.bin-in { display: inline-block; min-width: 1.6em; padding: 0 6px; text-align: center; border-radius: 6px; background: #d9d0ff; font-weight: 700; }
+.bin-no { color: #b3170f; font-weight: 700; }
+.bin-par select { font: 700 14px Consolas, monospace; padding: 3px 6px; background: #fff1c4; border-color: #b8860b; }
+.bin-tabla table { width: 100%; border-collapse: collapse; font: 14px Consolas, monospace; text-align: center; }
+.bin-tabla th, .bin-tabla td { padding: 3px 8px; border-bottom: 1px solid #ddd8f5; }
+.bin-tabla th { color: #6a62a8; font-size: 12px; }
+.bin-tabla tr.ok { background: #e3f6e9; }
+.bin-tabla tr.mal { background: #fff0ee; }
+.bin-tabla .esp { font-weight: 700; }
+.bin-ayuda { font-size: 12px; }
+.bin-ayuda summary { cursor: pointer; color: #6a62a8; }
+.bin-ayuda ul { margin: 4px 0; padding-left: 20px; }

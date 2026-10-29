@@ -28,3 +28,4 @@ SO simulado en el navegador para el alumnado del IES Galileo (Vite + TypeScript,
 - Menú Inicio con submenú **Aplicaciones → módulo** (`AppDef.carpeta`); las apps de módulo no van en el escritorio. Cada módulo tendrá sus apps.
 - Al editar con la herramienta Edit: no pasar código con barras invertidas por scripts de Python/Bash (se estropean los escapes); usar Edit/Write.
 - **Juegos (29-10-2026):** carpeta «Juegos» del menú (`carpeta: "Juegos"`); primero Sudoku 4×4 y 9×9 con niveles, errores, deshacer, estadísticas y temporizador (sin notas de lápiz ni pistas por decisión de Alejandro). Riesgo asumido: que jueguen en clase; control de profesorado pendiente hasta tener cuentas.
+- **Binario** (juego, 29-10-2026): bombillas, pruebas rápidas de conversión y puertas lógicas en una sola app con pestañas, dentro de «Juegos». Encaja con Sistemas Informáticos y Entornos de Desarrollo (representación de datos y lógica booleana).

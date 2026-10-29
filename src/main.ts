@@ -7,6 +7,7 @@ import { explorador } from "./apps/explorador";
 import { terminal } from "./apps/terminal";
 import { pseudoFlow } from "./apps/pseudoflow";
 import { sudoku } from "./apps/juegos/sudoku";
+import { binario } from "./apps/juegos/binario";
 import { arrancar, iniciarSesion } from "./shell/arranque";
 import { montarEscritorio } from "./shell/escritorio";
 import { montarMovil } from "./shell/movil";
@@ -22,6 +23,7 @@ so.registrar(terminal);
 so.registrar(blocDeNotas);
 so.registrar(pseudoFlow);
 so.registrar(sudoku);
+so.registrar(binario);
 so.registrar(calculadora);
 // GASA se añadirá más adelante con appWeb({ id: "gasa", nombre: "GASA", url: "/gasa/", icono: … })
 
