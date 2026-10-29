@@ -57,7 +57,7 @@ export class Kernel {
   /** Qué app abre cada tipo de archivo */
   appParaArchivo(ruta: string): string {
     const ext = ruta.split(".").pop()?.toLowerCase();
-    if (ext === "psc" || ext === "diag") return "diagramas";
+    if (ext === "psc" || ext === "diag") return "pseudoflow";
     return "bloc-de-notas";
   }
 

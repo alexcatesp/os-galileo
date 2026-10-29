@@ -5,6 +5,7 @@ import { blocDeNotas } from "./apps/bloc-de-notas";
 import { calculadora } from "./apps/calculadora";
 import { explorador } from "./apps/explorador";
 import { terminal } from "./apps/terminal";
+import { pseudoFlow } from "./apps/pseudoflow";
 import { appWeb } from "./apps/app-web";
 import { arrancar, iniciarSesion } from "./shell/arranque";
 import { montarEscritorio } from "./shell/escritorio";
@@ -15,6 +16,7 @@ const so = new Kernel();
 so.registrar(explorador);
 so.registrar(terminal);
 so.registrar(blocDeNotas);
+so.registrar(pseudoFlow);
 so.registrar(calculadora);
 so.registrar(
   appWeb({

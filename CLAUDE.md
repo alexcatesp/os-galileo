@@ -18,3 +18,6 @@ SO simulado en el navegador para el alumnado del IES Galileo (Vite + TypeScript,
 - Independiente de `ai-os` (SO de Raspberry Pi 5) por ahora.
 - Identidad: morado `#2a1770`, rojo `#da251c`, logo en `public/logo.svg`; fondos en `public/fondos/` (aportados por Alejandro, con el logo centrado y adornos en las esquinas), rotados por `src/kernel/fondos.ts`.
 - La simulación debe poder crecer hacia procesos, permisos y usuarios: el acceso al almacenamiento va siempre por `Vfs`.
+- **PseudoFlow** (nombre de la app de diagramas y pseudocódigo, `src/apps/pseudoflow/`): un único modelo (`modelo.ts`) con dos vistas; el diagrama es **estructurado** (nada de dibujo libre) para poder generar siempre pseudocódigo correcto. Dialecto del pseudocódigo = el de las diapositivas de Programación DAM UT03 §1 (`analizar` en `parser.ts`, `aTexto` en `formato.ts`). Los estilos del SVG van como atributos para que el PNG exportado se vea igual. Si se amplía el dialecto, tocar parser, formato, XML, ejecutor y layout a la vez.
+- Las apps se abren entre sí con `so.abrirApp(id, { ruta })`; el shell activo asigna `so.lanzador`. `so.appParaArchivo` decide qué app abre cada extensión (`.psc`/`.diag` → PseudoFlow).
+- En las pruebas con Playwright no usar `taskkill /IM node.exe`: matar solo el PID del puerto del servidor de prueba.

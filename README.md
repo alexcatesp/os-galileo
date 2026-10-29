@@ -14,10 +14,20 @@ Sistema operativo **simulado** que corre en el navegador, para el alumnado del I
 - **Escritorio** con identidad Galileo (morado `#2a1770`, rojo `#da251c`): iconos, ventanas arrastrables, redimensionables, minimizables y maximizables, barra de tareas, menú de inicio con buscador y reloj.
 - **Móvil** (< 760 px): cuadrícula de iconos, apps a pantalla completa, pulsación larga para reordenar (el orden se guarda).
 - Núcleo: sistema de archivos virtual persistente (`localStorage`), procesos y registro de apps.
-- Apps: **Bloc de notas** (abre y guarda en el sistema de archivos virtual), **Calculadora** y **GASA** (el campus en `/gasa/` dentro de una ventana; `apps/app-web.ts` sirve para cualquier web del mismo dominio).
+- Apps: **Archivos** (explorador: navegar, crear, renombrar, borrar, abrir con doble clic), **Terminal** (`help`, `ls`, `cd`, `cat`, `mkdir`, `touch`, `rm [-r]`, `mv`, `cp`, `tree`, `echo > / >>`, `ps`, `open`; historial con flechas y Tab), **Bloc de notas**, **Calculadora**, **PseudoFlow** y **GASA** (el campus en `/gasa/` dentro de una ventana; `apps/app-web.ts` sirve para cualquier web del mismo dominio).
 - Fondos de escritorio en `public/fondos/` (`src/kernel/fondos.ts`): cambia en cada entrada y cada 10 minutos; para añadir más, copiar la imagen y listarla en `FONDOS`.
 
 ![Escritorio](docs/escritorio.png) ![Móvil](docs/movil.png)
+
+## PseudoFlow (`src/apps/pseudoflow/`)
+Pseudocódigo y diagrama de flujo como **dos vistas del mismo modelo** (`modelo.ts`): se ven por separado o las dos a la vez, y lo que se hace en una aparece en la otra.
+- **Pseudocódigo** (el de las diapositivas de Programación UT03 §1): `LEER`, `ESCRIBIR`, `x <- valor`, `SI…ENTONCES…SI NO…FIN SI`, `SEGÚN…CASO…OTRO…FIN SEGÚN`, `MIENTRAS…HACER…FIN MIENTRAS`, `REPETIR…HASTA`, `PARA…DESDE…HASTA…[CON PASO]…HACER…FIN PARA`. Resaltado de palabras clave, sangría automática y errores con su línea.
+- **Listado lateral**: al pulsar una estructura se escribe en el cursor con huecos «…»; **Tab** salta al siguiente hueco y no se puede ejecutar hasta rellenarlos. Hay también fichas de operadores y funciones.
+- **Diagrama**: óvalo, rectángulo, rombo y paralelogramo. Se edita con el **+** de cada flecha (añadir), pulsando un símbolo (editar sus campos, subir, bajar, eliminar). Como es estructurado, una decisión siempre tiene dos salidas que se reúnen: no puede haber ramas colgando. El pseudocódigo se regenera solo.
+- **Ejecutar** (trazado): paso a paso o automático, símbolo y línea resaltados, tabla de variables, salida y entrada con `LEER`. Detecta división entre cero, variables sin valor, comparar texto con número y bucles infinitos (20 000 pasos).
+- **Archivos**: guardar/abrir en el sistema virtual (`.psc` texto, `.diag` XML), descargar **TXT**, **PNG** (fondo blanco, sin botones) y **XML**, e importar TXT/XML.
+- Ejemplos de la UT03 §1: aprobado/suspenso, tres rangos, notas hasta −1, traza de `x`, tabla con `PARA`, `REPETIR`, `SEGÚN`.
+- Los casos de un `SEGÚN` solo se editan en el pseudocódigo (en el diagrama se ven como una cadena de decisiones).
 
 ## Desarrollo
 ```
@@ -36,6 +46,6 @@ npm run build    # tsc + vite build → dist/
 
 ## Hoja de ruta
 1. Logo definitivo en el arranque.
-2. Explorador de archivos y terminal con comandos básicos.
+2. Terminal: tuberías, permisos y usuarios; explorador: mover/copiar arrastrando.
 3. Acceso real: correo del alumno + código por correo, altas y apps por módulo en una base de datos administrada (como el panel del profesorado).
 4. Simulaciones de aplicaciones (IDE, bases de datos, redes…) y procesos, permisos y usuarios.
