@@ -15,7 +15,7 @@ Sistema operativo **simulado** que corre en el navegador, para el alumnado del I
 - **Móvil** (< 760 px): cuadrícula de iconos, apps a pantalla completa, pulsación larga para reordenar (el orden se guarda).
 - Núcleo: sistema de archivos virtual persistente (`localStorage`), procesos y registro de apps.
 - Apps: **Bloc de notas** (abre y guarda en el sistema de archivos virtual) y **Calculadora**.
-- Fondo provisional en `public/fondo.svg`: se sustituirá por la imagen basada en el logo.
+- Fondo de escritorio definitivo en `public/fondo.png` (logo IES Galileo sobre morado).
 
 ![Escritorio](docs/escritorio.png) ![Móvil](docs/movil.png)
 
@@ -35,7 +35,7 @@ npm run build    # tsc + vite build → dist/
 - `apps/` — una app por fichero. Para añadir una: exportar un `AppDef` y registrarlo en `main.ts`.
 
 ## Hoja de ruta
-1. Imagen de fondo definitiva y logo en el arranque.
+1. Logo definitivo en el arranque.
 2. Explorador de archivos y terminal con comandos básicos.
 3. Acceso real: correo del alumno + código por correo, altas y apps por módulo en una base de datos administrada (como el panel del profesorado).
 4. Simulaciones de aplicaciones (IDE, bases de datos, redes…) y procesos, permisos y usuarios.

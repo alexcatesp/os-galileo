@@ -16,5 +16,5 @@ SO simulado en el navegador para el alumnado del IES Galileo (Vite + TypeScript,
 - Dos shells (escritorio ≥ 760 px y móvil) sobre el mismo núcleo; las apps no dependen del shell.
 - Acceso: solo invitado por ahora. El acceso real (correo + código, apps por módulo en una base de datos con el propietario como administrador) queda para más adelante.
 - Independiente de `ai-os` (SO de Raspberry Pi 5) por ahora.
-- Identidad: morado `#2a1770`, rojo `#da251c`, logo en `public/logo.svg`; el fondo definitivo lo pondrá Alejandro (`public/fondo.svg`).
+- Identidad: morado `#2a1770`, rojo `#da251c`, logo en `public/logo.svg`; fondo definitivo en `public/fondo.png` (aportado por Alejandro; centrado, con adornos en dos esquinas).
 - La simulación debe poder crecer hacia procesos, permisos y usuarios: el acceso al almacenamiento va siempre por `Vfs`.

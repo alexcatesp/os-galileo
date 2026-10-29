@@ -7,7 +7,7 @@
   --tenue: #b3acd9;
   --vidrio: rgba(20, 14, 52, 0.78);
   --borde: rgba(255, 255, 255, 0.14);
-  --fondo: url("/fondo.svg"); /* sustituir por la imagen definitiva en public/ */
+  --fondo: url("/fondo.png");
   font-family: "Segoe UI", system-ui, -apple-system, "Noto Sans", sans-serif;
   color-scheme: dark;
 }
