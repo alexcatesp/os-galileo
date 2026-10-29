@@ -73,6 +73,8 @@ Las aplicaciones del sistema (Archivos, Terminal, Bloc de notas, Calculadora) es
 ## IADW (`src/apps/iadw/`)
 Carpeta **Inicio → Aplicaciones → IADW** (IA aplicada al desarrollo web).
 - **Token** (`token/`): tokenizador didáctico con tres pestañas. *Tokenizar* compara caracteres, palabras, bytes UTF-8 y **BPE** (entrenado en el navegador con un texto de ejemplo en español, en inglés o el propio; deslizador de fusiones). *Paso a paso* muestra el algoritmo BPE fusión a fusión. *Contexto y coste* estima tokens, % de la ventana de contexto y coste. `bpe.ts` es el algoritmo (sin dependencias); es un vocabulario de juguete, no el tokenizador de ningún modelo real.
+- **Prompt o no prompt** (`prompt/`): rondas de 10 prompts (de 22, en `datos.ts`); se decide si es bueno o mejorable y, si es mejorable, qué criterios le fallan (objetivo, contexto, datos, formato, restricciones, privacidad). Hasta 2 puntos por prompt; explica el fallo y propone una versión mejor. Guarda la mejor ronda.
+- **Descenso** (`descenso/`): simulador de descenso del gradiente. *Paisaje*: mapa de nivel de cuatro funciones de dos variables (cuenco, valle alargado, dos mínimos, Rosenbrock), con SGD, momento y Adam, tasa de aprendizaje ajustable en vivo, clic para elegir el punto de partida y curva de pérdida; avisa de divergencia o de lentitud. *Ajustar una recta*: 20 puntos con ruido; se ajustan w y b a mano o con el descenso (todos los datos, mini-lote o uno), sobre el mapa del error ECM y comparando con la solución exacta. Las matemáticas están en `matematica.ts`.
 
 ## Hoja de ruta
 1. Logo definitivo en el arranque.

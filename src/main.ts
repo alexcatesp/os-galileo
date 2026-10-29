@@ -10,6 +10,8 @@ import { sudoku } from "./apps/juegos/sudoku";
 import { binario } from "./apps/juegos/binario";
 import { islaSql } from "./apps/juegos/isla-sql";
 import { token } from "./apps/iadw/token";
+import { promptONoPrompt } from "./apps/iadw/prompt";
+import { descenso } from "./apps/iadw/descenso";
 import { appWeb } from "./apps/app-web";
 import { arrancar, iniciarSesion } from "./shell/arranque";
 import { montarEscritorio } from "./shell/escritorio";
@@ -29,6 +31,8 @@ so.registrar(sudoku);
 so.registrar(binario);
 so.registrar(islaSql);
 so.registrar(token);
+so.registrar(promptONoPrompt);
+so.registrar(descenso);
 so.registrar(calculadora);
 // GASA (el campus de aventuras gráficas) es la web hermana en /gasa/ y se abre dentro de una ventana
 so.registrar(

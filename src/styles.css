@@ -498,6 +498,64 @@ svg { display: block; }
 .tk-medidor i { display: block; height: 100%; min-width: 3px; background: #1f9d4d; }
 .tk-nota { margin: 0; font-size: 12px; color: #6a62a8; }
 
+/* ---------- Prompt o no prompt (IADW) ---------- */
+.pp { height: 100%; overflow: auto; background: #f4f1ff; color: #1a1440; }
+.pp button { font: inherit; font-size: 13px; color: #1a1440; border: 1px solid #c9c2ee; border-radius: 8px; background: #fff; padding: 8px 14px; cursor: pointer; }
+.pp button:hover:not(:disabled) { background: #f0ecff; }
+.pp button:disabled { opacity: 0.55; cursor: default; }
+.pp .pp-primario { background: var(--morado); border-color: var(--morado); color: #fff; font-weight: 600; justify-self: start; }
+.pp .pp-primario:hover { background: var(--morado-claro); }
+.pp-caja { display: grid; gap: 10px; align-content: start; padding: 16px 18px 22px; }
+.pp-caja h2 { margin: 0; color: var(--morado); }
+.pp-caja p { margin: 0; }
+.pp-peq { font-size: 12px; color: #5b5486; }
+.pp-prog { display: flex; justify-content: space-between; font-size: 12px; color: #5b5486; }
+.pp-barra { height: 6px; border-radius: 3px; background: #ddd8f5; overflow: hidden; }
+.pp-barra i { display: block; height: 100%; background: #1f9d4d; transition: width 0.2s; }
+.pp-prompt { margin: 4px 0; padding: 14px 16px; background: #fff; border: 1px solid #ddd8f5; border-left: 5px solid var(--morado); border-radius: 10px; font: 14px/1.55 Consolas, "Cascadia Mono", monospace; white-space: normal; }
+.pp-elige { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pp-elige button.on { background: var(--morado); border-color: var(--morado); color: #fff; font-weight: 600; }
+.pp-crits { display: grid; gap: 4px; }
+.pp-crit { display: grid; grid-template-columns: auto auto 1fr; gap: 6px; align-items: baseline; padding: 6px 10px; background: #fff; border: 1px solid #ddd8f5; border-radius: 8px; font-size: 12px; cursor: pointer; }
+.pp-crit span { color: #5b5486; }
+.pp-crit.acierto { background: #e3f6e9; border-color: #1f9d4d; }
+.pp-crit.falta { background: #fff6d6; border-color: #c98a00; }
+.pp-crit.sobra { background: #fff0ee; border-color: #b3170f; }
+.pp-res { padding: 10px 14px; border-radius: 10px; display: grid; gap: 6px; font-size: 13px; }
+.pp-res.ok { background: #e3f6e9; } .pp-res.mal { background: #fff0ee; }
+.pp-mejora { padding: 8px 10px; background: #fff; border-left: 4px solid #1f9d4d; border-radius: 4px; font: 13px/1.5 Consolas, monospace; }
+.pp-mejora span { display: block; margin-bottom: 2px; font: 600 11px system-ui, sans-serif; color: #1f7a3d; text-transform: uppercase; }
+.pp-grande { text-align: center; font-size: 54px; font-weight: 700; color: var(--morado); }
+.pp-msg.ok { color: #1f7a3d; font-weight: 600; }
+.pp-rep { font-size: 12px; } .pp-rev { padding: 6px 0; border-top: 1px solid #ddd8f5; } .pp-rev q { display: block; font-family: Consolas, monospace; } .pp-rev span { color: #6a62a8; }
+
+/* ---------- Descenso (IADW) ---------- */
+.ds { display: flex; flex-direction: column; height: 100%; background: #f4f1ff; color: #1a1440; }
+.ds button, .ds select { font: inherit; font-size: 13px; color: #1a1440; border: 1px solid #c9c2ee; border-radius: 8px; background: #fff; padding: 6px 10px; }
+.ds button:hover:not(:disabled) { background: #f0ecff; }
+.ds button:disabled { opacity: 0.5; cursor: default; }
+.ds-tabs { display: flex; gap: 4px; padding: 8px 8px 0; background: #ece8fb; }
+.ds-tabs button { border-radius: 8px 8px 0 0; border-bottom: 0; }
+.ds-tabs button.on { background: var(--morado); color: #fff; border-color: var(--morado); }
+.ds-cuerpo { flex: 1; min-height: 0; overflow: auto; }
+.ds-modo { display: grid; gap: 10px; align-content: start; padding: 12px 16px 18px; }
+.ds-controles, .ds-botones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 12px; }
+.ds-controles label, .ds-vel { display: flex; align-items: center; gap: 6px; }
+.ds-controles input[type="range"] { width: 130px; }
+.ds .ds-primario { background: var(--morado); border-color: var(--morado); color: #fff; font-weight: 600; }
+.ds .ds-primario:hover:not(:disabled) { background: var(--morado-claro); }
+.ds-vel { margin-left: auto; }
+.ds-formula { margin: 0; font: 15px Consolas, monospace; color: var(--morado); }
+.ds-fila { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; align-items: start; }
+.ds-col { display: grid; gap: 4px; }
+.ds-col small, .ds-idea { font-size: 12px; color: #5b5486; }
+.ds-idea { margin: 0; }
+.ds-lienzo { width: 100%; max-width: 360px; aspect-ratio: 1; border: 1px solid #ddd8f5; border-radius: 8px; cursor: crosshair; background: #fff; }
+.ds-curva { width: 100%; height: auto; border-radius: 6px; }
+.ds-datos { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: #5b5486; }
+.ds-datos b { color: var(--morado); font-family: Consolas, monospace; }
+.ds-msg { margin: 0; min-height: 20px; font-size: 13px; }
+
 /* ---------- foto de perfil ---------- */
 .avatar { overflow: hidden; padding: 0; width: 112px; height: 112px; background: #0a1a3a; }
 .avatar img, .mini-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.16); }
