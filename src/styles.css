@@ -12,7 +12,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body, #so { margin: 0; height: 100%; overflow: hidden; background: var(--noche); color: var(--texto); }
+html, body, #so { touch-action: manipulation; -webkit-text-size-adjust: 100%; margin: 0; height: 100%; overflow: hidden; background: var(--noche); color: var(--texto); }
 button { font: inherit; color: inherit; cursor: pointer; }
 svg { display: block; }
 
@@ -236,3 +236,9 @@ svg { display: block; }
 .dg-vars tr.cambio { background: #fff1c4; }
 .dg-salida { margin: 0; font: 13px/1.4 Consolas, monospace; white-space: pre-wrap; }
 .dg input:not([type="file"]) { background: #fff; color: #1a1440; }
+
+/* móvil: sin zoom ni auto-zoom al enfocar campos (iOS amplía los de menos de 16 px) */
+@media (max-width: 760px) {
+  input, textarea, select { font-size: 16px !important; }
+  .pc-fondo, .pc-texto { font-size: 16px; }
+}
