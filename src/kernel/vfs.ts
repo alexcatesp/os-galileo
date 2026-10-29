@@ -138,6 +138,40 @@ export class Vfs {
     this.guardar();
   }
 
+  /** Mueve o renombra: si destino es una carpeta existente, el elemento entra en ella. */
+  mover(origen: string, destino: string): void {
+    const po = Vfs.normalizar(origen);
+    const nombre = po.pop();
+    const padreO = this.nodo("/" + po.join("/"));
+    if (!nombre || !padreO || padreO.tipo !== "dir" || !padreO.hijos[nombre]) throw new Error(`No existe: ${origen}`);
+    let rutaDestino = Vfs.normalizar(destino);
+    if (this.esDir(destino)) rutaDestino = [...rutaDestino, nombre];
+    const nuevo = rutaDestino.pop();
+    const padreD = this.nodo("/" + rutaDestino.join("/"));
+    if (!nuevo || !padreD || padreD.tipo !== "dir") throw new Error(`Destino no válido: ${destino}`);
+    if (padreD.hijos[nuevo]) throw new Error(`Ya existe: ${nuevo}`);
+    const todo = "/" + po.concat(nombre).join("/");
+    if (("/" + rutaDestino.concat(nuevo).join("/")).startsWith(todo + "/")) throw new Error("No se puede mover una carpeta dentro de sí misma");
+    padreD.hijos[nuevo] = padreO.hijos[nombre];
+    delete padreO.hijos[nombre];
+    this.guardar();
+  }
+
+  /** Copia un archivo (o una carpeta completa) */
+  copiar(origen: string, destino: string): void {
+    const n = this.nodo(origen);
+    if (!n) throw new Error(`No existe: ${origen}`);
+    const nombre = Vfs.normalizar(origen).pop()!;
+    let ruta = Vfs.normalizar(destino);
+    if (this.esDir(destino)) ruta = [...ruta, nombre];
+    const nuevo = ruta.pop();
+    const padre = this.nodo("/" + ruta.join("/"));
+    if (!nuevo || !padre || padre.tipo !== "dir") throw new Error(`Destino no válido: ${destino}`);
+    if (padre.hijos[nuevo]) throw new Error(`Ya existe: ${nuevo}`);
+    padre.hijos[nuevo] = JSON.parse(JSON.stringify(n)) as Nodo;
+    this.guardar();
+  }
+
   borrar(ruta: string): void {
     const partes = Vfs.normalizar(ruta);
     const nombre = partes.pop();

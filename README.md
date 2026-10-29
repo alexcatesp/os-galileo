@@ -15,7 +15,7 @@ Sistema operativo **simulado** que corre en el navegador, para el alumnado del I
 - **Móvil** (< 760 px): cuadrícula de iconos, apps a pantalla completa, pulsación larga para reordenar (el orden se guarda).
 - Núcleo: sistema de archivos virtual persistente (`localStorage`), procesos y registro de apps.
 - Apps: **Bloc de notas** (abre y guarda en el sistema de archivos virtual), **Calculadora** y **GASA** (el campus en `/gasa/` dentro de una ventana; `apps/app-web.ts` sirve para cualquier web del mismo dominio).
-- Fondo de escritorio definitivo en `public/fondo.png` (logo IES Galileo sobre morado).
+- Fondos de escritorio en `public/fondos/` (`src/kernel/fondos.ts`): cambia en cada entrada y cada 10 minutos; para añadir más, copiar la imagen y listarla en `FONDOS`.
 
 ![Escritorio](docs/escritorio.png) ![Móvil](docs/movil.png)
 

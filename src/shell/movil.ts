@@ -1,7 +1,7 @@
 // Shell móvil: pantalla de inicio con cuadrícula de iconos, apps a pantalla completa
 // y reordenación de iconos (mantener pulsado, arrastrar y soltar).
 
-import type { Kernel, Ventana } from "../kernel/kernel";
+import type { ArgsApp, Kernel, Ventana } from "../kernel/kernel";
 
 const CLAVE_ORDEN = "osg-movil-orden";
 
@@ -64,7 +64,7 @@ export function montarMovil(raiz: HTMLElement, so: Kernel, alApagar: () => void)
   let pidActual: number | null = null;
   let limpiarActual: (() => void) | undefined;
 
-  function abrir(id: string) {
+  function abrir(id: string, args: ArgsApp = {}) {
     const app = so.app(id);
     if (!app) return;
     cerrarApp();
@@ -76,7 +76,7 @@ export function montarMovil(raiz: HTMLElement, so: Kernel, alApagar: () => void)
       fijarTitulo: (t) => (tituloApp.textContent = t),
       cerrar: cerrarApp,
     };
-    const l = app.iniciar({ so, ventana: api, raiz: cuerpo });
+    const l = app.iniciar({ so, ventana: api, raiz: cuerpo, args });
     limpiarActual = typeof l === "function" ? l : undefined;
     contApp.hidden = false;
   }
@@ -88,6 +88,7 @@ export function montarMovil(raiz: HTMLElement, so: Kernel, alApagar: () => void)
     contApp.hidden = true;
     cuerpo.innerHTML = "";
   }
+  so.lanzador = (id, args) => abrir(id, args);
   q(".movil-home").addEventListener("click", cerrarApp);
   q(".movil-salir").addEventListener("click", () => {
     cerrarApp();

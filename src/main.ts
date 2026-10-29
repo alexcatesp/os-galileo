@@ -1,7 +1,10 @@
 import "./styles.css";
+import { iniciarRotacionFondos } from "./kernel/fondos";
 import { Kernel } from "./kernel/kernel";
 import { blocDeNotas } from "./apps/bloc-de-notas";
 import { calculadora } from "./apps/calculadora";
+import { explorador } from "./apps/explorador";
+import { terminal } from "./apps/terminal";
 import { appWeb } from "./apps/app-web";
 import { arrancar, iniciarSesion } from "./shell/arranque";
 import { montarEscritorio } from "./shell/escritorio";
@@ -9,6 +12,8 @@ import { montarMovil } from "./shell/movil";
 
 const raiz = document.getElementById("so")!;
 const so = new Kernel();
+so.registrar(explorador);
+so.registrar(terminal);
 so.registrar(blocDeNotas);
 so.registrar(calculadora);
 so.registrar(
@@ -39,4 +44,5 @@ async function sesion(): Promise<void> {
   }
 }
 
+iniciarRotacionFondos();
 void arrancar(raiz).then(sesion);

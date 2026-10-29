@@ -9,10 +9,16 @@ export interface Ventana {
   cerrar(): void;
 }
 
+export interface ArgsApp {
+  /** archivo del sistema virtual que la app debe abrir */
+  ruta?: string;
+}
+
 export interface ContextoApp {
   so: Kernel;
   ventana: Ventana;
   raiz: HTMLElement;
+  args: ArgsApp;
 }
 
 export interface AppDef {
@@ -40,6 +46,20 @@ export class Kernel {
   private procesos = new Map<number, Proceso>();
   private siguientePid = 1;
   private oyentes = new Set<Oyente>();
+
+  /** Lo asigna el shell activo: abre una app (nueva ventana o pantalla completa) */
+  lanzador: (id: string, args: ArgsApp) => void = () => {};
+
+  abrirApp(id: string, args: ArgsApp = {}): void {
+    this.lanzador(id, args);
+  }
+
+  /** Qué app abre cada tipo de archivo */
+  appParaArchivo(ruta: string): string {
+    const ext = ruta.split(".").pop()?.toLowerCase();
+    if (ext === "psc" || ext === "diag") return "diagramas";
+    return "bloc-de-notas";
+  }
 
   registrar(app: AppDef): void {
     this.apps.set(app.id, app);

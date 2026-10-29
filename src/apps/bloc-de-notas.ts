@@ -8,7 +8,7 @@ export const blocDeNotas: AppDef = {
   icono: `<svg viewBox="0 0 48 48"><rect x="9" y="5" width="30" height="38" rx="4" fill="#f4f1ff"/><rect x="9" y="5" width="30" height="8" rx="4" fill="#da251c"/><g stroke="#2a1770" stroke-width="2.4" stroke-linecap="round"><path d="M15 21h18M15 27h18M15 33h11"/></g></svg>`,
   ancho: 520,
   alto: 380,
-  iniciar({ so, ventana, raiz }) {
+  iniciar({ so, ventana, raiz, args }) {
     raiz.classList.add("bloc");
     raiz.innerHTML = `
       <div class="bloc-barra">
@@ -74,6 +74,10 @@ export const blocDeNotas: AppDef = {
     });
     titulo();
     aviso("Listo");
+    if (args.ruta) {
+      ruta.value = args.ruta;
+      abrir();
+    }
     texto.focus();
   },
 };

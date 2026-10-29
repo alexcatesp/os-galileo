@@ -7,7 +7,7 @@
   --tenue: #b3acd9;
   --vidrio: rgba(20, 14, 52, 0.78);
   --borde: rgba(255, 255, 255, 0.14);
-  --fondo: url("/fondo.png");
+  --fondo: url("/fondos/fondo-1.png"); /* lo cambia fondos.ts */
   font-family: "Segoe UI", system-ui, -apple-system, "Noto Sans", sans-serif;
   color-scheme: dark;
 }
@@ -124,3 +124,36 @@ svg { display: block; }
 /* ---------- apps web (iframe) ---------- */
 .app-web { height: 100%; background: #0d0b1e; }
 .app-web-marco { display: block; width: 100%; height: 100%; border: 0; }
+
+/* ---------- Archivos ---------- */
+.expl { display: flex; flex-direction: column; height: 100%; background: #fbfaff; color: #1a1440; }
+.expl-barra, .expl-extra { display: flex; gap: 6px; padding: 6px; background: #ece8fb; }
+.expl-extra { padding-top: 0; }
+.expl button { padding: 4px 10px; border: 1px solid #c9c2ee; border-radius: 6px; background: #fff; color: #1a1440; font-size: 12px; }
+.expl button:hover { background: #f0ecff; }
+.expl-ruta { flex: 1; min-width: 0; padding: 5px 8px; border: 1px solid #c9c2ee; border-radius: 6px; font: 12px Consolas, monospace; }
+.expl-lista { flex: 1; overflow: auto; padding: 6px; }
+.expl-fila { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 6px; cursor: default; outline: none; }
+.expl-fila svg { width: 26px; height: 26px; flex: none; }
+.expl-fila .nombre { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.expl-fila small { color: #7a739f; }
+.expl-fila:hover { background: #efebff; }
+.expl-fila.sel, .expl-fila:focus-visible { background: #d9d0ff; }
+.expl-vacia { margin: 30px 0; text-align: center; color: #7a739f; }
+.expl-form { display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #fff6d6; border-radius: 6px; }
+.expl-form label { flex: 1; display: flex; gap: 8px; align-items: center; font-size: 13px; }
+.expl-form input { flex: 1; min-width: 0; padding: 4px 8px; border: 1px solid #c9c2ee; border-radius: 6px; }
+.expl-confirmar { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 8px; background: #ffe3e0; border-radius: 6px; font-size: 13px; }
+.expl-confirmar span { flex: 1; }
+.expl-pie { padding: 3px 10px; background: #ece8fb; font-size: 11px; color: #5b5486; min-height: 22px; }
+.expl-pie.error { color: #b3170f; }
+
+/* ---------- Terminal ---------- */
+.term { display: flex; flex-direction: column; height: 100%; background: #0b0a17; color: #d7f5df; font: 13px/1.45 Consolas, "Cascadia Mono", monospace; }
+.term-pantalla { flex: 1; overflow: auto; padding: 8px 10px 0; outline: none; }
+.term-sal { white-space: pre-wrap; word-break: break-word; }
+.term-sal.error { color: #ff8a84; }
+.term-sal.info { color: #8fd3ff; }
+.term-linea { display: flex; padding: 4px 10px 8px; }
+.term-prompt { color: #6fd08c; white-space: pre; }
+.term-linea input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: #fff; font: inherit; }

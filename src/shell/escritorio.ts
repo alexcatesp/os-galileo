@@ -1,6 +1,6 @@
 // Shell de escritorio: iconos, ventanas arrastrables, barra de tareas y menú de inicio.
 
-import type { AppDef, Kernel, Ventana } from "../kernel/kernel";
+import type { AppDef, ArgsApp, Kernel, Ventana } from "../kernel/kernel";
 
 interface VentanaViva {
   el: HTMLElement;
@@ -108,7 +108,7 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
     });
   }
 
-  function abrir(app: AppDef) {
+  function abrir(app: AppDef, args: ArgsApp = {}) {
     const proc = so.iniciarProceso(app.id);
     const desplazamiento = (vivas.size % 6) * 28;
     const el = document.createElement("section");
@@ -143,7 +143,7 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
       },
       cerrar: () => cerrar(proc.pid),
     };
-    const limpiar = app.iniciar({ so, ventana: api, raiz: el.querySelector<HTMLElement>(".ventana-cuerpo")! });
+    const limpiar = app.iniciar({ so, ventana: api, raiz: el.querySelector<HTMLElement>(".ventana-cuerpo")!, args });
     if (typeof limpiar === "function") v.limpiar = limpiar;
 
     el.addEventListener("pointerdown", () => enfocar(proc.pid));
@@ -236,6 +236,11 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
       esq.addEventListener("pointerup", soltar);
     });
   }
+
+  so.lanzador = (id, args) => {
+    const app = so.app(id);
+    if (app) abrir(app, args);
+  };
 
   return () => {
     clearInterval(relojId);
