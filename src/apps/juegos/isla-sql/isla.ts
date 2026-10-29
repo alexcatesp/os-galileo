@@ -108,6 +108,7 @@ export const ISLA: Episodio = {
         "SELECT * FROM tabla;  → muestra todas las columnas.",
         "SELECT DISTINCT columna FROM tabla;  → sin valores repetidos.",
         "Cada sentencia acaba en punto y coma.",
+        "SHOW TABLES;  → lista las tablas · DESCRIBE tabla;  → muestra sus columnas (como en MySQL).",
       ],
     },
     {
@@ -207,8 +208,8 @@ export const ISLA: Episodio = {
       },
       chuleta: [
         "CREATE TABLE nombre (col TIPO restricciones, ...);",
-        "Tipos: INTEGER (enteros), TEXT (texto), REAL (decimales).",
-        "PRIMARY KEY identifica cada fila · NOT NULL la hace obligatoria.",
+        "Tipos: INT (enteros), VARCHAR(n) (texto de hasta n caracteres), DECIMAL(p,s) o DOUBLE (decimales), DATE (fechas).",
+        "PRIMARY KEY identifica cada fila · AUTO_INCREMENT la numera sola · NOT NULL la hace obligatoria.",
         "FOREIGN KEY (col) REFERENCES otra_tabla(id)  → apunta a una fila de otra tabla.",
       ],
     },
@@ -451,7 +452,7 @@ export const ISLA: Episodio = {
         "SELECT COUNT(*) FROM habitante",
         "SELECT oficio, edad, amistad, aldea_id FROM habitante WHERE id > 19",
       ],
-      pistas: ["Se usa INSERT INTO tabla (columnas) VALUES (valores);", "No hace falta dar el id: se rellena solo."],
+      pistas: ["Se usa INSERT INTO tabla (columnas) VALUES (valores);", "No hace falta dar el id: se numera solo (la columna es AUTO_INCREMENT)."],
       exito: "«Ya estás en el Libro. Bienvenido, de verdad, a la isla.»",
     },
     {
@@ -496,15 +497,23 @@ export const ISLA: Episodio = {
     // ───────── 7. CREATE TABLE ─────────
     {
       id: "7.1", capitulo: 7, personaje: "irene", tipo: "modifica",
-      historia: "«Necesitas una cabaña y el Libro no tiene tabla para ellas. Créala: se llamará cabana, con id (entero, clave primaria), nombre (texto, obligatorio), habitaciones (entero) y aldea_id (entero), que apunta a la tabla aldea.»",
-      reto: "Crea la tabla cabana: id INTEGER PRIMARY KEY, nombre TEXT NOT NULL, habitaciones INTEGER, aldea_id INTEGER con clave foránea a aldea(id).",
-      solucion: "CREATE TABLE cabana (id INTEGER PRIMARY KEY, nombre TEXT NOT NULL, habitaciones INTEGER, aldea_id INTEGER, FOREIGN KEY (aldea_id) REFERENCES aldea(id));",
-      alternativas: ["CREATE TABLE cabana (id INTEGER PRIMARY KEY, nombre TEXT NOT NULL, habitaciones INTEGER, aldea_id INTEGER REFERENCES aldea(id));"],
+      historia: "«Necesitas una cabaña y el Libro no tiene tabla para ellas. Créala al estilo MySQL: se llamará cabana, con id (INT, clave primaria que se numera sola con AUTO_INCREMENT), nombre (VARCHAR(50), obligatorio), habitaciones (INT) y aldea_id (INT), que apunta a la tabla aldea.»",
+      reto: "Crea la tabla cabana: id INT AUTO_INCREMENT PRIMARY KEY, nombre VARCHAR(50) NOT NULL, habitaciones INT y aldea_id INT con clave foránea a aldea(id).",
+      solucion: "CREATE TABLE cabana (id INT AUTO_INCREMENT PRIMARY KEY, nombre VARCHAR(50) NOT NULL, habitaciones INT, aldea_id INT, FOREIGN KEY (aldea_id) REFERENCES aldea(id));",
+      alternativas: [
+        "CREATE TABLE cabana (id INT AUTO_INCREMENT, nombre VARCHAR(50) NOT NULL, habitaciones INT, aldea_id INT, PRIMARY KEY (id), FOREIGN KEY (aldea_id) REFERENCES aldea(id)) ENGINE=InnoDB;",
+        "CREATE TABLE `cabana` (`id` INT NOT NULL AUTO_INCREMENT, `nombre` VARCHAR(30) NOT NULL, `habitaciones` INT, `aldea_id` INT, PRIMARY KEY (`id`), CONSTRAINT fk_cabana_aldea FOREIGN KEY (`aldea_id`) REFERENCES `aldea` (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+        "CREATE TABLE cabana (id INT PRIMARY KEY AUTO_INCREMENT, nombre VARCHAR(50) NOT NULL, habitaciones INT, aldea_id INT REFERENCES aldea(id));",
+      ],
+      incorrectas: [
+        "CREATE TABLE cabana (id INT AUTO_INCREMENT PRIMARY KEY, nombre VARCHAR(50), habitaciones INT, aldea_id INT, FOREIGN KEY (aldea_id) REFERENCES aldea(id));",
+        "CREATE TABLE cabana (id INT AUTO_INCREMENT PRIMARY KEY, nombre VARCHAR(50) NOT NULL, habitaciones INT, aldea_id INT);",
+      ],
       verificar: [
-        "SELECT name, UPPER(type), \"notnull\", pk FROM pragma_table_info('cabana') ORDER BY cid",
+        "SELECT name, CASE WHEN UPPER(type) LIKE '%INT%' THEN 'entero' WHEN UPPER(type) LIKE '%CHAR%' OR UPPER(type) LIKE '%TEXT%' THEN 'texto' ELSE LOWER(type) END, \"notnull\", pk FROM pragma_table_info('cabana') ORDER BY cid",
         "SELECT \"table\", \"from\", \"to\" FROM pragma_foreign_key_list('cabana')",
       ],
-      pistas: ["CREATE TABLE nombre (columna TIPO, ...);", "La clave foránea: FOREIGN KEY (aldea_id) REFERENCES aldea(id), o REFERENCES aldea(id) justo después de la columna."],
+      pistas: ["CREATE TABLE nombre (columna TIPO, ...);  La clave que se numera sola es: id INT AUTO_INCREMENT PRIMARY KEY.", "La clave foránea: FOREIGN KEY (aldea_id) REFERENCES aldea(id), o REFERENCES aldea(id) justo después de la columna."],
       exito: "«Tabla creada. Ahora el Libro sabe que existen las cabañas.»",
     },
     {

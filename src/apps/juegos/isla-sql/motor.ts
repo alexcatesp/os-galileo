@@ -36,12 +36,62 @@ export interface Resultado {
   filas: Celda[][];
 }
 
+/**
+ * Capa de compatibilidad con MySQL (el SGBD del módulo): el motor es SQLite, pero lo que se escribe como en MySQL
+ * se entiende. Convierte AUTO_INCREMENT, ENGINE=…, UNSIGNED, ENUM, NOW(), IF(), SHOW TABLES, DESCRIBE y USE.
+ * Los textos entre comillas simples no se tocan.
+ */
+export function traducirMySql(sql: string): string {
+  const t = sql.trim().replace(/;+\s*$/, "");
+  let m: RegExpMatchArray | null;
+  if (/^SHOW\s+(?:FULL\s+)?TABLES$/i.test(t)) {
+    return "SELECT name AS Tables_in_isla FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name;";
+  }
+  if ((m = t.match(/^(?:DESCRIBE|DESC|EXPLAIN|SHOW\s+(?:FULL\s+)?COLUMNS\s+FROM)\s+`?(\w+)`?$/i))) {
+    return `SELECT name AS Field, CASE WHEN UPPER(type) = 'INTEGER' THEN 'int' WHEN UPPER(type) = 'TEXT' THEN 'varchar(255)' WHEN UPPER(type) = 'REAL' THEN 'double' ELSE LOWER(type) END AS Type, CASE WHEN "notnull" OR pk THEN 'NO' ELSE 'YES' END AS "Null", CASE WHEN pk THEN 'PRI' ELSE '' END AS "Key", dflt_value AS "Default", CASE WHEN pk AND UPPER(type) = 'INTEGER' THEN 'auto_increment' ELSE '' END AS Extra FROM pragma_table_info('${m[1]}') ORDER BY cid;`;
+  }
+  if (/^USE\s+`?\w+`?$/i.test(t)) return "SELECT 'Database changed' AS Aviso;";
+
+  // se protegen los textos entre comillas simples
+  const textos: string[] = [];
+  let x = sql.replace(/'(?:[^']|'')*'/g, (s) => {
+    textos.push(s);
+    return `\u0001${textos.length - 1}\u0002`;
+  });
+  // opciones de tabla: ENGINE=InnoDB, DEFAULT CHARSET=utf8mb4, COLLATE=…, AUTO_INCREMENT=100
+  x = x.replace(/\b(?:ENGINE|DEFAULT\s+CHARSET|DEFAULT\s+CHARACTER\s+SET|CHARACTER\s+SET|CHARSET|COLLATE|ROW_FORMAT)\s*=\s*\w+/gi, "");
+  x = x.replace(/\bAUTO_INCREMENT\s*=\s*\d+/gi, "");
+  x = x.replace(/\s+UNSIGNED\b/gi, "");
+  // columna entera con AUTO_INCREMENT → clave de SQLite que se numera sola
+  const claves: string[] = [];
+  const entero = "(?:TINYINT|SMALLINT|MEDIUMINT|BIGINT|INT|INTEGER)(?:\\(\\d+\\))?";
+  x = x.replace(new RegExp(`([\`"]?\\w+[\`"]?)\\s+${entero}(?:\\s+NOT\\s+NULL)?\\s+(?:PRIMARY\\s+KEY\\s+AUTO_INCREMENT|AUTO_INCREMENT(?:\\s+PRIMARY\\s+KEY)?)`, "gi"), (_, nombre: string) => {
+    claves.push(nombre.replace(/[`"]/g, ""));
+    return `${nombre} INTEGER PRIMARY KEY`;
+  });
+  x = x.replace(new RegExp(`([\`"]?\\w+[\`"]?)\\s+${entero}\\s+PRIMARY\\s+KEY`, "gi"), (_, nombre: string) => {
+    claves.push(nombre.replace(/[`"]/g, ""));
+    return `${nombre} INTEGER PRIMARY KEY`;
+  });
+  // si la clave ya está declarada en la columna, sobra la cláusula PRIMARY KEY (col) de la tabla
+  for (const c of new Set(claves)) {
+    x = x.replace(new RegExp(`\\s*,\\s*PRIMARY\\s+KEY\\s*\\(\\s*[\`"]?${c}[\`"]?\\s*\\)`, "gi"), "");
+  }
+  x = x.replace(/\bAUTO_INCREMENT\b/gi, "");
+  x = x.replace(/\bENUM\s*\([^)]*\)/gi, "TEXT");
+  x = x.replace(/\bNOW\s*\(\s*\)/gi, "datetime('now')").replace(/\bCURDATE\s*\(\s*\)/gi, "date('now')").replace(/\bCURRENT_TIMESTAMP\s*\(\s*\)/gi, "CURRENT_TIMESTAMP");
+  x = x.replace(/\bIF\s*\(/gi, "IIF(");
+  x = x.replace(/\bINSERT\s+IGNORE\b/gi, "INSERT OR IGNORE");
+  x = x.replace(/\bTRUNCATE\s+(?:TABLE\s+)?(\w+)/gi, "DELETE FROM $1");
+  return x.replace(/\u0001(\d+)\u0002/g, (_, i: string) => textos[Number(i)]);
+}
+
 /** Crea el mundo: el esquema y los datos del episodio, más las jugadas ya aceptadas (INSERT, UPDATE…) */
 export function crearMundo(SQL: SqlJsStatic, semilla: string, jugadas: string[]): Database {
   const db = new SQL.Database();
   db.run("PRAGMA foreign_keys = ON;");
   db.run(semilla);
-  for (const j of jugadas) db.run(j);
+  for (const j of jugadas) db.run(traducirMySql(j));
   return db;
 }
 
@@ -75,7 +125,7 @@ export function ejecutar(db: Database, sql: string, conservar: boolean): Ejecuci
   if (aviso) return { resultado: null, modificadas: 0, error: aviso };
   db.run("SAVEPOINT intento;");
   try {
-    const r: QueryExecResult[] = db.exec(sql);
+    const r: QueryExecResult[] = db.exec(traducirMySql(sql));
     const modificadas = db.getRowsModified();
     if (conservar) db.run("RELEASE intento;");
     else db.run("ROLLBACK TO intento; RELEASE intento;");
@@ -93,7 +143,7 @@ export function ejecutar(db: Database, sql: string, conservar: boolean): Ejecuci
 
 /** Ejecuta una consulta propia del juego (sin las restricciones del alumno) y devuelve su resultado */
 export function consultar(db: Database, sql: string): Resultado | null {
-  const r = db.exec(sql);
+  const r = db.exec(traducirMySql(sql));
   const u = r[r.length - 1];
   return u ? { columnas: u.columns, filas: u.values as Celda[][] } : null;
 }

@@ -1,7 +1,7 @@
 // Comprobación de una misión: sin interfaz, para poder probarla con SQLite real.
 
 import type { Database, SqlJsStatic } from "sql.js";
-import { comparar, consultar, crearMundo, ejecutar, type Resultado } from "./motor";
+import { comparar, consultar, crearMundo, ejecutar, traducirMySql, type Resultado } from "./motor";
 import type { Episodio, Mision } from "./tipos";
 
 export interface Veredicto {
@@ -37,7 +37,7 @@ export function comprobar(SQL: SqlJsStatic, ep: Episodio, m: Mision, db: Databas
   const ensayo = crearMundo(SQL, ep.semilla, jugadas);
   const referencia = crearMundo(SQL, ep.semilla, jugadas);
   try {
-    referencia.run(m.solucion);
+    referencia.run(traducirMySql(m.solucion));
     const e = ejecutar(ensayo, sql, true);
     if (e.error) return { ok: false, error: e.error };
     for (const q of m.verificar ?? []) {

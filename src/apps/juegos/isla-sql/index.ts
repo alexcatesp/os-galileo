@@ -34,6 +34,12 @@ function guardarAvance(a: Avance): void {
   }
 }
 
+/** nombre del tipo tal y como se escribe en MySQL */
+function tipoMySql(t: string): string {
+  const u = t.toUpperCase();
+  return u === "INTEGER" ? "INT" : u === "TEXT" ? "VARCHAR" : u === "REAL" ? "DOUBLE" : u;
+}
+
 function celda(v: Celda): string {
   if (v === null) return `<i class="nulo">NULL</i>`;
   if (typeof v === "number") return String(Number.isInteger(v) ? v : Number(v.toFixed(4)));
@@ -272,7 +278,7 @@ export const islaSql: AppDef = {
       modal(`
         <h3>📋 Chuleta · ${esc(c.tema)}</h3>
         <ul class="isla-chuleta">${c.chuleta.map((l) => `<li><code>${esc(l)}</code></li>`).join("")}</ul>
-        <p class="isla-nota">Aquí se usa SQLite. En PostgreSQL casi todo es igual; algunas diferencias: LIKE distingue mayúsculas (allí se usa ILIKE) y los tipos tienen otros nombres (SERIAL, VARCHAR…).</p>
+        <p class="isla-nota"><b>Sintaxis MySQL.</b> El juego entiende la sintaxis de MySQL (INT, VARCHAR, AUTO_INCREMENT, ENGINE=InnoDB, SHOW TABLES, DESCRIBE…), pero por dentro es SQLite. Diferencias que conviene conocer: en MySQL <code>5/2</code> da 2,5 (aquí 2: usa <code>5/2.0</code>); MySQL exige que las columnas del SELECT estén en el GROUP BY o dentro de una función; y MySQL no tiene FULL JOIN.</p>
         <button data-i="cerrar">Cerrar</button>`);
     }
 
@@ -285,7 +291,7 @@ export const islaSql: AppDef = {
         return `<div class="isla-esq"><div class="isla-esq-cab"><b>${esc(t)}</b><span>${n} filas</span><button data-i="ver" data-t="${esc(t)}">Ver datos</button></div><ul>${cols
           .map(
             (c) =>
-              `<li><code>${esc(String(c[0]))}</code> <small>${esc(String(c[1]))}${c[3] ? " · 🔑 clave primaria" : ""}${c[2] ? " · obligatoria" : ""}${fks.has(String(c[0])) ? ` · ↗ apunta a ${esc(fks.get(String(c[0]))!)}` : ""}</small></li>`,
+              `<li><code>${esc(String(c[0]))}</code> <small>${esc(tipoMySql(String(c[1])))}${c[3] ? ` · 🔑 clave primaria${String(c[1]).toUpperCase() === "INTEGER" ? " (AUTO_INCREMENT)" : ""}` : ""}${c[2] ? " · obligatoria" : ""}${fks.has(String(c[0])) ? ` · ↗ apunta a ${esc(fks.get(String(c[0]))!)}` : ""}</small></li>`,
           )
           .join("")}</ul></div>`;
       });
