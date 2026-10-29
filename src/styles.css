@@ -452,3 +452,57 @@ svg { display: block; }
 .avatar img, .mini-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.16); }
 .inicio-usuario { display: flex; align-items: center; gap: 8px; }
 .mini-avatar { width: 28px; height: 28px; flex: none; border-radius: 50%; overflow: hidden; border: 2px solid var(--rojo); background: #0a1a3a; }
+
+/* ---------- La isla de los datos ---------- */
+.isla { position: relative; display: flex; flex-direction: column; height: 100%; background: #f4f1ff; color: #1a1440; font-size: 13px; }
+.isla button, .isla select { font: inherit; font-size: 12px; color: #1a1440; border: 1px solid #c9c2ee; border-radius: 8px; background: #fff; padding: 5px 10px; }
+.isla button:hover:not(:disabled) { background: #f0ecff; }
+.isla button:disabled { opacity: 0.45; cursor: default; }
+.isla .isla-primario { background: #1f9d4d; border-color: #1f9d4d; color: #fff; font-weight: 600; }
+.isla .isla-primario:hover:not(:disabled) { background: #17803d; }
+.isla .peligro { color: #b3170f; border-color: #e8b4b0; }
+.isla-carga { margin: 40px 20px; text-align: center; color: #5b5486; }
+.isla-escena { position: relative; flex: none; background: #8fd3ff; }
+.isla-escena svg { display: block; width: 100%; height: auto; max-height: 200px; }
+.isla-capitulo { position: absolute; left: 8px; top: 6px; padding: 2px 10px; border-radius: 10px; background: rgba(20, 14, 52, 0.72); color: #fff; font-size: 11px; }
+.isla-capitulo small { opacity: 0.75; margin-left: 4px; }
+.isla-dialogo { flex: none; display: flex; gap: 10px; padding: 8px 12px; background: #fffdf4; border-bottom: 2px solid #e8e2b5; }
+.isla-retrato { flex: none; width: 54px; height: 54px; border-radius: 50%; overflow: hidden; border: 2px solid var(--morado); }
+.isla-retrato svg { display: block; width: 100%; height: 100%; }
+.isla-texto { min-width: 0; }
+.isla-texto p { margin: 2px 0 0; line-height: 1.4; }
+.isla-reto { color: #2a1770; font-weight: 600; }
+.isla-hecha { margin-left: 6px; padding: 0 7px; border-radius: 9px; background: #c8efd5; color: #14532d; font-size: 11px; }
+.isla-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; padding: 8px 12px; overflow: auto; }
+.isla-sql { flex: none; width: 100%; min-height: 96px; resize: vertical; padding: 8px 10px; border: 1px solid #c9c2ee; border-radius: 8px; background: #fff; color: #1a1440; font: 14px/1.5 Consolas, "Cascadia Mono", monospace; tab-size: 2; }
+.isla-botones { display: flex; flex-wrap: wrap; gap: 6px; }
+.isla-pista { padding: 5px 10px; margin-bottom: 4px; border-left: 3px solid #c98a00; background: #fff6d6; border-radius: 4px; }
+.isla-solucion { padding: 6px 10px; border-left: 3px solid #8a2bb0; background: #f2e8fa; border-radius: 4px; }
+.isla-solucion pre { margin: 4px 0; white-space: pre-wrap; font: 13px Consolas, monospace; }
+.isla-ok, .isla-mal, .isla-error, .isla-info { padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; }
+.isla-ok { background: #e3f6e9; color: #14532d; font-weight: 600; }
+.isla-mal { background: #fff0ee; color: #7a1d17; }
+.isla-error { background: #fff0ee; color: #7a1d17; font: 12px/1.4 Consolas, monospace; }
+.isla-info { background: #e8f0ff; color: #1d3a73; }
+.isla-tabla { overflow: auto; max-height: 220px; border: 1px solid #ddd8f5; border-radius: 6px; background: #fff; }
+.isla-tabla table { border-collapse: collapse; width: 100%; font: 12px Consolas, monospace; }
+.isla-tabla th { position: sticky; top: 0; background: #ece8fb; text-align: left; padding: 4px 8px; }
+.isla-tabla td { padding: 3px 8px; border-top: 1px solid #eee9fb; white-space: nowrap; }
+.isla-tabla td.num { text-align: right; }
+.isla-tabla .nulo { color: #8d88b0; }
+.isla-nota { margin: 4px 0 0; font-size: 11px; color: #6a62a8; }
+.isla-barra { flex: none; display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: #ece8fb; border-top: 1px solid #ddd8f5; }
+.isla-espacio { flex: 1; }
+.isla-modal { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; padding: 10px; background: rgba(26, 20, 64, 0.6); }
+.isla-modal[hidden] { display: none; }
+.isla-caja { width: min(100%, 560px); max-height: 100%; overflow: auto; padding: 14px; border-radius: 12px; background: #fff; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45); }
+.isla-caja h3 { margin: 6px 0 8px; font-size: 16px; }
+.isla-intro svg { display: block; width: 100%; height: auto; border-radius: 8px; }
+.isla-dialogo.en-modal { border: 0; padding: 8px 0; background: transparent; }
+.isla-chuleta { margin: 0 0 8px; padding-left: 18px; }
+.isla-chuleta code, .isla-esq code { font: 12px Consolas, monospace; }
+.isla-esq { margin-bottom: 8px; padding: 6px 10px; border: 1px solid #ddd8f5; border-radius: 8px; }
+.isla-esq-cab { display: flex; align-items: center; gap: 8px; }
+.isla-esq-cab span { flex: 1; color: #6a62a8; font-size: 11px; }
+.isla-esq ul { margin: 4px 0 0; padding-left: 18px; }
+.isla-esq small { color: #6a62a8; }
