@@ -45,7 +45,7 @@ npm install
 npm run dev      # servidor de desarrollo
 npm run build    # tsc + vite build → dist/
 ```
-`dist/` es estático y usa rutas relativas: se publica copiándolo a la raíz del subdominio.
+`dist/` es estático y usa rutas relativas. **Publicación:** se copia a `public/iesgalileo/` del repositorio `web-personal-gemini3` (`D:Developmentweb-personal-gemini3`, Firebase App Hosting; `server.mjs` sirve esa carpeta en el subdominio). Hay que borrar antes `assets/index-*` antiguos y no tocar `gasa/` ni `materiales/`; después commit «OS Galileo: …» y push.
 
 ## Juegos (`src/apps/juegos/`)
 Carpeta **Inicio → Aplicaciones → Juegos** con juegos educativos.
