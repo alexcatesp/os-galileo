@@ -9,6 +9,7 @@ import { pseudoFlow } from "./apps/pseudoflow";
 import { sudoku } from "./apps/juegos/sudoku";
 import { binario } from "./apps/juegos/binario";
 import { islaSql } from "./apps/juegos/isla-sql";
+import { token } from "./apps/iadw/token";
 import { appWeb } from "./apps/app-web";
 import { arrancar, iniciarSesion } from "./shell/arranque";
 import { montarEscritorio } from "./shell/escritorio";
@@ -27,6 +28,7 @@ so.registrar(pseudoFlow);
 so.registrar(sudoku);
 so.registrar(binario);
 so.registrar(islaSql);
+so.registrar(token);
 so.registrar(calculadora);
 // GASA (el campus de aventuras gráficas) es la web hermana en /gasa/ y se abre dentro de una ventana
 so.registrar(

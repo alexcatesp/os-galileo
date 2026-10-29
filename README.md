@@ -70,6 +70,10 @@ Las aplicaciones del sistema (Archivos, Terminal, Bloc de notas, Calculadora) es
 - `shell/arranque.ts` — arranque y acceso.
 - `apps/` — una app por fichero. Para añadir una: exportar un `AppDef` y registrarlo en `main.ts`.
 
+## IADW (`src/apps/iadw/`)
+Carpeta **Inicio → Aplicaciones → IADW** (IA aplicada al desarrollo web).
+- **Token** (`token/`): tokenizador didáctico con tres pestañas. *Tokenizar* compara caracteres, palabras, bytes UTF-8 y **BPE** (entrenado en el navegador con un texto de ejemplo en español, en inglés o el propio; deslizador de fusiones). *Paso a paso* muestra el algoritmo BPE fusión a fusión. *Contexto y coste* estima tokens, % de la ventana de contexto y coste. `bpe.ts` es el algoritmo (sin dependencias); es un vocabulario de juguete, no el tokenizador de ningún modelo real.
+
 ## Hoja de ruta
 1. Logo definitivo en el arranque.
 2. Terminal: tuberías, permisos y usuarios; explorador: mover/copiar arrastrando.
