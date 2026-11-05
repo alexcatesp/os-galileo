@@ -194,7 +194,7 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
       q<HTMLInputElement>(".inicio-buscar").focus();
     } else cerrarMenu();
   });
-  for (const m of [menu, sub1, sub2]) m.addEventListener("pointerdown", (e) => e.stopPropagation());
+  for (const m of [menu, sub1, sub2, sub3]) m.addEventListener("pointerdown", (e) => e.stopPropagation());
   const fuera = () => cerrarMenu();
   raiz.addEventListener("pointerdown", fuera);
   q(".apagar").addEventListener("click", () => {
