@@ -57,7 +57,7 @@ function tabla(r: Resultado): string {
 export const islaSql: AppDef = {
   id: "isla-sql",
   nombre: "La isla de los datos",
-  carpeta: "Juegos/SQL",
+  carpeta: "Juegos/Bases de Datos",
   icono: `<svg viewBox="0 0 48 48"><rect x="3" y="3" width="42" height="42" rx="8" fill="#8fd3ff"/><path d="M3 30q10 -6 20 0t22 -2v17H3z" fill="#2aa8d8"/><ellipse cx="24" cy="33" rx="15" ry="6" fill="#f3d58a"/><path d="M24 33q-2 -10 3 -17" stroke="#7b5a33" stroke-width="2.5" fill="none"/><g fill="#2f9d4a"><ellipse cx="27" cy="15" rx="8" ry="2.6" transform="rotate(-20 27 15)"/><ellipse cx="27" cy="15" rx="8" ry="2.6" transform="rotate(35 27 15)"/></g><circle cx="38" cy="11" r="4" fill="#ffd54a"/><g font-family="Consolas, monospace" font-weight="700" font-size="7" fill="#2a1770"><text x="8" y="14">SQL</text></g></svg>`,
   ancho: 760,
   alto: 780,

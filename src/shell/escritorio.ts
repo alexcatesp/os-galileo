@@ -78,7 +78,7 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
   const sub1 = q(".inicio-sub1");
   const sub2 = q(".inicio-sub2");
   const sub3 = q(".inicio-sub3");
-  // «Juegos/SQL»: el primer tramo es el módulo y el segundo, una subcarpeta
+  // «Juegos/Bases de Datos»: el primer tramo es el módulo y el segundo, una subcarpeta
   const modulos = [...new Set(apps.filter((a) => a.carpeta).map((a) => a.carpeta!.split("/")[0]))].sort();
   btnApps.hidden = !modulos.length;
 

@@ -24,7 +24,7 @@ export interface ContextoApp {
 export interface AppDef {
   id: string;
   nombre: string;
-  /** carpeta del menú Aplicaciones: un módulo («0485 · Programación») o «Juegos»; con «Juegos/SQL» se añade una subcarpeta; sin carpeta = aplicación del sistema */
+  /** carpeta del menú Aplicaciones: un módulo («0485 · Programación») o «Juegos»; con «Juegos/Bases de Datos» se añade una subcarpeta; sin carpeta = aplicación del sistema */
   carpeta?: string;
   /** SVG de 48×48 */
   icono: string;
