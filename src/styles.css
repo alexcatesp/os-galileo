@@ -615,3 +615,14 @@ svg { display: block; }
 .isla-esq-cab span { flex: 1; color: #6a62a8; font-size: 11px; }
 .isla-esq ul { margin: 4px 0 0; padding-left: 18px; }
 .isla-esq small { color: #6a62a8; }
+
+/* Token: modelos reales e idiomas */
+.tk-remotos[hidden] { display: none; }
+.tk-remotos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 6px 8px; background: #fff7dc; border: 1px solid #f0d98a; border-radius: 8px; font-size: 12px; }
+.tk-tabla-scroll { overflow-x: auto; }
+.tk-modelos td small { color: #6a62a8; }
+.tk-modelos .tk-num { width: 64px; }
+.tk-idiomas th.sel, .tk-idiomas td.sel { background: #efeafc; font-weight: 600; }
+.tk-idioma { border: 0; background: none; padding: 0; font: inherit; color: var(--morado); cursor: pointer; text-decoration: underline dotted; }
+.tk-barra { display: inline-block; width: 60px; height: 8px; background: #eee9fb; border-radius: 4px; vertical-align: middle; overflow: hidden; }
+.tk-barra i { display: block; height: 100%; background: var(--morado); }

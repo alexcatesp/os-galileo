@@ -1,6 +1,7 @@
 import type { AppDef } from "../../../kernel/kernel";
 import { Entrenador, bytesDe, entrenar, trocear, visible, type Ficha, type Fusion, type Metodo } from "./bpe";
 import { CORPUS_EN, CORPUS_ES, CORPUS_MINI, TEXTO_INICIAL } from "./textos";
+import { CODIFICACIONES, CODIFS, FRASES_IDIOMAS, MB_REMOTAS, MODELOS, REMOTAS, cargar, listo, type Codificacion } from "./real";
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -14,9 +15,17 @@ const METODOS: Record<Metodo, { nombre: string; idea: string }> = {
 type Corpus = "es" | "en" | "mio";
 const NOMBRE_CORPUS: Record<Corpus, string> = { es: "texto de ejemplo en español", en: "texto de ejemplo en inglés", mio: "mi propio texto" };
 
-const VENTANAS: [string, number][] = [["4 mil", 4096], ["8 mil", 8192], ["32 mil", 32768], ["128 mil", 128000], ["200 mil", 200000], ["1 millón", 1000000]];
+type Pestana = "reales" | "idiomas" | "tokenizar" | "paso";
 
-type Pestana = "tokenizar" | "paso" | "coste";
+const TITULOS: Record<Pestana, string> = { reales: "Modelos reales", idiomas: "Idiomas", tokenizar: "Métodos", paso: "BPE paso a paso" };
+
+/** Botón para descargar los tokenizadores de DeepSeek y GLM (pesan mucho: solo si el alumno lo pide) */
+const botonRemotos = () =>
+  `<div class="tk-remotos" data-remotos><button data-descargar>⬇ Cargar ${REMOTAS.map((c) => CODIFICACIONES[c].nombre).join(" y ")} (≈ ${MB_REMOTAS} MB)</button> <small data-estado-remotos>Se descargan de Hugging Face la primera vez.</small></div>`;
+
+const todosRemotos = () => REMOTAS.every((c) => listo(c));
+
+const usd = (v: number, dec = 2) => (v < 0.01 && v > 0 ? v.toFixed(5) : v.toFixed(dec)).replace(".", ",");
 
 /** Color de cada ficha (rotan para distinguir dónde acaba una y empieza la siguiente) */
 const color = (i: number) => `tk-c${i % 6}`;
@@ -39,7 +48,7 @@ export const token: AppDef = {
     raiz.classList.add("tk");
     raiz.innerHTML = `
       <div class="tk-tabs" role="tablist">
-        <button data-p="tokenizar">🔤 Tokenizar</button><button data-p="paso">🧩 Paso a paso</button><button data-p="coste">💶 Contexto y coste</button>
+        <button data-p="reales">🌐 Modelos reales</button><button data-p="idiomas">🗣️ Idiomas</button><button data-p="tokenizar">🔤 Métodos</button><button data-p="paso">🧩 BPE paso a paso</button>
       </div>
       <div class="tk-cuerpo"></div>`;
     const cuerpo = raiz.querySelector<HTMLElement>(".tk-cuerpo")!;
@@ -50,6 +59,8 @@ export const token: AppDef = {
     let corpus: Corpus = "es";
     let nFusiones = 150;
     let verIds = true;
+    let codif: Codificacion = "o200k_base";
+    const precios = new Map(MODELOS.map((m) => [m.id, m.precio]));
     const aprendidas = new Map<string, Fusion[]>();
 
     /** fusiones del BPE actual (se entrenan una vez por combinación; con «mi texto» se reentrena al escribir) */
@@ -70,10 +81,11 @@ export const token: AppDef = {
       const caja = document.createElement("div");
       caja.className = "tk-modo";
       cuerpo.replaceChildren(caja);
-      ventana.fijarTitulo(`Token · ${p === "tokenizar" ? "Tokenizar" : p === "paso" ? "Paso a paso" : "Contexto y coste"}`);
-      if (p === "tokenizar") tokenizar(caja);
-      else if (p === "paso") pasoAPaso(caja);
-      else coste(caja);
+      ventana.fijarTitulo(`Token · ${TITULOS[p]}`);
+      if (p === "reales") reales(caja);
+      else if (p === "idiomas") idiomas(caja);
+      else if (p === "tokenizar") tokenizar(caja);
+      else pasoAPaso(caja);
     }
     raiz.querySelector(".tk-tabs")!.addEventListener("click", (e) => {
       const p = (e.target as HTMLElement).dataset.p as Pestana | undefined;
@@ -219,65 +231,171 @@ export const token: AppDef = {
       pintar();
     }
 
-    // ============ 3. Contexto y coste ============
-    function coste(caja: HTMLElement): void {
-      let ventanaCtx = 8192;
-      let precio = 3;
+    /** conecta el botón de descarga de DeepSeek/GLM; `alCargar` repinta la pestaña cuando terminan */
+    function enlazarRemotos(caja: HTMLElement, alCargar: () => void): void {
+      const zona = caja.querySelector<HTMLElement>("[data-remotos]");
+      if (!zona) return;
+      if (todosRemotos()) {
+        zona.hidden = true;
+        return;
+      }
+      const boton = zona.querySelector<HTMLButtonElement>("button")!;
+      const estado = zona.querySelector<HTMLElement>("[data-estado-remotos]")!;
+      boton.addEventListener("click", () => {
+        boton.disabled = true;
+        estado.textContent = "Descargando…";
+        Promise.all(REMOTAS.map((c) => cargar(c)))
+          .then(() => {
+            zona.hidden = true;
+            alCargar();
+          })
+          .catch(() => {
+            boton.disabled = false;
+            estado.textContent = "No se pudo descargar (¿sin conexión?). Inténtalo de nuevo.";
+          });
+      });
+    }
+
+    const cargarOpenAi = () => Promise.all([cargar("cl100k_base"), cargar("o200k_base")]);
+
+    // ============ Modelos reales ============
+    function reales(caja: HTMLElement): void {
       caja.innerHTML = `
-        <label class="tk-etq">Texto (el mismo de la pestaña Tokenizar)
-          <textarea class="tk-texto" rows="4" spellcheck="false" aria-label="Texto"></textarea>
+        <label class="tk-etq">Texto a tokenizar
+          <textarea class="tk-texto" rows="4" spellcheck="false" aria-label="Texto a tokenizar"></textarea>
         </label>
         <div class="tk-opciones">
-          <label>Ventana de contexto <select data-c="ventana">${VENTANAS.map(([n, v]) => `<option value="${v}">${n} tokens</option>`).join("")}</select></label>
-          <label>Precio <input type="number" min="0" step="0.5" data-c="precio" class="tk-num" aria-label="Precio por millón de tokens" /> € por millón de tokens</label>
+          <label>Vocabulario <select data-r="codif">${CODIFS.map((c) => `<option value="${c}">${CODIFICACIONES[c].nombre} · ${CODIFICACIONES[c].modelos}</option>`).join("")}</select></label>
+          <label class="tk-check"><input type="checkbox" data-r="ids" /> ver ids</label>
         </div>
-        <div class="tk-salida-c" data-c="salida" aria-live="polite"></div>
-        <p class="tk-nota">Es una <b>estimación</b>: usa el BPE de juguete de esta app. Cada modelo real tiene su propio tokenizador, así que el número exacto cambia de un modelo a otro. Para saber el consumo real, mira siempre el campo <code>usage</code> que devuelve la API.</p>`;
+        ${botonRemotos()}
+        <div class="tk-salida" data-r="salida" aria-live="polite"><span class="tk-vacio">Cargando el vocabulario real…</span></div>
+        <div class="tk-datos" data-r="datos"></div>
+        <h4>Qué cuesta enviarlo a cada modelo</h4>
+        <table class="tk-pares tk-modelos" data-r="tabla"></table>
+        <p class="tk-nota">Vocabularios <b>oficiales</b>: tiktoken de OpenAI y el <code>tokenizer.json</code> de DeepSeek V4 y GLM-5.3 (Hugging Face). Todos los GPT-4o, GPT-4.1 y GPT-5 comparten <code>o200k_base</code>; según fuentes externas, GPT-5.6 Sol, Terra y Luna también (OpenAI no lo documenta oficialmente). Los <b>precios son orientativos y editables</b> (cambian a menudo; mira la página del proveedor; con precio 0 no se calcula coste). Anthropic y Google no publican su vocabulario: solo se pueden contar sus tokens con su API. Para el consumo real, mira siempre el campo <code>usage</code> de la respuesta.</p>`;
       const area = caja.querySelector<HTMLTextAreaElement>(".tk-texto")!;
       area.value = texto;
-      const q = <T extends HTMLElement>(k: string) => caja.querySelector<T>(`[data-c="${k}"]`)!;
-      q<HTMLSelectElement>("ventana").value = String(ventanaCtx);
-      q<HTMLInputElement>("precio").value = String(precio);
+      const q = <T extends HTMLElement>(k: string) => caja.querySelector<T>(`[data-r="${k}"]`)!;
+      q<HTMLSelectElement>("codif").value = codif;
+      q<HTMLInputElement>("ids").checked = verIds;
+      q("tabla").innerHTML = `<thead><tr><th>Modelo</th><th>Tokens</th><th>% ventana</th><th>$ por envío</th><th>$ por 1 000 envíos</th><th>$ / M tokens</th></tr></thead><tbody>${MODELOS.map(
+        (m) =>
+          `<tr><td>${m.nombre}<br><small>${CODIFICACIONES[m.codif].nombre} · ventana ${m.ventana >= 1e6 ? Math.round(m.ventana / 1e6) + " M" : Math.round(m.ventana / 1000) + " mil"}</small></td><td data-n="${m.id}"></td><td data-v="${m.id}"></td><td data-e="${m.id}"></td><td data-d="${m.id}"></td><td><input type="number" min="0" step="0.1" class="tk-num" data-pr="${m.id}" value="${precios.get(m.id)}" aria-label="Precio de ${m.nombre} en dólares por millón de tokens" /></td></tr>`,
+      ).join("")}</tbody>`;
 
       function actualizar(): void {
-        const car = Array.from(texto).length;
-        const bytes = new TextEncoder().encode(texto).length;
-        const nBpe = trocear(texto, "bpe", vocabulario("es", 250)).length;
-        const pct = (nBpe / ventanaCtx) * 100;
-        const euros = (nBpe / 1e6) * precio;
-        const caben = nBpe ? Math.floor(ventanaCtx / nBpe) : 0;
-        q("salida").innerHTML = `
-          <div class="tk-tarjetas">
-            <div><span>Tokens (BPE 250 fusiones)</span><b>${nBpe}</b></div>
-            <div><span>Bytes UTF-8</span><b>${bytes}</b></div>
-            <div><span>Regla «car. ÷ 4»</span><b>${Math.ceil(car / 4)}</b></div>
-            <div><span>Coste de enviarlo</span><b>${euros < 0.01 ? euros.toFixed(5) : euros.toFixed(3)} €</b></div>
-          </div>
-          <div class="tk-medidor" role="img" aria-label="${pct.toFixed(1)} % de la ventana de contexto"><i style="width:${Math.min(100, pct)}%"></i></div>
-          <p class="tk-mensaje">${pct > 100 ? "⚠ No cabe: supera la ventana de contexto." : `Ocupa el <b>${pct < 0.1 && nBpe ? "<0,1" : pct.toFixed(1).replace(".", ",")} %</b> de la ventana.`}${caben > 1 ? ` Caben unas <b>${caben}</b> copias de este texto.` : ""}</p>
-          <p class="tk-mensaje">Enviarlo <b>1 000 veces</b> al día costaría unos <b>${((euros * 1000)).toFixed(2).replace(".", ",")} €</b> al día, solo en entrada.</p>`;
+        const m = listo(codif);
+        if (!m) {
+          q("salida").innerHTML = `<span class="tk-vacio">${CODIFICACIONES[codif].remoto ? "Pulsa «Cargar» para descargar este vocabulario." : "Cargando el vocabulario real…"}</span>`;
+          q("datos").innerHTML = "";
+        } else {
+          const lista = m.trocear(texto);
+          q("salida").innerHTML = fichas(lista, verIds);
+          const car = Array.from(texto).length;
+          const bytes = new TextEncoder().encode(texto).length;
+          q("datos").innerHTML = `<span><b>${lista.length}</b> tokens</span><span><b>${car}</b> caracteres</span><span><b>${bytes}</b> bytes</span><span><b>${lista.length ? (car / lista.length).toFixed(2).replace(".", ",") : "0"}</b> caracteres por token</span>`;
+        }
+        for (const mod of MODELOS) {
+          const celda = (k: string) => caja.querySelector<HTMLElement>(`[data-${k}="${mod.id}"]`)!;
+          const mt = listo(mod.codif);
+          if (!mt) {
+            for (const k of ["n", "v", "e", "d"]) celda(k).textContent = "—";
+            continue;
+          }
+          const n = mt.contar(texto);
+          const precio = precios.get(mod.id) ?? 0;
+          const coste = (n / 1e6) * precio;
+          const pct = (n / mod.ventana) * 100;
+          celda("n").textContent = String(n);
+          celda("v").textContent = pct > 100 ? "⚠ no cabe" : pct < 0.01 && n ? "<0,01 %" : `${pct.toFixed(2).replace(".", ",")} %`;
+          celda("e").textContent = precio ? `$${usd(coste, 4)}` : "—";
+          celda("d").textContent = precio ? `$${usd(coste * 1000)}` : "—";
+        }
       }
+
+      cargarOpenAi().then(actualizar).catch(() => {
+        q("salida").innerHTML = `<span class="tk-vacio">No se pudo cargar el vocabulario. Recarga la app e inténtalo de nuevo.</span>`;
+      });
+      enlazarRemotos(caja, actualizar);
+      actualizar();
+
       area.addEventListener("input", () => {
         texto = area.value;
         actualizar();
       });
       caja.addEventListener("input", (e) => {
         const t = e.target as HTMLInputElement;
-        if (t.dataset.c === "precio") {
-          precio = Math.max(0, Number(t.value) || 0);
+        if (t.dataset.pr) {
+          precios.set(t.dataset.pr, Math.max(0, Number(t.value) || 0));
           actualizar();
         }
       });
       caja.addEventListener("change", (e) => {
-        const t = e.target as HTMLSelectElement;
-        if (t.dataset.c === "ventana") {
-          ventanaCtx = Number(t.value);
-          actualizar();
-        }
+        const t = e.target as HTMLInputElement | HTMLSelectElement;
+        if (t.dataset.r === "codif") codif = t.value as Codificacion;
+        else if (t.dataset.r === "ids") verIds = (t as HTMLInputElement).checked;
+        else return;
+        actualizar();
       });
-      actualizar();
     }
 
-    abrir("tokenizar");
+    // ============ Idiomas ============
+    function idiomas(caja: HTMLElement): void {
+      let elegida = 1; // español
+      caja.innerHTML = `
+        <p class="tk-idea">La <b>misma frase</b> en varios idiomas. Los vocabularios se aprenden sobre todo con texto en inglés, así que otros idiomas (y otros alfabetos) suelen necesitar <b>más tokens para decir lo mismo</b>… y por tanto cuestan más y llenan antes la ventana de contexto. Los modelos chinos lo hacen mejor con el chino.</p>
+        <div class="tk-opciones"><label>Ver los tokens con <select data-i="codif">${CODIFS.map((c) => `<option value="${c}">${CODIFICACIONES[c].nombre}</option>`).join("")}</select></label></div>
+        ${botonRemotos()}
+        <div class="tk-tabla-scroll"><table class="tk-pares tk-idiomas" data-i="tabla"><tbody><tr><td><span class="tk-vacio">Cargando el vocabulario real…</span></td></tr></tbody></table></div>
+        <div class="tk-salida" data-i="salida" aria-live="polite"></div>
+        <p class="tk-nota">Pulsa un idioma para ver cómo trocea su frase. «Respecto al inglés» compara cada idioma con el inglés <b>en el vocabulario elegido</b>: ×1,5 significa que paga un 50 % más por el mismo mensaje. «—» = vocabulario sin descargar.</p>`;
+      const q = <T extends HTMLElement>(k: string) => caja.querySelector<T>(`[data-i="${k}"]`)!;
+      q<HTMLSelectElement>("codif").value = codif;
+
+      function pintar(): void {
+        if (!listo("cl100k_base") || !listo("o200k_base")) return;
+        const filas = FRASES_IDIOMAS.map((f) => ({
+          ...f,
+          car: Array.from(f.texto).length,
+          bytes: new TextEncoder().encode(f.texto).length,
+          n: CODIFS.map((c) => listo(c)?.contar(f.texto)),
+        }));
+        const k = CODIFS.indexOf(codif);
+        const ref = filas[0].n[k];
+        const max = Math.max(...filas.map((f) => f.n[k] ?? 0), 1);
+        q("tabla").innerHTML = `<thead><tr><th>Idioma</th><th>Car.</th><th>Bytes</th>${CODIFS.map((c) => `<th class="${c === codif ? "sel" : ""}">${CODIFICACIONES[c].nombre}</th>`).join("")}<th>Respecto al inglés</th></tr></thead><tbody>${filas
+          .map(
+            (f, i) =>
+              `<tr class="${i === elegida ? "top" : ""}"><td><button class="tk-idioma" data-idioma="${i}">${f.idioma}</button></td><td>${f.car}</td><td>${f.bytes}</td>${f.n.map((n, j) => `<td class="${j === k ? "sel" : ""}">${n ?? "—"}</td>`).join("")}<td>${f.n[k] === undefined || !ref ? "—" : `<span class="tk-barra"><i style="width:${(f.n[k]! / max) * 100}%"></i></span> ×${(f.n[k]! / ref).toFixed(2).replace(".", ",")}`}</td></tr>`,
+          )
+          .join("")}</tbody>`;
+        const motor = listo(codif);
+        q("salida").innerHTML = `<p class="tk-mensaje"><b>${FRASES_IDIOMAS[elegida].idioma}:</b> ${esc(FRASES_IDIOMAS[elegida].texto)}</p>${motor ? fichas(motor.trocear(FRASES_IDIOMAS[elegida].texto), verIds) : `<span class="tk-vacio">Pulsa «Cargar» para descargar este vocabulario.</span>`}`;
+      }
+
+      cargarOpenAi().then(pintar).catch(() => {
+        q("tabla").innerHTML = `<tbody><tr><td><span class="tk-vacio">No se pudo cargar el vocabulario. Recarga la app e inténtalo de nuevo.</span></td></tr></tbody>`;
+      });
+      enlazarRemotos(caja, pintar);
+      pintar();
+
+      caja.addEventListener("click", (e) => {
+        const i = (e.target as HTMLElement).dataset.idioma;
+        if (i !== undefined) {
+          elegida = Number(i);
+          pintar();
+        }
+      });
+      caja.addEventListener("change", (e) => {
+        const t = e.target as HTMLSelectElement;
+        if (t.dataset.i === "codif") {
+          codif = t.value as Codificacion;
+          pintar();
+        }
+      });
+    }
+
+    abrir("reales");
   },
 };
