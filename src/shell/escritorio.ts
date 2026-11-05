@@ -26,6 +26,7 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
       </div>
       <div class="inicio-sub inicio-sub1" role="menu" hidden></div>
       <div class="inicio-sub inicio-sub2" role="menu" hidden></div>
+      <div class="inicio-sub inicio-sub3" role="menu" hidden></div>
       <div class="barra">
         <button class="boton-inicio" aria-label="Inicio"><img src="./logo.svg" alt="" /></button>
         <div class="tareas"></div>
@@ -76,12 +77,15 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
   const btnApps = q(".inicio-aplicaciones");
   const sub1 = q(".inicio-sub1");
   const sub2 = q(".inicio-sub2");
-  const modulos = [...new Set(apps.filter((a) => a.carpeta).map((a) => a.carpeta!))].sort();
+  const sub3 = q(".inicio-sub3");
+  // «Juegos/SQL»: el primer tramo es el módulo y el segundo, una subcarpeta
+  const modulos = [...new Set(apps.filter((a) => a.carpeta).map((a) => a.carpeta!.split("/")[0]))].sort();
   btnApps.hidden = !modulos.length;
 
   const cerrarSubs = () => {
     sub1.hidden = true;
     sub2.hidden = true;
+    sub3.hidden = true;
     btnApps.classList.remove("abierto");
     sub1.querySelectorAll(".abierto").forEach((x) => x.classList.remove("abierto"));
   };
@@ -100,19 +104,41 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
     sub.style.top = `${Math.max(4, Math.min(a.top - r.top - 6, maximo))}px`;
   }
 
+  function abrirSub3(ruta: string, ancla: HTMLElement): void {
+    sub2.querySelectorAll(".abierto").forEach((x) => x.classList.remove("abierto"));
+    ancla.classList.add("abierto");
+    sub3.innerHTML = "";
+    for (const app of apps.filter((a) => a.carpeta === ruta)) sub3.appendChild(itemApp(app));
+    colocar(sub3, ancla);
+  }
+
+  function itemApp(app: AppDef): HTMLElement {
+    const b = tarjeta(app, "sub-app");
+    b.setAttribute("role", "menuitem");
+    b.addEventListener("click", () => {
+      cerrarMenu();
+      abrir(app);
+    });
+    return b;
+  }
+
   function abrirSub2(modulo: string, ancla: HTMLElement): void {
     sub1.querySelectorAll(".abierto").forEach((x) => x.classList.remove("abierto"));
     ancla.classList.add("abierto");
+    sub3.hidden = true;
     sub2.innerHTML = "";
-    for (const app of apps.filter((a) => a.carpeta === modulo)) {
-      const b = tarjeta(app, "sub-app");
+    const subcarpetas = [
+      ...new Set(apps.filter((a) => a.carpeta?.startsWith(modulo + "/")).map((a) => a.carpeta!.split("/")[1])),
+    ].sort();
+    for (const sc of subcarpetas) {
+      const b = document.createElement("button");
+      b.className = "sub-modulo";
       b.setAttribute("role", "menuitem");
-      b.addEventListener("click", () => {
-        cerrarMenu();
-        abrir(app);
-      });
+      b.dataset.r = `${modulo}/${sc}`;
+      b.innerHTML = `📁 <span>${sc}</span> <i>▸</i>`;
       sub2.appendChild(b);
     }
+    for (const app of apps.filter((a) => a.carpeta === modulo)) sub2.appendChild(itemApp(app));
     colocar(sub2, ancla);
   }
 
@@ -134,6 +160,12 @@ export function montarEscritorio(raiz: HTMLElement, so: Kernel, alApagar: () => 
   };
   sub1.addEventListener("click", sobreModulo);
   sub1.addEventListener("mouseover", sobreModulo);
+  const sobreSubcarpeta = (e: Event) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>(".sub-modulo");
+    if (b) abrirSub3(b.dataset.r!, b);
+  };
+  sub2.addEventListener("click", sobreSubcarpeta);
+  sub2.addEventListener("mouseover", sobreSubcarpeta);
 
   const pintarMenu = (filtro = "") => {
     lista.innerHTML = "";

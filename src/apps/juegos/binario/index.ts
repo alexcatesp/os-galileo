@@ -45,7 +45,7 @@ type Modo = "bombillas" | "rapidas" | "puertas";
 export const binario: AppDef = {
   id: "binario",
   nombre: "Binario",
-  carpeta: "Juegos",
+  carpeta: "Juegos/Sistemas",
   icono: `<svg viewBox="0 0 48 48"><rect x="4" y="4" width="40" height="40" rx="7" fill="#0d0b1e" stroke="#6fd08c" stroke-width="2.5"/><g font-family="Consolas, monospace" font-weight="700" font-size="14" text-anchor="middle"><text x="15" y="21" fill="#6fd08c">1</text><text x="33" y="21" fill="#f7e26b">0</text><text x="15" y="39" fill="#f7e26b">0</text><text x="33" y="39" fill="#6fd08c">1</text></g></svg>`,
   ancho: 560,
   alto: 680,

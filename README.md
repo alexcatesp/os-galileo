@@ -61,7 +61,7 @@ Carpeta **Inicio → Aplicaciones → Juegos** con juegos educativos.
 - Pensado para añadir **control por el profesorado** (activar o desactivar la carpeta por grupo o franja horaria) cuando haya cuentas de alumnado; hoy no hay ninguno.
 
 ## Menú Inicio (escritorio)
-Las aplicaciones del sistema (Archivos, Terminal, Bloc de notas, Calculadora) están en el escritorio y en el menú. Las de cada módulo están en **Inicio → Aplicaciones → módulo** (submenú en cascada); se declaran con `carpeta: "0485 · Programación"` en su `AppDef` (los juegos usan `carpeta: "Juegos"`) y la búsqueda las encuentra todas. En el móvil siguen todas en la pantalla de inicio.
+Las aplicaciones del sistema (Archivos, Terminal, Bloc de notas, Calculadora) están en el escritorio y en el menú. Las de cada módulo están en **Inicio → Aplicaciones → módulo** (submenú en cascada); se declaran con `carpeta: "0485 · Programación"` en su `AppDef` (los juegos usan `carpeta: "Juegos"`; con `"Juegos/SQL"` o `"Juegos/Sistemas"` se añade un tercer nivel: La isla de los datos está en Juegos → SQL y Binario en Juegos → Sistemas) y la búsqueda las encuentra todas. En el móvil siguen todas en la pantalla de inicio.
 
 ## Arquitectura (`src/`)
 - `kernel/vfs.ts` — árbol de archivos y carpetas (`leer`, `escribir`, `listar`, `mkdir`, `borrar`). Interfaz preparada para migrar a IndexedDB.

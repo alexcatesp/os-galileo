@@ -39,7 +39,7 @@ so.registrar(
   appWeb({
     id: "gasa",
     nombre: "GASA",
-    carpeta: "Juegos",
+    carpeta: "Juegos/1DAM",
     url: "/gasa/",
     ancho: 980,
     alto: 680,
