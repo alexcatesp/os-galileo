@@ -1,9 +1,11 @@
 import type { AppDef } from "../../../kernel/kernel";
+import { ejemplos } from "./ejemplos";
+import { recorrido } from "./explica";
+import { fmt, pintarPerdida } from "./util";
 import { FUNCIONES, OPTIMIZADORES, Optimizador, ajusteExacto, datosRecta, ecm, gradRecta, norma, type Dom, type Funcion, type Punto, type TipoOpt, type Vec } from "./matematica";
 
 const LADO = 360;
 const MAX_PASOS = 3000;
-const fmt = (n: number, d = 3) => (Math.abs(n) >= 1e5 || (n !== 0 && Math.abs(n) < 1e-3) ? n.toExponential(2) : n.toFixed(d)).replace(".", ",");
 
 // tasa de aprendizaje: deslizador logarítmico de 0,001 a 1
 const lrDe = (v: number) => 10 ** (-3 + (3 * v) / 100);
@@ -90,32 +92,6 @@ function pintarMapa(lienzo: HTMLCanvasElement, mapa: HTMLCanvasElement, dom: Dom
   cx.fill();
 }
 
-/** Curva de pérdida en escala logarítmica */
-function pintarPerdida(lienzo: HTMLCanvasElement, v: number[]): void {
-  const cx = lienzo.getContext("2d")!;
-  const [W, H] = [lienzo.width, lienzo.height];
-  cx.clearRect(0, 0, W, H);
-  cx.fillStyle = "#fff";
-  cx.fillRect(0, 0, W, H);
-  cx.strokeStyle = "#ddd8f5";
-  cx.strokeRect(0.5, 0.5, W - 1, H - 1);
-  if (v.length < 2) return;
-  const l = v.map((x) => Math.log10(Math.max(x, 1e-12)));
-  const hi = Math.min(Math.max(...l), 8);
-  const lo = Math.min(...l);
-  const rango = hi - lo || 1;
-  cx.beginPath();
-  l.forEach((y, i) => {
-    const px = 6 + (i / (l.length - 1)) * (W - 12);
-    const py = 6 + (1 - (Math.min(y, hi) - lo) / rango) * (H - 12);
-    if (i) cx.lineTo(px, py);
-    else cx.moveTo(px, py);
-  });
-  cx.strokeStyle = "#2a1770";
-  cx.lineWidth = 2;
-  cx.stroke();
-}
-
 export const descenso: AppDef = {
   id: "descenso",
   nombre: "Descenso",
@@ -126,24 +102,35 @@ export const descenso: AppDef = {
   iniciar({ ventana, raiz }) {
     raiz.classList.add("ds");
     raiz.innerHTML = `
-      <div class="ds-tabs" role="tablist"><button data-m="paisaje">🏔 Paisaje</button><button data-m="recta">📈 Ajustar una recta</button></div>
+      <div class="ds-tabs" role="tablist"><button data-m="que">📖 Qué es</button><button data-m="ejemplos">🧪 Ejemplos</button><button data-m="laboratorio">🔬 Laboratorio</button></div>
       <div class="ds-cuerpo"></div>`;
     const cuerpo = raiz.querySelector<HTMLElement>(".ds-cuerpo")!;
     let limpiar: (() => void) | null = null;
 
-    function abrir(m: "paisaje" | "recta"): void {
+    type Modo = "que" | "ejemplos" | "laboratorio";
+    const TITULOS: Record<Modo, string> = { que: "Qué es", ejemplos: "Ejemplos", laboratorio: "Laboratorio" };
+
+    function abrir(m: Modo): void {
       limpiar?.();
       raiz.querySelectorAll<HTMLElement>("[data-m]").forEach((b) => b.classList.toggle("on", b.dataset.m === m));
       const caja = document.createElement("div");
       caja.className = "ds-modo";
       cuerpo.replaceChildren(caja);
-      ventana.fijarTitulo(`Descenso · ${m === "paisaje" ? "Paisaje" : "Ajustar una recta"}`);
-      limpiar = m === "paisaje" ? paisaje(caja) : recta(caja);
+      cuerpo.scrollTop = 0;
+      ventana.fijarTitulo(`Descenso · ${TITULOS[m]}`);
+      limpiar = m === "que" ? recorrido(caja, abrir) : m === "ejemplos" ? ejemplos(caja, recta) : laboratorio(caja);
     }
     raiz.querySelector(".ds-tabs")!.addEventListener("click", (e) => {
-      const m = (e.target as HTMLElement).dataset.m as "paisaje" | "recta" | undefined;
+      const m = (e.target as HTMLElement).dataset.m as Modo | undefined;
       if (m) abrir(m);
     });
+
+    /** Laboratorio: el simulador libre (paisajes de dos variables con SGD, momento y Adam) */
+    function laboratorio(caja: HTMLElement): () => void {
+      caja.innerHTML = `<p class="ds-idea">Aquí puedes probar el descenso en <b>paisajes de dos variables</b> (el mapa se ve «desde arriba»: azul = bajo, amarillo = alto) y comparar métodos. Si es tu primera vez, empieza por <b>Qué es</b>.</p><div data-k="lab"></div>`;
+      return paisaje(q(caja, "lab"));
+    }
+    const q = <T extends HTMLElement>(zona: HTMLElement, k: string) => zona.querySelector<T>(`[data-k="${k}"]`)!;
 
     const opcionesOpt = (Object.keys(OPTIMIZADORES) as TipoOpt[]).map((t) => `<option value="${t}">${OPTIMIZADORES[t].nombre}</option>`).join("");
     const controlesLr = (lr: number) => `<label>Tasa de aprendizaje <input type="range" min="0" max="100" step="0.5" data-k="lr" value="${vDe(lr)}" aria-label="Tasa de aprendizaje" /> <b data-k="lr-n"></b></label>`;
@@ -491,7 +478,7 @@ export const descenso: AppDef = {
       return parar;
     }
 
-    abrir("paisaje");
+    abrir("que");
     return () => limpiar?.();
   },
 };

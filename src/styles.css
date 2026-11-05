@@ -626,3 +626,41 @@ svg { display: block; }
 .tk-idioma { border: 0; background: none; padding: 0; font: inherit; color: var(--morado); cursor: pointer; text-decoration: underline dotted; }
 .tk-barra { display: inline-block; width: 60px; height: 8px; background: #eee9fb; border-radius: 4px; vertical-align: middle; overflow: hidden; }
 .tk-barra i { display: block; height: 100%; background: var(--morado); }
+
+/* Descenso: recorrido guiado, ejemplos y demos de una variable */
+.ds-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ds-puntos { display: flex; gap: 6px; }
+.ds-puntos i { width: 10px; height: 10px; border-radius: 50%; background: #d4cdf3; }
+.ds-puntos i.hecho { background: #8d7fd6; }
+.ds-puntos i.on { background: var(--morado); box-shadow: 0 0 0 3px #d4cdf3; }
+.ds-titulo { margin: 0; font-size: 18px; color: var(--morado); }
+.ds-texto { margin: 0; font-size: 14px; line-height: 1.55; }
+.ds-demo { display: grid; gap: 8px; padding: 10px; background: #fff; border: 1px solid #ddd8f5; border-radius: 10px; }
+.ds-c1d { width: 100%; height: auto; border: 1px solid #ddd8f5; border-radius: 8px; background: #fff; cursor: ew-resize; }
+.ds-reto { margin: 0; font-size: 13px; }
+.ds-ctl { display: flex; align-items: center; gap: 8px; font-size: 12px; flex-wrap: wrap; }
+.ds-ctl input[type="range"] { flex: 1; min-width: 140px; }
+.ds-amarillo { color: #b57f00; font-weight: 700; } .ds-verde { color: #1f7a3d; font-weight: 700; }
+.ds-mates { background: #fff; border: 1px dashed #c9c2ee; border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+.ds-mates summary { cursor: pointer; font-weight: 600; color: var(--morado); }
+.ds-mates code, .ds-texto code, .ds-resumen code { font: 13px Consolas, monospace; background: #e8e3fb; padding: 0 4px; border-radius: 4px; }
+.ds-resumen { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; }
+.ds-pregunta { display: grid; gap: 6px; padding: 8px 10px; background: #fff; border-radius: 8px; border: 1px solid #ddd8f5; }
+.ds-pregunta p { margin: 0; font-size: 13px; }
+.ds-pregunta button { text-align: left; }
+.ds .ds-pregunta button.acierto { background: #e3f6e9; border-color: #1f9d4d; }
+.ds .ds-pregunta button.fallo { background: #fff0ee; border-color: #b3170f; }
+.ds-ejs { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.ds .ds-ejs button { display: grid; gap: 2px; justify-items: center; padding: 8px; text-align: center; }
+.ds .ds-ejs button span { font-size: 22px; }
+.ds .ds-ejs button small { color: #6a62a8; font-size: 11px; }
+.ds .ds-ejs button.on { background: var(--morado); border-color: var(--morado); color: #fff; }
+.ds .ds-ejs button.on small { color: #d9d2ff; }
+.ds-sinpad { padding: 0; }
+.ds-intro { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.ds-intro div { background: #fff; border: 1px solid #ddd8f5; border-radius: 8px; padding: 6px 10px; font-size: 12px; }
+.ds-intro b { display: block; color: var(--morado); margin-bottom: 2px; }
+.ds-pesos { display: grid; gap: 2px; font-size: 12px; } .ds-pesos b { color: var(--morado); font-family: Consolas, monospace; }
+.ds-prueba { display: grid; gap: 4px; padding: 8px 10px; background: #fff; border: 1px solid #ddd8f5; border-radius: 8px; font-size: 12px; }
+.ds-prueba label { display: flex; align-items: center; gap: 8px; } .ds-prueba input[type="range"] { flex: 1; max-width: 220px; }
+.ds-check { display: flex; align-items: center; gap: 6px; }
