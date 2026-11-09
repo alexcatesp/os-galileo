@@ -9,7 +9,7 @@ export interface NivelFlex {
   teoria: string;
   /** cuántas cajas (ids c1, c2…) */
   cajas: number;
-  /** tamaño de cada caja en px */
+  /** tamaño de cada caja en px (0 = automático, para que las estire la rejilla) */
   ancho?: number;
   alto?: number;
   /** CSS que ya viene dado y no se edita */
@@ -209,7 +209,7 @@ export function documentoFlex(n: NivelFlex): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
     html,body{margin:0;background:#fff}
     .pista{width:${ANCHO_PISTA}px;height:${ALTO_PISTA}px;box-sizing:border-box;background:#ece8fb;border:2px solid #b9b0ea}
-    .caja{width:${n.ancho ?? 50}px;height:${n.alto ?? 50}px;box-sizing:border-box;border-radius:8px;color:#fff;font:700 18px Arial,sans-serif;display:grid;place-items:center}
+    .caja{width:${n.ancho === 0 ? "auto" : `${n.ancho ?? 50}px`};height:${n.alto === 0 ? "auto" : `${n.alto ?? 50}px`};min-height:${n.alto === 0 ? "34px" : "0"};box-sizing:border-box;border-radius:8px;color:#fff;font:700 18px Arial,sans-serif;display:grid;place-items:center}
     ${estilosCajas}
   </style><style id="base">${n.base}</style><style id="u"></style></head><body><div class="pista">${cajas}</div></body></html>`;
 }

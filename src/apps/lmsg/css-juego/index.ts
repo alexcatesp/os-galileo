@@ -1,6 +1,7 @@
 import type { AppDef } from "../../../kernel/kernel";
 import { crearMarco } from "../laboratorio/documento";
-import { NIVELES_FLEX, documentoFlex, medir, mismaDisposicion } from "./flexbox";
+import { NIVELES_FLEX, documentoFlex, medir, mismaDisposicion, type NivelFlex } from "./flexbox";
+import { NIVELES_GRID } from "./grid";
 import { NIVELES_SELECTOR, mismosElementos, montarEscena, type Escena } from "./selectores";
 
 const CLAVE = "osg-css-juego";
@@ -8,10 +9,11 @@ const CLAVE = "osg-css-juego";
 interface Registro {
   selectores: number[];
   flexbox: number[];
+  grid: number[];
 }
 
 function cargar(): Registro {
-  const vacio: Registro = { selectores: [], flexbox: [] };
+  const vacio: Registro = { selectores: [], flexbox: [], grid: [] };
   try {
     return { ...vacio, ...(JSON.parse(localStorage.getItem(CLAVE) ?? "{}") as Partial<Registro>) };
   } catch {
@@ -32,7 +34,7 @@ const primerPendiente = (hechos: number[], total: number) => {
   return total - 1;
 };
 
-type Modo = "selectores" | "flexbox";
+type Modo = "selectores" | "flexbox" | "grid";
 
 export const cssEnJuego: AppDef = {
   id: "css-juego",
@@ -45,7 +47,7 @@ export const cssEnJuego: AppDef = {
     raiz.classList.add("cj");
     raiz.innerHTML = `
       <div class="cj-tabs" role="tablist">
-        <button data-m="selectores" role="tab">🎯 Selectores</button><button data-m="flexbox" role="tab">📐 Flexbox</button>
+        <button data-m="selectores" role="tab">🎯 Selectores</button><button data-m="flexbox" role="tab">📐 Flexbox</button><button data-m="grid" role="tab">▦ Grid</button>
       </div>
       <div class="cj-cuerpo"></div>`;
     const cuerpo = raiz.querySelector<HTMLElement>(".cj-cuerpo")!;
@@ -59,7 +61,7 @@ export const cssEnJuego: AppDef = {
       const caja = document.createElement("div");
       caja.className = "cj-modo";
       cuerpo.replaceChildren(caja);
-      limpiar = m === "selectores" ? selectores(caja) : flexbox(caja);
+      limpiar = m === "selectores" ? selectores(caja) : m === "flexbox" ? maqueta(caja, "flexbox", "Flexbox", NIVELES_FLEX) : maqueta(caja, "grid", "Grid", NIVELES_GRID);
     }
     raiz.querySelector(".cj-tabs")!.addEventListener("click", (e) => {
       const m = (e.target as HTMLElement).dataset.m as Modo | undefined;
@@ -173,10 +175,11 @@ export const cssEnJuego: AppDef = {
       return () => {};
     }
 
-    // ============ 2. Flexbox ============
-    function flexbox(caja: HTMLElement): () => void {
-      const total = NIVELES_FLEX.length;
-      let i = primerPendiente(reg.flexbox, total);
+    // ============ 2. Flexbox y Grid (mismo motor) ============
+    function maqueta(caja: HTMLElement, clave: "flexbox" | "grid", nombre: string, NIVELES: NivelFlex[]): () => void {
+      const total = NIVELES.length;
+      const hechos = reg[clave];
+      let i = primerPendiente(hechos, total);
       let resuelto = false;
       let temporizador = 0;
       const objetivo = crearMarco();
@@ -187,10 +190,10 @@ export const cssEnJuego: AppDef = {
       function nivel(n: number): void {
         i = n;
         resuelto = false;
-        const niv = NIVELES_FLEX[i];
-        ventana.fijarTitulo(`CSS en juego · Flexbox · nivel ${i + 1}`);
+        const niv = NIVELES[i];
+        ventana.fijarTitulo(`CSS en juego · ${nombre} · nivel ${i + 1}`);
         caja.innerHTML = `
-          ${fichas(total, i, reg.flexbox)}
+          ${fichas(total, i, hechos)}
           <div class="cj-ficha"><span class="cj-bloque">${niv.bloque}</span><h3>Nivel ${i + 1} · ${niv.titulo}</h3><p>${niv.teoria}</p></div>
           <p class="cj-consigna">Escribe el CSS para que <b>tus cajas</b> queden donde están en el <b>objetivo</b>.</p>
           <div class="cj-marcos">
@@ -204,7 +207,7 @@ export const cssEnJuego: AppDef = {
             <button data-a="ant" ${i === 0 ? "disabled" : ""}>◂ Anterior</button>
             <button data-a="sol">💡 Ver solución</button>
             <button data-a="sig" class="cj-primario" ${i === total - 1 ? "disabled" : ""} hidden>Siguiente ▸</button>
-            <span class="cj-marcador">Superados: <b>${reg.flexbox.length}</b> / ${total}</span>
+            <span class="cj-marcador">Superados: <b>${hechos.length}</b> / ${total}</span>
           </div>`;
         caja.querySelector('[data-q="objetivo"]')!.append(objetivo);
         caja.querySelector('[data-q="tuyo"]')!.append(tuyo);
@@ -222,7 +225,7 @@ export const cssEnJuego: AppDef = {
       };
 
       function aplicar(): void {
-        const niv = NIVELES_FLEX[i];
+        const niv = NIVELES[i];
         const estiloO = objetivo.contentDocument?.getElementById("u");
         const estiloT = tuyo.contentDocument?.getElementById("u");
         if (!estiloO || !estiloT) return;
@@ -233,14 +236,14 @@ export const cssEnJuego: AppDef = {
         if (estado) estado.textContent = ok ? "✓ igual" : "";
         if (ok && !resuelto) {
           resuelto = true;
-          if (!reg.flexbox.includes(i)) {
-            reg.flexbox.push(i);
+          if (!hechos.includes(i)) {
+            hechos.push(i);
             guardar(reg);
           }
           mensaje("✓ ¡Correcto! Las cajas están donde toca.", "ok");
           const sig = caja.querySelector<HTMLElement>('[data-a="sig"]')!;
           sig.hidden = false;
-          caja.querySelector<HTMLElement>(".cj-marcador b")!.textContent = String(reg.flexbox.length);
+          caja.querySelector<HTMLElement>(".cj-marcador b")!.textContent = String(hechos.length);
           caja.querySelectorAll<HTMLElement>(".cj-niveles button")[i].classList.add("ok");
         } else if (!ok && resuelto) {
           resuelto = false; // ha seguido tocando y ya no coincide
@@ -270,7 +273,7 @@ export const cssEnJuego: AppDef = {
         if (b.dataset.n !== undefined) nivel(Number(b.dataset.n));
         else if (b.dataset.a === "ant") nivel(i - 1);
         else if (b.dataset.a === "sig") nivel(i + 1);
-        else if (b.dataset.a === "sol") mensaje(`Una solución: <code>${esc(NIVELES_FLEX[i].solucion)}</code>`);
+        else if (b.dataset.a === "sol") mensaje(`Una solución: <code>${esc(NIVELES[i].solucion)}</code>`);
       });
       nivel(i);
       return () => window.clearTimeout(temporizador);
