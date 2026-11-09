@@ -8,16 +8,21 @@ import { NIVELES_SELECTOR, mismosElementos, montarEscena, type Escena } from "./
 
 const CLAVE = "osg-css-juego";
 
+type Modo = "selectores" | "flexbox" | "grid";
+
 interface Registro {
   selectores: number[];
   flexbox: number[];
   grid: number[];
+  /** lo último que escribió el alumno al superar cada nivel (se recupera al volver a él) */
+  sol: Record<Modo, Record<number, string>>;
 }
 
 function cargar(): Registro {
-  const vacio: Registro = { selectores: [], flexbox: [], grid: [] };
+  const vacio: Registro = { selectores: [], flexbox: [], grid: [], sol: { selectores: {}, flexbox: {}, grid: {} } };
   try {
-    return { ...vacio, ...(JSON.parse(localStorage.getItem(CLAVE) ?? "{}") as Partial<Registro>) };
+    const leido = JSON.parse(localStorage.getItem(CLAVE) ?? "{}") as Partial<Registro>;
+    return { ...vacio, ...leido, sol: { ...vacio.sol, ...leido.sol } };
   } catch {
     return vacio;
   }
@@ -35,8 +40,6 @@ const primerPendiente = (hechos: number[], total: number) => {
   for (let i = 0; i < total; i++) if (!hechos.includes(i)) return i;
   return total - 1;
 };
-
-type Modo = "selectores" | "flexbox" | "grid";
 
 export const cssEnJuego: AppDef = {
   id: "css-juego",
@@ -105,10 +108,18 @@ export const cssEnJuego: AppDef = {
           <div class="cj-pie">
             <button data-a="ant" ${i === 0 ? "disabled" : ""}>◂ Anterior</button>
             <button data-a="sol">${etiquetaPista()}</button>
+            <button data-a="reiniciar" title="Borra tu solución guardada y empieza el nivel de cero" hidden>↺ De cero</button>
             <button data-a="sig" class="cj-primario" ${i === total - 1 ? "disabled" : ""} hidden>Siguiente ▸</button>
             <span class="cj-marcador">Superados: <b>${reg.selectores.length}</b> / ${total}</span>
           </div>`;
         escena = montarEscena(caja.querySelector<HTMLElement>(".cj-escena")!, niv);
+        // si ya lo superó, recupera su solución y vuelve a mostrar la explicación
+        const guardada = reg.selectores.includes(i) ? reg.sol.selectores[i] : undefined;
+        if (guardada !== undefined) {
+          entrada().value = guardada;
+          const elegidos = probar();
+          if (elegidos && mismosElementos(elegidos, escena.objetivo)) exito();
+        }
         entrada().focus();
       }
       const entrada = () => caja.querySelector<HTMLInputElement>(".cj-sel")!;
@@ -139,6 +150,24 @@ export const cssEnJuego: AppDef = {
         }
       }
 
+      /** el selector elige justo el objetivo: guarda la solución y enseña la explicación */
+      function exito(): void {
+        resuelto = true;
+        if (!reg.selectores.includes(i)) reg.selectores.push(i);
+        reg.sol.selectores[i] = entrada().value.trim();
+        guardar(reg);
+        const mia = NIVELES_SELECTOR[i].solucion;
+        const igual = entrada().value.trim().replace(/\s+/g, " ") === mia;
+        mensaje(
+          `✓ ¡Correcto!${igual ? "" : ` Mi solución era <code>${esc(mia)}</code>; la tuya también sirve si elige lo mismo.`}<span class="cj-explica">${AYUDAS_SELECTOR[i].explicacion}</span>`,
+          "ok",
+        );
+        caja.querySelector<HTMLElement>('[data-a="sig"]')!.hidden = false;
+        caja.querySelector<HTMLElement>('[data-a="reiniciar"]')!.hidden = false;
+        caja.querySelector<HTMLElement>(".cj-marcador b")!.textContent = String(reg.selectores.length);
+        caja.querySelectorAll<HTMLElement>(".cj-niveles button")[i].classList.add("ok");
+      }
+
       caja.addEventListener("input", (e) => {
         if ((e.target as HTMLElement).classList.contains("cj-sel") && !resuelto) probar();
       });
@@ -148,21 +177,8 @@ export const cssEnJuego: AppDef = {
         const elegidos = probar();
         if (!elegidos) return;
         if (mismosElementos(elegidos, escena.objetivo)) {
-          resuelto = true;
-          if (!reg.selectores.includes(i)) {
-            reg.selectores.push(i);
-            guardar(reg);
-          }
-          const mia = NIVELES_SELECTOR[i].solucion;
-          const igual = entrada().value.trim().replace(/\s+/g, " ") === mia;
-          mensaje(
-            `✓ ¡Correcto!${igual ? "" : ` Mi solución era <code>${esc(mia)}</code>; la tuya también sirve si elige lo mismo.`}<span class="cj-explica">${AYUDAS_SELECTOR[i].explicacion}</span>`,
-            "ok",
-          );
-          caja.querySelector<HTMLElement>('[data-a="sig"]')!.hidden = false;
+          exito();
           caja.querySelector<HTMLElement>('[data-a="sig"]')!.focus();
-          caja.querySelector<HTMLElement>(".cj-marcador b")!.textContent = String(reg.selectores.length);
-          caja.querySelectorAll<HTMLElement>(".cj-niveles button")[i].classList.add("ok");
         } else {
           const obj = escena.objetivo.length;
           const sobran = elegidos.filter((x) => !escena.objetivo.includes(x)).length;
@@ -179,7 +195,11 @@ export const cssEnJuego: AppDef = {
         if (b.dataset.n !== undefined) nivel(Number(b.dataset.n));
         else if (b.dataset.a === "ant") nivel(i - 1);
         else if (b.dataset.a === "sig") nivel(i + 1);
-        else if (b.dataset.a === "sol") {
+        else if (b.dataset.a === "reiniciar") {
+          delete reg.sol.selectores[i];
+          guardar(reg);
+          nivel(i);
+        } else if (b.dataset.a === "sol") {
           const ayuda = AYUDAS_SELECTOR[i];
           const lugar = caja.querySelector<HTMLElement>(".cj-ayuda")!;
           lugar.hidden = false;
@@ -227,11 +247,12 @@ export const cssEnJuego: AppDef = {
             <figure><figcaption>Tu resultado <span class="cj-estado" aria-live="polite"></span></figcaption><div class="cj-marco" data-q="tuyo"></div></figure>
           </div>
           ${niv.base ? `<pre class="cj-base" aria-label="CSS que ya viene dado">${esc(niv.base)}</pre>` : ""}
-          <textarea class="cj-css" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Tu CSS" rows="${Math.max(5, niv.inicial.split("\n").length + 1)}">${esc(niv.inicial)}</textarea>
+          <textarea class="cj-css" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Tu CSS" rows="${Math.max(5, niv.inicial.split("\n").length + 1)}">${esc(hechos.includes(i) ? (reg.sol[clave][i] ?? niv.inicial) : niv.inicial)}</textarea>
           <p class="cj-mensaje" aria-live="polite"></p>
           <div class="cj-pie">
             <button data-a="ant" ${i === 0 ? "disabled" : ""}>◂ Anterior</button>
             <button data-a="sol">${etiquetaPista()}</button>
+            <button data-a="reiniciar" title="Borra tu solución guardada y empieza el nivel de cero" ${reg.sol[clave][i] === undefined ? "hidden" : ""}>↺ De cero</button>
             <button data-a="sig" class="cj-primario" ${i === total - 1 ? "disabled" : ""} hidden>Siguiente ▸</button>
             <span class="cj-marcador">Superados: <b>${hechos.length}</b> / ${total}</span>
           </div>`;
@@ -262,10 +283,10 @@ export const cssEnJuego: AppDef = {
         if (estado) estado.textContent = ok ? "✓ igual" : "";
         if (ok && !resuelto) {
           resuelto = true;
-          if (!hechos.includes(i)) {
-            hechos.push(i);
-            guardar(reg);
-          }
+          if (!hechos.includes(i)) hechos.push(i);
+          reg.sol[clave][i] = editor().value;
+          guardar(reg);
+          caja.querySelector<HTMLElement>('[data-a="reiniciar"]')!.hidden = false;
           mensaje(`✓ ¡Correcto! Las cajas están donde toca.<span class="cj-explica">${AYUDAS[i].explicacion}</span>`, "ok");
           const sig = caja.querySelector<HTMLElement>('[data-a="sig"]')!;
           sig.hidden = false;
@@ -299,7 +320,11 @@ export const cssEnJuego: AppDef = {
         if (b.dataset.n !== undefined) nivel(Number(b.dataset.n));
         else if (b.dataset.a === "ant") nivel(i - 1);
         else if (b.dataset.a === "sig") nivel(i + 1);
-        else if (b.dataset.a === "sol") {
+        else if (b.dataset.a === "reiniciar") {
+          delete reg.sol[clave][i];
+          guardar(reg);
+          nivel(i);
+        } else if (b.dataset.a === "sol") {
           const ayuda = AYUDAS[i];
           if (pedidas < 2) {
             mensaje(`<b>Pista ${pedidas + 1}:</b> ${ayuda.pistas[pedidas]}`, "pista");
