@@ -60,6 +60,7 @@ export class Kernel {
   appParaArchivo(ruta: string): string {
     const ext = ruta.split(".").pop()?.toLowerCase();
     if (ext === "psc" || ext === "diag") return "pseudoflow";
+    if (ext === "html" || ext === "htm" || ext === "css") return "lmsg-laboratorio";
     return "bloc-de-notas";
   }
 

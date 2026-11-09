@@ -12,6 +12,8 @@ import { islaSql } from "./apps/juegos/isla-sql";
 import { token } from "./apps/iadw/token";
 import { promptONoPrompt } from "./apps/iadw/prompt";
 import { descenso } from "./apps/iadw/descenso";
+import { laboratorioHtmlCss } from "./apps/lmsg/laboratorio";
+import { cssEnJuego } from "./apps/lmsg/css-juego";
 import { appWeb } from "./apps/app-web";
 import { arrancar, iniciarSesion } from "./shell/arranque";
 import { montarEscritorio } from "./shell/escritorio";
@@ -33,6 +35,8 @@ so.registrar(islaSql);
 so.registrar(token);
 so.registrar(promptONoPrompt);
 so.registrar(descenso);
+so.registrar(laboratorioHtmlCss);
+so.registrar(cssEnJuego);
 so.registrar(calculadora);
 // GASA (el campus de aventuras gráficas) es la web hermana en /gasa/ y se abre dentro de una ventana
 so.registrar(

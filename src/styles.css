@@ -664,3 +664,85 @@ svg { display: block; }
 .ds-prueba { display: grid; gap: 4px; padding: 8px 10px; background: #fff; border: 1px solid #ddd8f5; border-radius: 8px; font-size: 12px; }
 .ds-prueba label { display: flex; align-items: center; gap: 8px; } .ds-prueba input[type="range"] { flex: 1; max-width: 220px; }
 .ds-check { display: flex; align-items: center; gap: 6px; }
+
+/* ---------- LMSG · Laboratorio HTML/CSS ---------- */
+.lab { display: flex; flex-direction: column; height: 100%; background: #f4f1ff; color: #1a1440; }
+.lab button, .lab select, .lab input { font: inherit; font-size: 13px; color: #1a1440; border: 1px solid #c9c2ee; border-radius: 8px; background: #fff; padding: 6px 10px; }
+.lab button:hover:not(:disabled) { background: #f0ecff; }
+.lab button[hidden], .cj button[hidden] { display: none; }
+.lab .lab-primario { background: var(--morado); border-color: var(--morado); color: #fff; font-weight: 600; }
+.lab .lab-primario:hover:not(:disabled) { background: var(--morado-claro); }
+.lab-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px; background: #ece8fb; border-bottom: 1px solid #d6cff5; }
+.lab-sep { flex: 1; }
+.lab-ruta { width: 240px; max-width: 100%; font: 12px Consolas, monospace !important; }
+.lab-cuerpo { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; }
+.lab-editor, .lab-vista { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.lab-tabs { display: flex; gap: 4px; }
+.lab-tabs button { border-radius: 8px 8px 0 0 !important; border-bottom: 0 !important; font-size: 12px !important; }
+.lab-tabs button.on { background: var(--morado) !important; color: #fff !important; border-color: var(--morado) !important; }
+.lab-texto { flex: 1; min-height: 160px; resize: none; border: 1px solid #c9c2ee; border-radius: 0 8px 8px 8px; padding: 10px; font: 13px/1.5 Consolas, "Cascadia Mono", monospace; color: #1a1440; background: #fff; tab-size: 2; white-space: pre; overflow: auto; }
+.lab-marco { flex: 1; min-height: 160px; border: 1px solid #c9c2ee; border-radius: 0 8px 8px 8px; background: #fff; overflow: hidden; display: flex; }
+.lab-marco iframe { flex: 1; width: 100%; height: 100%; border: 0; background: #fff; }
+.lab-marco iframe[hidden] { display: none; }
+.lab-panel { max-height: 34%; overflow: auto; padding: 8px 12px 10px; font-size: 13px; background: #fff; border-top: 1px solid #d6cff5; }
+.lab-panel p { margin: 4px 0; }
+.lab-panel code, .cj code { padding: 0 4px; border-radius: 4px; background: #ece8fb; font: 12px Consolas, monospace; }
+.lab-enunciado p { margin: 4px 0; line-height: 1.5; }
+.lab-tenue { color: #6a62a8; }
+.lab-ok { color: #1f7a3d; font-weight: 600; }
+.lab-mal { color: #b3170f; font-weight: 600; }
+.lab-lista { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 3px; }
+.lab-lista li.ok { color: #1f7a3d; }
+.lab-lista li.error { color: #b3170f; }
+.lab-lista li.aviso { color: #8a5a00; }
+.lab-lista small { display: block; margin-left: 18px; color: #6a62a8; }
+.lab-linea { font: 11px Consolas, monospace; color: #6a62a8; }
+.lab-sol { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lab-sol pre { margin: 0; padding: 8px; background: #f4f1ff; border-radius: 8px; font: 12px/1.45 Consolas, monospace; overflow: auto; }
+@media (max-width: 760px) {
+  .lab-cuerpo { grid-template-columns: 1fr; grid-template-rows: minmax(180px, 1fr) minmax(180px, 1fr); overflow: auto; }
+  .lab-texto { font-size: 16px; }
+  .lab-sol { grid-template-columns: 1fr; }
+  .lab-panel { max-height: 40%; }
+}
+
+/* ---------- LMSG · CSS en juego ---------- */
+.cj { display: flex; flex-direction: column; height: 100%; background: #f4f1ff; color: #1a1440; }
+.cj button, .cj select, .cj input, .cj textarea { font: inherit; font-size: 13px; color: #1a1440; border: 1px solid #c9c2ee; border-radius: 8px; background: #fff; padding: 6px 10px; }
+.cj button:hover:not(:disabled) { background: #f0ecff; }
+.cj button:disabled { opacity: 0.5; cursor: default; }
+.cj-tabs { display: flex; gap: 4px; padding: 8px 8px 0; background: #ece8fb; }
+.cj-tabs button { border-radius: 8px 8px 0 0 !important; border-bottom: 0 !important; }
+.cj-tabs button.on { background: var(--morado) !important; color: #fff !important; border-color: var(--morado) !important; }
+.cj-cuerpo { flex: 1; min-height: 0; overflow: auto; }
+.cj-modo { display: grid; gap: 10px; align-content: start; padding: 12px 16px 18px; }
+.cj-niveles { display: flex; flex-wrap: wrap; gap: 4px; }
+.cj .cj-niveles button { width: 30px; height: 28px; padding: 0; font-size: 12px; font-weight: 600; }
+.cj .cj-niveles button.ok { background: #dff5e6; border-color: #1f9d4d; color: #1f7a3d; }
+.cj .cj-niveles button.on { background: var(--morado); border-color: var(--morado); color: #fff; }
+.cj-ficha h3 { margin: 2px 0 4px; font-size: 17px; color: var(--morado); }
+.cj-ficha p { margin: 0; font-size: 14px; line-height: 1.5; }
+.cj-bloque { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #6a62a8; }
+.cj-consigna { margin: 0; font-size: 13px; color: #5b5486; }
+.cj-escena { min-height: 120px; }
+.cj-form { display: flex; align-items: center; gap: 8px; }
+.cj-pre { font: 700 12px Consolas, monospace; color: #6a62a8; }
+.cj-form input { flex: 1; min-width: 0; font: 16px Consolas, "Cascadia Mono", monospace !important; }
+.cj .cj-ok, .cj .cj-primario { background: var(--morado); border-color: var(--morado); color: #fff; font-weight: 600; }
+.cj .cj-ok:hover:not(:disabled), .cj .cj-primario:hover:not(:disabled) { background: var(--morado-claro); }
+.cj-mensaje { margin: 0; min-height: 22px; font-size: 13px; color: #5b5486; }
+.cj-mensaje.ok { color: #1f7a3d; font-weight: 600; }
+.cj-mensaje.mal { color: #b3170f; font-weight: 600; }
+.cj-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cj-marcador { margin-left: auto; font-size: 12px; color: #5b5486; }
+.cj-marcos { display: flex; flex-wrap: wrap; gap: 12px; }
+.cj-marcos figure { margin: 0; }
+.cj-marcos figcaption { margin-bottom: 4px; font-size: 12px; font-weight: 600; color: #5b5486; }
+.cj-estado { color: #1f7a3d; }
+.cj-marco iframe { display: block; width: 304px; height: 244px; border: 0; border-radius: 6px; background: #fff; }
+.cj-base { margin: 0; padding: 8px 10px; border-radius: 8px; background: #e6e1fa; color: #4a4470; font: 13px/1.5 Consolas, monospace; }
+.cj .cj-css { font: 14px/1.5 Consolas, "Cascadia Mono", monospace; resize: vertical; white-space: pre; tab-size: 2; }
+@media (max-width: 760px) {
+  .cj .cj-css { font-size: 16px; }
+  .cj-marco iframe { width: 100%; max-width: 304px; }
+}
