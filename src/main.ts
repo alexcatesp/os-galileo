@@ -14,6 +14,10 @@ import { promptONoPrompt } from "./apps/iadw/prompt";
 import { descenso } from "./apps/iadw/descenso";
 import { laboratorioHtmlCss } from "./apps/lmsg/laboratorio";
 import { cssEnJuego } from "./apps/lmsg/css-juego";
+import { memoriaJava } from "./apps/programacion/memoria";
+import { javadocEnJuego } from "./apps/programacion/api";
+import { cazadorDeErrores } from "./apps/programacion/errores";
+import { laboratorioJava } from "./apps/programacion/laboratorio";
 import { appWeb } from "./apps/app-web";
 import { arrancar, iniciarSesion } from "./shell/arranque";
 import { montarEscritorio } from "./shell/escritorio";
@@ -37,6 +41,10 @@ so.registrar(promptONoPrompt);
 so.registrar(descenso);
 so.registrar(laboratorioHtmlCss);
 so.registrar(cssEnJuego);
+so.registrar(memoriaJava);
+so.registrar(javadocEnJuego);
+so.registrar(cazadorDeErrores);
+so.registrar(laboratorioJava);
 so.registrar(calculadora);
 // GASA (el campus de aventuras gráficas) es la web hermana en /gasa/ y se abre dentro de una ventana
 so.registrar(

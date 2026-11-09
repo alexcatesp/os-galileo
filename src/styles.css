@@ -749,3 +749,127 @@ svg { display: block; }
 .cj-mensaje.pista { color: #3d3670; background: #fff8e1; border-left: 3px solid #f2b705; padding: 6px 10px; border-radius: 0 8px 8px 0; line-height: 1.5; }
 .cj-explica { display: block; margin-top: 4px; font-weight: 400; color: #3d3670; line-height: 1.5; }
 .cj-solucion { white-space: pre-wrap; }
+
+/* ---------- 0485 · Programación (Memoria de Java, Javadoc, errores, laboratorio) ---------- */
+.jv-cuerpo { display: grid; grid-auto-rows: max-content; gap: 10px; align-content: start; padding: 12px 16px 18px; height: 100%; overflow: auto; }
+.jv-progs { margin-bottom: 2px; }
+.jv-codigo { font: 13px/1.55 Consolas, "Cascadia Mono", monospace; background: #1b1740; color: #e8e4ff; border-radius: 10px; padding: 8px 0; overflow: auto; }
+.jv-l { display: flex; gap: 10px; padding: 0 12px 0 0; white-space: pre; }
+.jv-l.on { background: rgba(247, 226, 107, 0.2); box-shadow: inset 3px 0 0 #f7e26b; }
+.jv-num { flex: none; width: 28px; text-align: right; color: #7a73b8; user-select: none; }
+.jv-k { color: #ff8fb1; }
+.jv-s { color: #a5e8a0; }
+.jv-n { color: #f7c46b; }
+.jv-c { color: #8a84c4; font-style: italic; }
+.jv-t { color: #8fd3ff; }
+.jv-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 12px; align-items: start; }
+.jv-izq { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+.jv-consola { background: #0d0b1e; color: #b6f2c0; font: 13px/1.5 Consolas, monospace; border-radius: 10px; padding: 8px 12px; min-height: 64px; }
+.jv-consola-t { color: #7a73b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+.jv-consola .jv-vacio { color: #7a73b8; }
+.jv-err { color: #ff8f86; white-space: pre-wrap; word-break: break-word; }
+.jv-mem { position: relative; background: #fff; border: 1px solid #c9c2ee; border-radius: 10px; padding: 10px; }
+.jv-flechas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.jv-flecha { fill: none; stroke: #4a2fb5; stroke-width: 2; }
+.jv-dibujo { position: relative; display: grid; grid-template-columns: minmax(130px, 0.8fr) minmax(0, 1.2fr); gap: 36px; }
+.jv-dibujo h4 { margin: 0 0 6px; font-size: 13px; color: var(--morado); }
+.jv-dibujo h4 small { font-weight: 400; color: #6a62a8; }
+.jv-marco { border: 2px solid #c9c2ee; border-radius: 8px; margin-bottom: 8px; overflow: hidden; background: #faf9ff; }
+.jv-marco-t { background: #ece8fb; padding: 2px 8px; font: 700 12px Consolas, monospace; color: #4a2fb5; }
+.jv-var { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 5px 8px; border-top: 1px solid #ece8fb; font: 13px Consolas, monospace; }
+.jv-tipo { color: #6a62a8; }
+.jv-valor { font-weight: 700; }
+.jv-valor.nulo { color: #b3170f; font-style: italic; }
+.jv-punto { width: 12px; height: 12px; border-radius: 50%; background: #4a2fb5; flex: none; }
+.jv-vacio { padding: 4px 8px; font-size: 12px; color: #8a84c4; }
+.jv-obj { display: grid; gap: 2px; border: 2px solid #4a2fb5; border-radius: 8px; background: #fff; padding: 5px 9px; margin-bottom: 8px; font: 13px Consolas, monospace; }
+.jv-clase { font-size: 11px; color: #6a62a8; }
+.jv-texto { font-weight: 700; word-break: break-word; }
+.jv-obj.basura { border-style: dashed; border-color: #aaa3d6; background: #f1f0f7; color: #8a84c4; opacity: 0.85; }
+.jv-aviso { font-size: 11px; color: #8a6a00; }
+.jv-pool { border: 2px dotted #1f9d4d; border-radius: 10px; padding: 6px 8px 0; margin-bottom: 8px; background: #f0fbf3; }
+.jv-pool-t { display: block; font-size: 11px; color: #1f7a3d; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.jv-nota { font-size: 14px; line-height: 1.5; background: #fff; border-left: 3px solid #4a2fb5; border-radius: 0 8px 8px 0; padding: 8px 12px; min-height: 44px; }
+.jv-veredicto { margin-bottom: 4px; }
+.jv-veredicto .ok, .jv-ok { color: #1f7a3d; font-weight: 700; }
+.jv-veredicto .mal, .jv-mal { color: #b3170f; font-weight: 700; }
+.jv-pregunta { background: #fff8e1; border-left: 3px solid #f2b705; border-radius: 0 8px 8px 0; padding: 8px 12px; }
+.jv-pregunta p { margin: 0 0 6px; font-size: 14px; }
+.jv-opciones { display: flex; flex-wrap: wrap; gap: 6px; }
+.jv code, .jv-nota code, .jv-pregunta code { background: #ece8fb; border-radius: 4px; padding: 0 4px; font-family: Consolas, monospace; font-size: 0.92em; }
+@media (max-width: 760px) {
+  .jv-grid { grid-template-columns: 1fr; }
+  .jv-dibujo { gap: 28px; }
+}
+.jv-fichas { align-items: center; }
+.jv-grupo { flex-basis: 100%; margin-top: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #6a62a8; }
+.jv-opciones-v { display: grid; gap: 8px; }
+.jv-opcion button { width: 100%; text-align: left; padding: 8px 12px; line-height: 1.45; }
+.jv-opcion button.ok { background: #dff5e6; border-color: #1f9d4d; }
+.jv-opcion button.mal { background: #ffe3e0; border-color: #da251c; }
+.jv-opc-cod { font-family: Consolas, "Cascadia Mono", monospace; font-size: 13px; background: #1b1740 !important; color: #e8e4ff; padding: 3px 8px !important; border-radius: 6px; display: inline-block; }
+.jv-porque { margin: 4px 0 0; padding: 4px 10px; font-size: 13px; line-height: 1.45; border-radius: 6px; }
+.jv-porque[hidden] { display: none; }
+.jv-porque.ok { background: #e7f8ec; color: #1f6b38; }
+.jv-porque.mal { background: #fff0ee; color: #8a1a12; }
+.jv-porque.suave { opacity: 0.85; }
+.jv-javadoc h4 { margin: 4px 0 6px; font-size: 13px; color: var(--morado); }
+.jv-api { background: #fff; border: 1px solid #c9c2ee; border-radius: 8px; margin-bottom: 6px; padding: 4px 10px; }
+.jv-api summary { cursor: pointer; font-size: 13px; padding: 2px 0; }
+.jv-api summary small { color: #6a62a8; }
+.jv-api-res { margin: 2px 0 6px; font-size: 12px; color: #5b5486; }
+.jv-api-sec { margin: 6px 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #6a62a8; }
+.jv-api-fila { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 10px; padding: 3px 0; border-top: 1px solid #f0edfb; font-size: 12px; }
+.jv-api-fila code { font: 12px/1.4 Consolas, monospace; white-space: pre-wrap; word-break: break-word; background: #1b1740; color: #e8e4ff; border-radius: 4px; padding: 2px 6px; }
+.jv-api-fila span { color: #3d3670; line-height: 1.4; }
+.jv .jv-resp { flex: 1; min-width: 0; font: 16px Consolas, "Cascadia Mono", monospace !important; }
+@media (max-width: 760px) { .jv-api-fila { grid-template-columns: 1fr; } }
+.jv-l.clic { cursor: pointer; }
+.jv-l.clic:hover { background: rgba(255, 255, 255, 0.08); }
+.jv-l.mala { background: rgba(218, 37, 28, 0.35); }
+.jv-l.buena { background: rgba(111, 208, 140, 0.28); box-shadow: inset 3px 0 0 #6fd08c; }
+.jv-ide { display: grid; gap: 2px; border-radius: 8px; padding: 6px 12px; font: 13px/1.45 Consolas, monospace; }
+.jv-ide.problems { background: #fff; border: 1px solid #da251c; color: #8a1a12; }
+.jv-ide.consola { background: #0d0b1e; color: #ff8f86; }
+.jv-ide-t { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; }
+.jv-ide-m { white-space: pre-wrap; word-break: break-word; }
+.jv-arreglos { display: grid; gap: 8px; }
+.jv-preg { margin: 0; font-weight: 600; font-size: 14px; }
+.jv-arreglos .jv-opcion button { width: 100%; text-align: left; padding: 8px 12px; line-height: 1.5; }
+.jv-arreglos .jv-opcion button.ok { background: #dff5e6; border-color: #1f9d4d; }
+.jv-arreglos .jv-opcion button.mal { background: #ffe3e0; border-color: #da251c; }
+.jv-arreglos[hidden] { display: none; }
+.jv-pestana { display: grid; grid-auto-rows: max-content; gap: 10px; align-content: start; }
+.jv-ops { display: flex; flex-wrap: wrap; gap: 6px; }
+.jv .jv-ops button.on { background: var(--morado); border-color: var(--morado); color: #fff; }
+.jv-lab-res { display: grid; gap: 8px; }
+.jv-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.jv-dos h4, .jv-seccion h4 { margin: 0 0 6px; font-size: 13px; color: var(--morado); }
+.jv-caja { display: grid; gap: 3px; background: #fff; border: 1px solid #c9c2ee; border-radius: 8px; padding: 8px 12px; margin-top: 6px; font-size: 13px; }
+.jv-etq { color: #6a62a8; font-size: 12px; }
+.jv-v { font-family: Consolas, "Cascadia Mono", monospace; white-space: pre-wrap; word-break: break-word; }
+.jv-err2 { color: #b3170f; font: 12px Consolas, monospace; word-break: break-word; }
+.jv-nota-peq { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: #4a4470; }
+.jv-slider { display: grid; gap: 4px; font-size: 13px; }
+.jv-slider input { width: 100%; padding: 0; }
+.jv-barras { display: grid; gap: 8px; }
+.jv-barra { display: grid; grid-template-columns: 110px 1fr; gap: 4px 10px; align-items: center; font-size: 13px; }
+.jv-barra b { grid-column: 2; font-size: 12px; font-weight: 600; color: #3d3670; }
+.jv-pista { background: #e6e1fa; border-radius: 6px; height: 14px; overflow: hidden; }
+.jv-rell { height: 100%; border-radius: 6px; }
+.jv-rell.mal { background: #da251c; }
+.jv-rell.ok { background: #1f9d4d; }
+.jv-medir { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+.jv-seccion { background: #fff; border: 1px solid #c9c2ee; border-radius: 10px; padding: 10px 14px 12px; display: grid; gap: 8px; }
+.jv-seccion .jv-caja { background: #faf9ff; }
+.jv-fila { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.jv-fila label { display: grid; gap: 3px; font-size: 12px; color: #5b5486; }
+.jv-fila input[type="number"] { width: 110px; }
+.jv-trampas { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+@media (max-width: 760px) { .jv-dos { grid-template-columns: 1fr; } .jv-barra { grid-template-columns: 1fr; } .jv-barra b { grid-column: 1; } }
+.jv-fichas { display: grid; gap: 6px; }
+.jv-ces { display: flex; flex-wrap: wrap; gap: 4px; }
+.jv .jv-ce { font-size: 12px; font-weight: 600; padding: 4px 10px; }
+.jv .jv-ce small { font-weight: 400; opacity: 0.8; }
+.jv .jv-ce.on { background: var(--morado); border-color: var(--morado); color: #fff; }
+.jv .jv-ce.ok:not(.on) { background: #dff5e6; border-color: #1f9d4d; color: #1f7a3d; }
