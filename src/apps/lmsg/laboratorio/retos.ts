@@ -4,6 +4,11 @@
 // Así vale cualquier forma correcta de escribirlo (otro selector, otra unidad equivalente…).
 
 import { cargarOculto, componer } from "./documento";
+import { LOGO, plantilla } from "./plantilla";
+import { RETOS_HTML } from "./retos-html";
+import { RETOS_CSS } from "./retos-css";
+
+export { plantilla, LOGO };
 
 export interface Comprobacion {
   /** lo que se le dice al alumno: «El título h1 dice “Mi instituto”» */
@@ -18,12 +23,14 @@ export interface Comprobacion {
   atributos?: string[];
   /** propiedades CSS cuyo valor calculado debe coincidir */
   estilo?: string[];
+  /** pseudoelemento sobre el que leer los estilos (::before, ::after, ::first-letter…) */
+  pseudo?: string;
 }
 
 export interface Reto {
   id: string;
   titulo: string;
-  nivel: 1 | 2 | 3;
+  tema: string;
   /** enunciado en HTML */
   enunciado: string;
   html: string;
@@ -32,21 +39,6 @@ export interface Reto {
   solCss: string;
   comprobar: Comprobacion[];
 }
-
-const plantilla = (cuerpo: string, titulo = "Mi página") => `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>${titulo}</title>
-  <link rel="stylesheet" href="estilos.css">
-</head>
-<body>
-${cuerpo}
-</body>
-</html>
-`;
-
-const LOGO = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%232a1770'/%3E%3Cpath d='M30 62l20-34 20 34z' fill='%23da251c'/%3E%3C/svg%3E`;
 
 export const PAGINA_LIBRE = {
   html: plantilla(`  <h1>Hola, mundo</h1>
@@ -63,11 +55,11 @@ h1 {
 `,
 };
 
-export const RETOS: Reto[] = [
+const RETOS_BASE: Reto[] = [
   {
     id: "estructura",
     titulo: "Tu primera página",
-    nivel: 1,
+    tema: "Texto y estructura",
     enunciado: `Escribe en el <code>&lt;body&gt;</code>: un título <code>h1</code> que diga <b>Mi instituto</b>, un párrafo <code>p</code> con <b>Bienvenido al IES Galileo</b> y una lista <code>ul</code> con tres elementos <code>li</code>: <b>DAM</b>, <b>DAW</b> y <b>ASIR</b>.`,
     html: plantilla(`  <!-- Escribe aquí tu contenido -->`, "Mi instituto"),
     css: ``,
@@ -89,7 +81,7 @@ export const RETOS: Reto[] = [
   {
     id: "enlaces",
     titulo: "Enlaces e imágenes",
-    nivel: 1,
+    tema: "Enlaces e imágenes",
     enunciado: `A la imagen ponle el texto alternativo <b>Logo del instituto</b> (<code>alt</code>) y un ancho de <b>120</b> (<code>width</code>). Después del párrafo añade un enlace <code>a</code> con el texto <b>Ir al módulo</b> que apunte a <code>https://example.com</code> y se abra en una pestaña nueva (<code>target="_blank"</code>).`,
     html: plantilla(`  <h1>Enlaces e imágenes</h1>
   <img src="${LOGO}">
@@ -111,7 +103,7 @@ export const RETOS: Reto[] = [
   {
     id: "tabla",
     titulo: "Tabla del horario",
-    nivel: 2,
+    tema: "Tablas",
     enunciado: `Construye una tabla con cabecera (<code>thead</code>) y cuerpo (<code>tbody</code>). La cabecera tiene tres <code>th</code>: <b>Hora</b>, <b>Lunes</b>, <b>Martes</b>. El cuerpo tiene dos filas: <b>8:15 · Programación · Bases de datos</b> y <b>9:10 · Lenguajes de marcas · Sistemas</b>. Las celdas de cabecera llevan fondo <code>#2a1770</code> y texto blanco.`,
     html: plantilla(`  <h1>Horario</h1>
   <!-- Tu tabla aquí -->`, "Horario"),
@@ -144,7 +136,7 @@ th { background: #2a1770; color: #fff; }
   {
     id: "formulario",
     titulo: "Formulario de contacto",
-    nivel: 2,
+    tema: "Formularios",
     enunciado: `Crea un <code>form</code> con: un campo de texto <b>Nombre</b> (<code>id="nombre"</code>), un campo de tipo <code>email</code> <b>Correo</b> (<code>id="correo"</code>), una zona <code>textarea</code> <b>Mensaje</b> (<code>id="msg"</code>) y un botón <b>Enviar</b>. Cada campo lleva su <code>label</code> con <code>for</code>. Para que quede como el objetivo, cada <code>label</code> y cada campo en su línea (<code>display: block</code>).`,
     html: plantilla(`  <h1>Contacto</h1>
   <!-- Tu formulario aquí -->`, "Contacto"),
@@ -178,7 +170,7 @@ label { margin-top: 10px; }
   {
     id: "tipografia",
     titulo: "Colores y tipografía",
-    nivel: 1,
+    tema: "Texto y color",
     enunciado: `Con CSS: todo el <code>body</code> en <code>font-family: Arial, sans-serif</code>; el <code>h1</code> en rojo <code>#da251c</code> y centrado; la clase <code>.destacado</code> en negrita, de <code>20px</code> y color <code>#2a1770</code>.`,
     html: plantilla(`  <h1>Apuntes de Lenguajes de marcas</h1>
   <p class="destacado">HTML da estructura; CSS da el aspecto.</p>
@@ -201,7 +193,7 @@ h1 { color: #da251c; text-align: center; }
   {
     id: "caja",
     titulo: "Modelo de caja: la tarjeta",
-    nivel: 2,
+    tema: "Modelo de caja",
     enunciado: `Dale a <code>.tarjeta</code> este aspecto: ancho <b>280px</b>, relleno (<code>padding</code>) <b>16px</b>, margen superior <b>20px</b> y centrada horizontalmente (<code>margin: 20px auto</code>), borde de <b>2px</b> sólido <code>#2a1770</code>, esquinas redondeadas de <b>12px</b> y fondo <code>#f4f1ff</code>.`,
     html: plantilla(`  <div class="tarjeta">
     <h2>DAW</h2>
@@ -238,7 +230,7 @@ h1 { color: #da251c; text-align: center; }
   {
     id: "menu",
     titulo: "Menú horizontal",
-    nivel: 2,
+    tema: "Flexbox",
     enunciado: `Convierte la lista <code>.menu</code> en una barra horizontal: <code>display: flex</code> con huecos (<code>gap</code>) de <b>16px</b>, sin viñetas, sin relleno ni margen, fondo <code>#2a1770</code>. Los enlaces, blancos, sin subrayado, con <code>padding: 10px 14px</code> y <code>display: block</code>.`,
     html: plantilla(`  <ul class="menu">
     <li><a href="#">Inicio</a></li>
@@ -269,7 +261,7 @@ h1 { color: #da251c; text-align: center; }
   {
     id: "semantica",
     titulo: "Página semántica",
-    nivel: 2,
+    tema: "Semántica HTML5",
     enunciado: `La página está hecha solo con <code>div</code>. Cámbialos por las etiquetas con significado: <code>header</code>, <code>nav</code>, <code>main</code>, <code>article</code> y <code>footer</code>. El texto no cambia.`,
     html: plantilla(`  <div id="cabecera">
     <h1>Blog del módulo</h1>
@@ -324,7 +316,7 @@ nav, #menu, main, #principal { padding: 10px 16px; }
   {
     id: "rejilla",
     titulo: "Rejilla con Grid",
-    nivel: 3,
+    tema: "Grid",
     enunciado: `Coloca las seis cajas de <code>.rejilla</code> en <b>3 columnas iguales</b> (<code>repeat(3, 1fr)</code>) con huecos de <b>12px</b> usando <code>display: grid</code>. Después haz que la primera caja ocupe <b>2 columnas</b> (<code>grid-column: span 2</code>).`,
     html: plantilla(`  <div class="rejilla">
     <div class="caja">1</div>
@@ -362,6 +354,28 @@ nav, #menu, main, #principal { padding: 10px 16px; }
   },
 ];
 
+/** Temas, en el orden en que salen en la lista. */
+export const TEMAS = [
+  "Texto y estructura",
+  "Listas",
+  "Enlaces e imágenes",
+  "Tablas",
+  "Formularios",
+  "Semántica HTML5",
+  "Multimedia",
+  "Texto y color",
+  "Modelo de caja",
+  "Selectores CSS",
+  "Posicionamiento",
+  "Flexbox",
+  "Grid",
+  "Diseño adaptable",
+  "Variables y efectos",
+];
+
+const orden = (r: Reto) => TEMAS.indexOf(r.tema);
+export const RETOS: Reto[] = [...RETOS_BASE, ...RETOS_HTML, ...RETOS_CSS].sort((a, b) => orden(a) - orden(b));
+
 // ---------------------------------------------------------------------------------------------
 
 export interface ResultadoComp {
@@ -370,6 +384,8 @@ export interface ResultadoComp {
   /** por qué falla, si falla */
   detalle?: string;
 }
+
+const BOOLEANOS = new Set(["controls", "required", "checked", "disabled", "selected", "readonly", "multiple", "autoplay", "loop", "muted", "reversed", "hidden", "open", "autofocus"]);
 
 const norm = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, " ").trim();
 
@@ -405,14 +421,19 @@ export async function evaluar(reto: Reto, html: string, css: string): Promise<Re
           return falla(`El texto de «${c.sel}»${s.length > 1 ? ` (n.º ${i + 1})` : ""} debería ser «${norm(s[i].textContent)}» y es «${norm(a[i].textContent)}».`);
         }
         for (const at of c.atributos ?? []) {
-          const va = a[i].getAttribute(at);
-          const vs = s[i].getAttribute(at);
+          let va = a[i].getAttribute(at);
+          let vs = s[i].getAttribute(at);
+          // atributos booleanos: vale `controls`, `controls=""` o `controls="controls"`
+          if (BOOLEANOS.has(at)) {
+            va = va === null ? null : "";
+            vs = vs === null ? null : "";
+          }
           if (va !== vs) return falla(`${s.length > 1 ? `El n.º ${i + 1} de «${c.sel}»` : `«${c.sel}»`}: el atributo ${at} debería ser ${vs === null ? "inexistente" : `«${vs}»`} y es ${va === null ? "inexistente" : `«${va}»`}.`);
         }
         for (const p of c.estilo ?? []) {
-          const va = ventA.getComputedStyle(a[i]).getPropertyValue(p);
-          const vs = ventS.getComputedStyle(s[i]).getPropertyValue(p);
-          if (va !== vs) return falla(`${p} de «${c.sel}» debería valer ${vs} y vale ${va}.`);
+          const va = ventA.getComputedStyle(a[i], c.pseudo ?? null).getPropertyValue(p);
+          const vs = ventS.getComputedStyle(s[i], c.pseudo ?? null).getPropertyValue(p);
+          if (va !== vs) return falla(`${p} de «${c.sel}${c.pseudo ?? ""}» debería valer ${vs} y vale ${va}.`);
         }
       }
       return { texto: c.texto, ok: true };

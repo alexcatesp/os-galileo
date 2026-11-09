@@ -1,6 +1,6 @@
 import type { AppDef } from "../../../kernel/kernel";
 import { ARCHIVO_CSS, componer, crearMarco, enlazaEstilos, sujetar } from "./documento";
-import { PAGINA_LIBRE, RETOS, evaluar, type Reto } from "./retos";
+import { PAGINA_LIBRE, RETOS, TEMAS, evaluar, type Reto } from "./retos";
 import { revisarHtml } from "./revisar";
 
 const CLAVE = "osg-lmsg-lab";
@@ -94,13 +94,13 @@ export const laboratorioHtmlCss: AppDef = {
     function opciones(): void {
       selModo.innerHTML =
         `<option value="">Página libre</option>` +
-        [1, 2, 3]
-          .map(
-            (n) =>
-              `<optgroup label="Retos · nivel ${n}">${RETOS.filter((r) => r.nivel === n)
-                .map((r) => `<option value="${r.id}">${g.hechos.includes(r.id) ? "✓ " : ""}${r.titulo}</option>`)
-                .join("")}</optgroup>`,
-          )
+        TEMAS.map((t) => {
+          const delTema = RETOS.filter((r) => r.tema === t);
+          const hechos = delTema.filter((r) => g.hechos.includes(r.id)).length;
+          return `<optgroup label="${t} (${hechos}/${delTema.length})">${delTema
+            .map((r) => `<option value="${r.id}">${g.hechos.includes(r.id) ? "✓ " : ""}${r.titulo}</option>`)
+            .join("")}</optgroup>`;
+        })
           .join("");
       selModo.value = reto?.id ?? "";
     }
@@ -145,7 +145,7 @@ export const laboratorioHtmlCss: AppDef = {
       pintarVista();
       titular();
       if (reto) {
-        mensaje(`<div class="lab-enunciado"><b>${esc(reto.titulo)}</b> · nivel ${reto.nivel}<p>${reto.enunciado}</p><p class="lab-tenue">Mira la pestaña «Objetivo» y pulsa «Comprobar el reto» cuando creas que está igual.</p></div>`);
+        mensaje(`<div class="lab-enunciado"><b>${esc(reto.titulo)}</b> · ${esc(reto.tema)}<p>${reto.enunciado}</p><p class="lab-tenue">Mira la pestaña «Objetivo» y pulsa «Comprobar el reto» cuando creas que está igual.</p></div>`);
       } else {
         mensaje(`<p class="lab-tenue">Página libre: escribe HTML y CSS y mira el resultado al instante. El HTML debe enlazar <code>&lt;link rel="stylesheet" href="${ARCHIVO_CSS}"&gt;</code> para que se aplique el CSS. Elige un reto en la lista de arriba para practicar con objetivo y comprobación automática.</p>`);
       }
