@@ -746,3 +746,6 @@ svg { display: block; }
   .cj .cj-css { font-size: 16px; }
   .cj-marco iframe { width: 100%; max-width: 304px; }
 }
+.cj-mensaje.pista { color: #3d3670; background: #fff8e1; border-left: 3px solid #f2b705; padding: 6px 10px; border-radius: 0 8px 8px 0; line-height: 1.5; }
+.cj-explica { display: block; margin-top: 4px; font-weight: 400; color: #3d3670; line-height: 1.5; }
+.cj-solucion { white-space: pre-wrap; }

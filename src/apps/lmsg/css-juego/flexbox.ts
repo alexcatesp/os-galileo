@@ -5,8 +5,6 @@
 export interface NivelFlex {
   titulo: string;
   bloque: string;
-  /** explicación breve de lo nuevo (HTML) */
-  teoria: string;
   /** cuántas cajas (ids c1, c2…) */
   cajas: number;
   /** tamaño de cada caja en px (0 = automático, para que las estire la rejilla) */
@@ -27,7 +25,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Eje principal",
     titulo: "Activar flex",
-    teoria: `Con <code>display: flex</code> en el contenedor, sus hijos pasan de apilarse a colocarse <b>en fila</b>.`,
     cajas: 3,
     base: "",
     solucion: ".pista { display: flex; }",
@@ -36,7 +33,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Eje principal",
     titulo: "Al final de la fila",
-    teoria: `<code>justify-content</code> reparte los elementos a lo largo del <b>eje principal</b> (en una fila, el horizontal). <code>flex-end</code> los lleva al final.`,
     cajas: 3,
     base: PISTA,
     solucion: ".pista { justify-content: flex-end; }",
@@ -45,7 +41,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Eje principal",
     titulo: "Centrados",
-    teoria: `<code>justify-content: center</code> los junta en el centro.`,
     cajas: 3,
     base: PISTA,
     solucion: ".pista { justify-content: center; }",
@@ -54,7 +49,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Eje principal",
     titulo: "Espacio entre cajas",
-    teoria: `<code>space-between</code> reparte el espacio sobrante <b>entre</b> los elementos: el primero pegado al principio y el último al final.`,
     cajas: 4,
     base: PISTA,
     solucion: ".pista { justify-content: space-between; }",
@@ -63,7 +57,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Eje principal",
     titulo: "Espacio alrededor",
-    teoria: `<code>space-around</code> deja el mismo espacio a cada lado de cada elemento; <code>space-evenly</code> reparte los huecos exactamente iguales. Aquí: <b>space-around</b>.`,
     cajas: 3,
     base: PISTA,
     solucion: ".pista { justify-content: space-around; }",
@@ -72,7 +65,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Eje secundario",
     titulo: "Abajo",
-    teoria: `<code>align-items</code> coloca los elementos en el <b>eje secundario</b> (en una fila, el vertical). <code>flex-end</code> los baja al fondo.`,
     cajas: 3,
     base: PISTA,
     solucion: ".pista { align-items: flex-end; }",
@@ -81,7 +73,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Eje secundario",
     titulo: "En el centro vertical",
-    teoria: `<code>align-items: center</code> los centra en vertical.`,
     cajas: 3,
     base: PISTA,
     solucion: ".pista { align-items: center; }",
@@ -90,7 +81,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Eje secundario",
     titulo: "Centro perfecto",
-    teoria: `Para centrar algo en los <b>dos ejes</b> se combinan <code>justify-content</code> y <code>align-items</code>. El truco más usado de Flexbox.`,
     cajas: 1,
     ancho: 70,
     alto: 70,
@@ -101,7 +91,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Dirección",
     titulo: "Fila invertida",
-    teoria: `<code>flex-direction</code> cambia la dirección del eje principal. <code>row-reverse</code> invierte el orden: mira los números de las cajas.`,
     cajas: 3,
     base: PISTA,
     solucion: ".pista { flex-direction: row-reverse; }",
@@ -110,7 +99,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Dirección",
     titulo: "En columna",
-    teoria: `Con <code>flex-direction: column</code> el eje principal pasa a ser <b>vertical</b>.`,
     cajas: 3,
     alto: 44,
     base: PISTA,
@@ -120,7 +108,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Dirección",
     titulo: "Los ejes se cruzan",
-    teoria: `En columna, <code>justify-content</code> actúa en <b>vertical</b> y <code>align-items</code> en <b>horizontal</b>: los ejes se intercambian. Lleva las cajas abajo y centradas.`,
     cajas: 3,
     alto: 44,
     base: PISTA,
@@ -130,7 +117,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Elementos sueltos",
     titulo: "Cambiar el orden",
-    teoria: `<code>order</code> se pone en el <b>hijo</b>. Por defecto vale 0; los menores van antes. Pon la caja 3 la primera con un valor negativo.`,
     cajas: 4,
     base: PISTA,
     solucion: "#c3 { order: -1; }",
@@ -139,7 +125,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Elementos sueltos",
     titulo: "Una caja rebelde",
-    teoria: `<code>align-self</code> es como <code>align-items</code> pero para <b>un solo hijo</b>. Baja solo la caja 2 al fondo.`,
     cajas: 3,
     base: PISTA,
     solucion: "#c2 { align-self: flex-end; }",
@@ -148,7 +133,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Elementos sueltos",
     titulo: "Hueco entre cajas",
-    teoria: `<code>gap</code> en el contenedor deja un hueco fijo entre los hijos, sin tocar los márgenes. Pon <b>24px</b>.`,
     cajas: 4,
     base: PISTA,
     solucion: ".pista { gap: 24px; }",
@@ -157,7 +141,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Elementos sueltos",
     titulo: "Repartirse el sitio",
-    teoria: `<code>flex: 1</code> en los hijos les dice que <b>crezcan</b> para ocupar el espacio libre a partes iguales. Haz que las cajas llenen toda la fila.`,
     cajas: 3,
     base: PISTA,
     solucion: ".caja { flex: 1; }",
@@ -166,7 +149,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Varias líneas",
     titulo: "Saltar de línea",
-    teoria: `Por defecto Flexbox encoge los elementos para que quepan en una sola línea. Con <code>flex-wrap: wrap</code> los que no caben pasan a la línea siguiente.`,
     cajas: 7,
     ancho: 80,
     base: PISTA,
@@ -176,7 +158,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Varias líneas",
     titulo: "Reparto de líneas",
-    teoria: `Cuando hay varias líneas, <code>align-content</code> las reparte en el eje secundario (como <code>justify-content</code>, pero para las líneas). Separa las líneas con <code>space-between</code>.`,
     cajas: 6,
     ancho: 110,
     base: `.pista {\n  display: flex;\n  flex-wrap: wrap;\n}`,
@@ -186,7 +167,6 @@ export const NIVELES_FLEX: NivelFlex[] = [
   {
     bloque: "Reto final",
     titulo: "Menú con logo",
-    teoria: `Cuatro cajas: la <b>1</b> (el logo) a la izquierda y las otras tres a la derecha, todas centradas en vertical. Pista: en Flexbox un <code>margin-left: auto</code> empuja un elemento hasta el borde opuesto.`,
     cajas: 4,
     ancho: 54,
     alto: 54,

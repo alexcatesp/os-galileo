@@ -1,5 +1,6 @@
 import type { AppDef } from "../../../kernel/kernel";
 import { crearMarco } from "../laboratorio/documento";
+import { AYUDAS_FLEX, AYUDAS_GRID, type Ayuda } from "./ayudas";
 import { NIVELES_FLEX, documentoFlex, medir, mismaDisposicion, type NivelFlex } from "./flexbox";
 import { NIVELES_GRID } from "./grid";
 import { NIVELES_SELECTOR, mismosElementos, montarEscena, type Escena } from "./selectores";
@@ -61,7 +62,7 @@ export const cssEnJuego: AppDef = {
       const caja = document.createElement("div");
       caja.className = "cj-modo";
       cuerpo.replaceChildren(caja);
-      limpiar = m === "selectores" ? selectores(caja) : m === "flexbox" ? maqueta(caja, "flexbox", "Flexbox", NIVELES_FLEX) : maqueta(caja, "grid", "Grid", NIVELES_GRID);
+      limpiar = m === "selectores" ? selectores(caja) : m === "flexbox" ? maqueta(caja, "flexbox", "Flexbox", NIVELES_FLEX, AYUDAS_FLEX) : maqueta(caja, "grid", "Grid", NIVELES_GRID, AYUDAS_GRID);
     }
     raiz.querySelector(".cj-tabs")!.addEventListener("click", (e) => {
       const m = (e.target as HTMLElement).dataset.m as Modo | undefined;
@@ -176,11 +177,14 @@ export const cssEnJuego: AppDef = {
     }
 
     // ============ 2. Flexbox y Grid (mismo motor) ============
-    function maqueta(caja: HTMLElement, clave: "flexbox" | "grid", nombre: string, NIVELES: NivelFlex[]): () => void {
+    function maqueta(caja: HTMLElement, clave: "flexbox" | "grid", nombre: string, NIVELES: NivelFlex[], AYUDAS: Ayuda[]): () => void {
       const total = NIVELES.length;
       const hechos = reg[clave];
       let i = primerPendiente(hechos, total);
       let resuelto = false;
+      /** pistas ya pedidas en este nivel: 0, 1, 2 y, con la tercera, se enseña la solución */
+      let pedidas = 0;
+      const etiquetaPista = () => (pedidas === 0 ? "💡 Pista (1 de 3)" : pedidas === 1 ? "💡 Pista (2 de 3)" : "💡 Ver solución (3 de 3)");
       let temporizador = 0;
       const objetivo = crearMarco();
       const tuyo = crearMarco();
@@ -190,11 +194,12 @@ export const cssEnJuego: AppDef = {
       function nivel(n: number): void {
         i = n;
         resuelto = false;
+        pedidas = 0;
         const niv = NIVELES[i];
         ventana.fijarTitulo(`CSS en juego · ${nombre} · nivel ${i + 1}`);
         caja.innerHTML = `
           ${fichas(total, i, hechos)}
-          <div class="cj-ficha"><span class="cj-bloque">${niv.bloque}</span><h3>Nivel ${i + 1} · ${niv.titulo}</h3><p>${niv.teoria}</p></div>
+          <div class="cj-ficha"><span class="cj-bloque">${niv.bloque}</span><h3>Nivel ${i + 1} · ${niv.titulo}</h3><p>${AYUDAS[i].teoria}</p></div>
           <p class="cj-consigna">Escribe el CSS para que <b>tus cajas</b> queden donde están en el <b>objetivo</b>.</p>
           <div class="cj-marcos">
             <figure><figcaption>Objetivo</figcaption><div class="cj-marco" data-q="objetivo"></div></figure>
@@ -205,7 +210,7 @@ export const cssEnJuego: AppDef = {
           <p class="cj-mensaje" aria-live="polite"></p>
           <div class="cj-pie">
             <button data-a="ant" ${i === 0 ? "disabled" : ""}>◂ Anterior</button>
-            <button data-a="sol">💡 Ver solución</button>
+            <button data-a="sol">${etiquetaPista()}</button>
             <button data-a="sig" class="cj-primario" ${i === total - 1 ? "disabled" : ""} hidden>Siguiente ▸</button>
             <span class="cj-marcador">Superados: <b>${hechos.length}</b> / ${total}</span>
           </div>`;
@@ -240,7 +245,7 @@ export const cssEnJuego: AppDef = {
             hechos.push(i);
             guardar(reg);
           }
-          mensaje("✓ ¡Correcto! Las cajas están donde toca.", "ok");
+          mensaje(`✓ ¡Correcto! Las cajas están donde toca.<span class="cj-explica">${AYUDAS[i].explicacion}</span>`, "ok");
           const sig = caja.querySelector<HTMLElement>('[data-a="sig"]')!;
           sig.hidden = false;
           caja.querySelector<HTMLElement>(".cj-marcador b")!.textContent = String(hechos.length);
@@ -273,7 +278,17 @@ export const cssEnJuego: AppDef = {
         if (b.dataset.n !== undefined) nivel(Number(b.dataset.n));
         else if (b.dataset.a === "ant") nivel(i - 1);
         else if (b.dataset.a === "sig") nivel(i + 1);
-        else if (b.dataset.a === "sol") mensaje(`Una solución: <code>${esc(NIVELES[i].solucion)}</code>`);
+        else if (b.dataset.a === "sol") {
+          const ayuda = AYUDAS[i];
+          if (pedidas < 2) {
+            mensaje(`<b>Pista ${pedidas + 1}:</b> ${ayuda.pistas[pedidas]}`, "pista");
+            pedidas++;
+          } else {
+            mensaje(`<b>Solución:</b> <code class="cj-solucion">${esc(NIVELES[i].solucion)}</code>`, "pista");
+            pedidas = 3;
+          }
+          b.textContent = etiquetaPista();
+        }
       });
       nivel(i);
       return () => window.clearTimeout(temporizador);
