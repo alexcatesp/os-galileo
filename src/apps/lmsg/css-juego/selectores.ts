@@ -6,8 +6,6 @@ export interface NivelSelector {
   titulo: string;
   /** bloque del temario al que pertenece (para agrupar en la lista) */
   bloque: string;
-  /** explicación breve de lo nuevo (HTML) */
-  teoria: string;
   /** escena en HTML; las etiquetas se muestran tal cual */
   html: string;
   /** selector de referencia: define el objetivo */
@@ -18,7 +16,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Básicos",
     titulo: "Por etiqueta",
-    teoria: `El selector de <b>tipo</b> es el nombre de la etiqueta y elige todos los elementos de ese tipo. Elige los párrafos.`,
     html: `<h1></h1>
 <p></p>
 <p></p>
@@ -30,7 +27,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Básicos",
     titulo: "Por id",
-    teoria: `El <b>id</b> es único en la página. Se escribe con una almohadilla: <code>#nombre</code>.`,
     html: `<div id="entrada"></div>
 <div id="principal"></div>
 <div id="salida"></div>`,
@@ -39,7 +35,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Básicos",
     titulo: "Por clase",
-    teoria: `Una <b>clase</b> puede repetirse en muchos elementos de cualquier tipo. Se escribe con un punto: <code>.nombre</code>.`,
     html: `<p class="aviso"></p>
 <p></p>
 <div class="aviso"></div>
@@ -49,7 +44,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Básicos",
     titulo: "Etiqueta y clase",
-    teoria: `Se pueden <b>combinar sin espacios</b>: <code>p.aviso</code> elige los <code>p</code> que además tienen la clase <code>aviso</code>.`,
     html: `<p class="aviso"></p>
 <p></p>
 <div class="aviso"></div>
@@ -60,7 +54,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Básicos",
     titulo: "Dos clases a la vez",
-    teoria: `Un elemento puede tener varias clases. <code>.a.b</code> (sin espacio) exige las dos.`,
     html: `<p class="aviso"></p>
 <p class="aviso urgente"></p>
 <p class="urgente"></p>
@@ -70,7 +63,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Relaciones",
     titulo: "Descendientes",
-    teoria: `Con un <b>espacio</b> se eligen descendientes a cualquier profundidad: <code>nav a</code> son los <code>a</code> que están dentro de un <code>nav</code>.`,
     html: `<a></a>
 <nav>
   <a></a>
@@ -85,7 +77,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Relaciones",
     titulo: "Hijos directos",
-    teoria: `El signo <code>&gt;</code> solo elige <b>hijos directos</b>: <code>ul &gt; li</code> no llega a los <code>li</code> de listas anidadas en otras etiquetas.`,
     html: `<ul>
   <li></li>
   <li>
@@ -102,7 +93,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Relaciones",
     titulo: "Varios a la vez",
-    teoria: `La <b>coma</b> agrupa selectores: <code>h1, h2</code> elige los dos tipos.`,
     html: `<h1></h1>
 <h2></h2>
 <h3></h3>
@@ -113,7 +103,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Relaciones",
     titulo: "Hermano inmediato",
-    teoria: `<code>+</code> elige el elemento que va <b>justo después</b> de otro y comparte padre: <code>h2 + p</code>.`,
     html: `<h2></h2>
 <p></p>
 <p></p>
@@ -125,7 +114,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Relaciones",
     titulo: "Hermanos posteriores",
-    teoria: `<code>~</code> elige <b>todos los hermanos que vienen después</b>, aunque no sean inmediatos: <code>h2 ~ p</code>.`,
     html: `<p></p>
 <h2></h2>
 <p></p>
@@ -136,7 +124,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Atributos",
     titulo: "Tiene el atributo",
-    teoria: `<code>[atributo]</code> elige los elementos que <b>tienen</b> ese atributo, sea cual sea su valor.`,
     html: `<input type="text">
 <input type="email" required>
 <textarea required></textarea>
@@ -146,7 +133,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Atributos",
     titulo: "Atributo con un valor",
-    teoria: `<code>[atributo="valor"]</code> exige un valor exacto: <code>a[target="_blank"]</code>.`,
     html: `<a href="#" target="_blank"></a>
 <a href="#"></a>
 <a href="#" target="_self"></a>
@@ -156,7 +142,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Atributos",
     titulo: "Empieza por…",
-    teoria: `<code>[atributo^="texto"]</code> elige los que <b>empiezan</b> por ese texto. Útil para enlaces seguros: <code>a[href^="https"]</code>.`,
     html: `<a href="https://a.es"></a>
 <a href="http://b.es"></a>
 <a href="https://c.es/x"></a>
@@ -166,7 +151,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Atributos",
     titulo: "Termina en…",
-    teoria: `<code>[atributo$="texto"]</code> elige los que <b>terminan</b> así: <code>a[href$=".pdf"]</code> para los enlaces a PDF.`,
     html: `<a href="apuntes.pdf"></a>
 <a href="apuntes.html"></a>
 <a href="tema1.pdf"></a>
@@ -176,7 +160,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Pseudoclases",
     titulo: "Primer hijo",
-    teoria: `<code>:first-child</code> elige el elemento que es el <b>primero</b> dentro de su padre.`,
     html: `<ul>
   <li></li>
   <li></li>
@@ -191,7 +174,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Pseudoclases",
     titulo: "Último hijo",
-    teoria: `<code>:last-child</code> elige el <b>último</b> de su padre. Ojo: si después va otra etiqueta, ya no es el último.`,
     html: `<div>
   <p></p>
   <p></p>
@@ -206,7 +188,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Pseudoclases",
     titulo: "El n.º 2",
-    teoria: `<code>:nth-child(n)</code> elige el hijo que ocupa la posición <b>n</b> (se empieza a contar en 1).`,
     html: `<ul>
   <li></li>
   <li></li>
@@ -224,7 +205,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Pseudoclases",
     titulo: "Impares",
-    teoria: `<code>:nth-child(odd)</code> elige las posiciones impares (1, 3, 5…) y <code>even</code> las pares. También vale una fórmula: <code>2n+1</code>.`,
     html: `<ul>
   <li></li>
   <li></li>
@@ -237,7 +217,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Pseudoclases",
     titulo: "Todos menos…",
-    teoria: `<code>:not(…)</code> <b>excluye</b> lo que cumpla lo de dentro: <code>p:not(.nota)</code> son los <code>p</code> sin esa clase.`,
     html: `<p class="nota"></p>
 <p></p>
 <p class="aviso"></p>
@@ -248,7 +227,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Pseudoclases",
     titulo: "Hijo único",
-    teoria: `<code>:only-child</code> elige el elemento que es el <b>único hijo</b> de su padre.`,
     html: `<ul>
   <li></li>
 </ul>
@@ -264,7 +242,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Pseudoclases",
     titulo: "Elementos vacíos",
-    teoria: `<code>:empty</code> elige los elementos <b>sin contenido</b> (ni texto ni etiquetas dentro).`,
     html: `<p>Hola</p>
 <p></p>
 <p>Mundo</p>
@@ -274,7 +251,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Pseudoclases",
     titulo: "Primero de su tipo",
-    teoria: `<code>:first-of-type</code> elige el primero <b>de su misma etiqueta</b> entre sus hermanos, aunque otros tipos vayan antes. No es lo mismo que <code>:first-child</code>.`,
     html: `<div>
   <h2></h2>
   <p></p>
@@ -290,7 +266,6 @@ export const NIVELES_SELECTOR: NivelSelector[] = [
   {
     bloque: "Reto final",
     titulo: "Combinando todo",
-    teoria: `Elige los <b>enlaces internos</b> (los que empiezan por <code>#</code>) del menú <code>.menu</code>, <b>menos los del último elemento de la lista</b>. Combina clase, descendiente, <code>:not</code>, <code>:last-child</code> y atributo.`,
     html: `<ul class="menu">
   <li><a href="#inicio"></a></li>
   <li><a href="https://x.es"></a></li>

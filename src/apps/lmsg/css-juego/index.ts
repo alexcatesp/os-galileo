@@ -1,6 +1,7 @@
 import type { AppDef } from "../../../kernel/kernel";
 import { crearMarco } from "../laboratorio/documento";
 import { AYUDAS_FLEX, AYUDAS_GRID, type Ayuda } from "./ayudas";
+import { AYUDAS_SELECTOR } from "./ayudas-selectores";
 import { NIVELES_FLEX, documentoFlex, medir, mismaDisposicion, type NivelFlex } from "./flexbox";
 import { NIVELES_GRID } from "./grid";
 import { NIVELES_SELECTOR, mismosElementos, montarEscena, type Escena } from "./selectores";
@@ -83,22 +84,27 @@ export const cssEnJuego: AppDef = {
       let i = primerPendiente(reg.selectores, total);
       let escena: Escena;
       let resuelto = false;
+      /** pistas ya pedidas en este nivel: 0, 1, 2 y, con la tercera, se enseña la solución */
+      let pedidas = 0;
+      const etiquetaPista = () => (pedidas === 0 ? "💡 Pista (1 de 3)" : pedidas === 1 ? "💡 Pista (2 de 3)" : "💡 Ver solución (3 de 3)");
 
       function nivel(n: number): void {
         i = n;
         resuelto = false;
+        pedidas = 0;
         const niv = NIVELES_SELECTOR[i];
         ventana.fijarTitulo(`CSS en juego · Selectores · nivel ${i + 1}`);
         caja.innerHTML = `
           ${fichas(total, i, reg.selectores)}
-          <div class="cj-ficha"><span class="cj-bloque">${niv.bloque}</span><h3>Nivel ${i + 1} · ${niv.titulo}</h3><p>${niv.teoria}</p></div>
+          <div class="cj-ficha"><span class="cj-bloque">${niv.bloque}</span><h3>Nivel ${i + 1} · ${niv.titulo}</h3><p>${AYUDAS_SELECTOR[i].teoria}</p></div>
           <p class="cj-consigna">Escribe un selector que elija los elementos que <b>parpadean</b> (y solo esos).</p>
           <div class="cj-escena"></div>
           <form class="cj-form"><span class="cj-pre" aria-hidden="true">CSS</span><input class="cj-sel" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Tu selector…" aria-label="Selector CSS" /><button class="cj-ok">Probar</button></form>
           <p class="cj-mensaje" aria-live="polite"></p>
+          <p class="cj-mensaje pista cj-ayuda" aria-live="polite" hidden></p>
           <div class="cj-pie">
             <button data-a="ant" ${i === 0 ? "disabled" : ""}>◂ Anterior</button>
-            <button data-a="sol">💡 Ver solución</button>
+            <button data-a="sol">${etiquetaPista()}</button>
             <button data-a="sig" class="cj-primario" ${i === total - 1 ? "disabled" : ""} hidden>Siguiente ▸</button>
             <span class="cj-marcador">Superados: <b>${reg.selectores.length}</b> / ${total}</span>
           </div>`;
@@ -149,7 +155,10 @@ export const cssEnJuego: AppDef = {
           }
           const mia = NIVELES_SELECTOR[i].solucion;
           const igual = entrada().value.trim().replace(/\s+/g, " ") === mia;
-          mensaje(`✓ ¡Correcto!${igual ? "" : ` Mi solución era <code>${esc(mia)}</code>; la tuya también sirve si elige lo mismo.`}`, "ok");
+          mensaje(
+            `✓ ¡Correcto!${igual ? "" : ` Mi solución era <code>${esc(mia)}</code>; la tuya también sirve si elige lo mismo.`}<span class="cj-explica">${AYUDAS_SELECTOR[i].explicacion}</span>`,
+            "ok",
+          );
           caja.querySelector<HTMLElement>('[data-a="sig"]')!.hidden = false;
           caja.querySelector<HTMLElement>('[data-a="sig"]')!.focus();
           caja.querySelector<HTMLElement>(".cj-marcador b")!.textContent = String(reg.selectores.length);
@@ -170,7 +179,19 @@ export const cssEnJuego: AppDef = {
         if (b.dataset.n !== undefined) nivel(Number(b.dataset.n));
         else if (b.dataset.a === "ant") nivel(i - 1);
         else if (b.dataset.a === "sig") nivel(i + 1);
-        else if (b.dataset.a === "sol") mensaje(`Una solución: <code>${esc(NIVELES_SELECTOR[i].solucion)}</code>`);
+        else if (b.dataset.a === "sol") {
+          const ayuda = AYUDAS_SELECTOR[i];
+          const lugar = caja.querySelector<HTMLElement>(".cj-ayuda")!;
+          lugar.hidden = false;
+          if (pedidas < 2) {
+            lugar.innerHTML = `<b>Pista ${pedidas + 1}:</b> ${ayuda.pistas[pedidas]}`;
+            pedidas++;
+          } else {
+            lugar.innerHTML = `<b>Solución:</b> <code class="cj-solucion">${esc(NIVELES_SELECTOR[i].solucion)}</code>`;
+            pedidas = 3;
+          }
+          b.textContent = etiquetaPista();
+        }
       });
       nivel(i);
       return () => {};
