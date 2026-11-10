@@ -190,6 +190,7 @@ export const robotGalileo: AppDef = {
       aviso = "";
       mapaSel = 0;
       tr = null;
+      ocultarBanner();
       destino = [];
       const guardada = reg.codigos[nivel.id];
       modo = reg.modos[nivel.id] ?? nivel.modo;
@@ -427,6 +428,7 @@ export const robotGalileo: AppDef = {
       }
       errorJava = null;
       aviso = "";
+      ocultarBanner();
       const ver = evaluar(nivel, r.prog);
       const fallido = ver.mapas.findIndex((m) => !m.ok);
       if (nivel.mapas.length > 1 && fallido >= 0) mapaSel = fallido;

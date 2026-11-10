@@ -30,6 +30,20 @@ const casos: [string, string, boolean][] = [
   ["p3", "for (int i = 0; i < 6; i++) { recoger(); avanzar(); }", false], // recoger donde no hay nada
   ["p5", "for (int i = 0; i <= 5; i++) { avanzar(); avanzar(); recoger(); }", false],
   ["p1", "while (true) { avanzar(); }", false],
+  // mundo 2: while
+  ["l1", "for (int i = 0; i < 4; i++) { avanzar(); }", false], // solo vale para un pasillo
+  ["l1", "for (int i = 0; i < 9; i++) { avanzar(); }", false], // choca en los cortos
+  ["l1", "while (!enMeta()) { avanzar(); }", true], // otra condición válida
+  ["l2", "while (!hayPared()) { recoger(); avanzar(); }", false], // recoge antes de pisar la moneda
+  ["l3", "while (!hayPared()) { if (hayMoneda()) { recoger(); } avanzar(); }", false], // se deja la moneda de la última casilla
+  ["l3", "while (!hayPared()) { if (hayMoneda()) { recoger(); } avanzar(); } if (hayMoneda()) { recoger(); }", true], // la «arreglada» también vale (6 instrucciones)
+  ["l4", "while (!hayPared()) { avanzar(); } girarDerecha(); while (!hayPared()) { avanzar(); }", true],
+  ["l4", "while (!hayPared()) { avanzar(); } girarDerecha();", false],
+  ["l5", "for (int i = 0; i < 4; i++) { avanzar(); girarIzquierda(); avanzar(); girarDerecha(); }", false],
+  ["l5", "while (!enMeta()) { avanzar(); girarIzquierda(); avanzar(); girarDerecha(); }", true],
+  ["l6", "while (!hayPared()) { avanzar(); }", false],
+  ["l6", "while (!enMeta()) { if (!hayPared()) { avanzar(); } if (hayPared()) { girarDerecha(); } }", true], // sin else también vale
+  ["l6", "while (!enMeta()) { if (hayPared()) { girarDerecha(); } else { avanzar(); } }", true],
 ];
 for (const [id, cod, esperado] of casos) {
   const n = NIVELES.find((x) => x.id === id)!;
