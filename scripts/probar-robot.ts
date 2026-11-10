@@ -1,6 +1,6 @@
 // Valida los niveles del Robot Galileo: la solución los supera, el programa vacío no, y las trampas típicas fallan.
 import { compilar } from "../src/apps/programacion/robot/lenguaje";
-import { NIVELES, evaluar } from "../src/apps/programacion/robot/niveles";
+import { NIVELES, evaluar, juzgarPrediccion, resultadoReal } from "../src/apps/programacion/robot/niveles";
 
 let incidencias = 0;
 const mal = (m: string) => {
@@ -14,6 +14,21 @@ const prog = (t: string) => {
 };
 
 for (const n of NIVELES) {
+  if (n.tipo === "predecir") {
+    // el resultado calculado a mano debe coincidir con el del motor, y una predicción equivocada debe fallar
+    const real = resultadoReal(n);
+    const e = n.esperado!;
+    const igual = real.x === e.x && real.y === e.y && real.monedas === e.monedas && real.error === e.error;
+    console.log(`${n.id} «${n.titulo}»: predicción ${igual ? "OK" : "FALLA"} (real: x=${real.x}, y=${real.y}, monedas=${real.monedas}, error=${real.error})`);
+    if (!igual) mal(`${n.id}: el motor da ${JSON.stringify(real)} y se esperaba ${JSON.stringify(e)}`);
+    const acierto = juzgarPrediccion(n, { x: e.x, y: e.y, monedas: e.monedas, error: e.error });
+    if (!acierto.ok) mal(`${n.id}: la predicción correcta no se da por buena`);
+    const falla = juzgarPrediccion(n, { x: e.x + 1, y: e.y, monedas: e.monedas, error: e.error });
+    if (falla.ok) mal(`${n.id}: una casilla equivocada se da por buena`);
+    if (n.preguntas?.monedas && juzgarPrediccion(n, { x: e.x, y: e.y, monedas: e.monedas + 1, error: e.error }).ok) mal(`${n.id}: unas monedas equivocadas se dan por buenas`);
+    if (n.preguntas?.error && juzgarPrediccion(n, { x: e.x, y: e.y, monedas: e.monedas, error: !e.error }).ok) mal(`${n.id}: un error equivocado se da por bueno`);
+    continue;
+  }
   const v = evaluar(n, prog(n.solucion));
   console.log(`${n.id} «${n.titulo}»: solución ${v.superado ? "OK" : "FALLA"} (${v.instrucciones}/${n.limite})`);
   if (!v.superado) mal(`la solución no supera ${n.id}: ${v.mapas.map((m) => m.motivo).join(" | ")}`);

@@ -80,6 +80,25 @@
 .rb .rb-primario { background: #8c6dff; border-color: #e8e4ff; color: #fff; font-weight: 700; }
 .rb-ed-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #3a31a0; flex-wrap: wrap; }
 .rb-vistas { display: flex; }
+.rb-vistas[hidden] { display: none; }
+.rb-lienzo.rb-predecir .rb-mapa { cursor: crosshair; height: auto; }
+.rb-lienzo.rb-predecir .rb-svg { place-items: start center; align-content: start; }
+.rb-lienzo.rb-predecir .rb-banner.pierdes .rb-tarjeta { padding: 6px 12px; }
+.rb-lienzo.rb-predecir .rb-banner.pierdes .rb-pred-res { margin: 2px 0; font-size: 13px; line-height: 1.4; }
+.rb-pred-cab { font-size: 13px; color: #c9c2f5; line-height: 1.5; }
+.rb-pred-form { display: grid; gap: 8px; background: #12103a; border: 1px solid #3a31a0; border-radius: 12px; padding: 10px 12px; }
+.rb-pred-fila { font-size: 13px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; }
+.rb-pred-fila b { color: #f7c948; }
+.rb-pred-fila label { display: inline-flex; align-items: center; gap: 4px; }
+.rb-pred-fila input[type="number"] { width: 70px; text-align: center; background: #0d0b1e; }
+.rb-pred-fila input[type="radio"] { width: auto; padding: 0; accent-color: #8c6dff; }
+.rb-pred-casilla { color: #a79cf0; }
+.rb-pred-casilla.hecha { color: #8af0b0; font-weight: 700; }
+.rb .rb-comprobar { justify-self: start; font-weight: 700; padding: 8px 16px; }
+.rb-pred-res { list-style: none; margin: 8px 0; padding: 0; text-align: left; font-size: 14px; line-height: 1.6; }
+.rb-pred-res .si { color: #8af0b0; }
+.rb-pred-res .no { color: #ff8f86; }
+.rb-pred-ayuda { font-size: 12px !important; color: #a79cf0; }
 .rb .rb-vistas button { border-radius: 0; }
 .rb .rb-vistas button:first-child { border-radius: 9px 0 0 9px; }
 .rb .rb-vistas button:last-child { border-radius: 0 9px 9px 0; border-left: 0; }
@@ -125,6 +144,14 @@
 .rb-java-zona { display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; }
 .rb .rb-ed { width: 100%; box-sizing: border-box; flex: 1; min-height: 190px; font: 14px/1.5 Consolas, "Cascadia Mono", monospace; background: #0d0b1e; color: #e8e4ff; border: 1px solid #4a3fb0; border-radius: 10px; padding: 8px 12px; resize: vertical; white-space: pre; tab-size: 2; cursor: text; }
 .rb .rb-editar { align-self: flex-start; }
+.rb-java-zona { position: relative; }
+.rb-sug { position: absolute; left: 6px; right: 6px; bottom: 6px; max-height: 190px; overflow: auto; z-index: 4; background: #1b1740; border: 1px solid #8c6dff; border-radius: 10px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55); display: grid; }
+.rb-sug[hidden] { display: none; }
+.rb .rb-sug button { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px; text-align: left; border: 0; border-radius: 0; background: transparent; padding: 5px 10px; }
+.rb .rb-sug button.on { background: #3a31a0; }
+.rb-sug code { font: 13px Consolas, "Cascadia Mono", monospace; color: #e8e4ff; }
+.rb-sug span { font-size: 12px; color: #a79cf0; }
+@media (max-width: 760px) { .rb .rb-sug button { grid-template-columns: 1fr; } }
 .rb-ed-pie { border-top: 1px solid #3a31a0; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
 .rb-mensaje { margin: 0; min-height: 20px; font-size: 13px; line-height: 1.5; color: #c9c2f5; }
 .rb-mensaje.mal { color: #ff8f86; font-weight: 600; }

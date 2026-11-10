@@ -2,7 +2,7 @@
 // pistas y solución. Un programa supera el nivel si resuelve TODOS sus mapas sin pasarse del límite.
 
 import { ejecutar, type Ejecucion } from "./ejecutor";
-import { contar, type Sent } from "./lenguaje";
+import { compilar, contar, type Sent } from "./lenguaje";
 import { crearMundo } from "./mundo";
 
 export type BloqueId = "avanzar" | "girarIzquierda" | "girarDerecha" | "recoger" | "repetir" | "mientras" | "hacerMientras" | "si";
@@ -24,6 +24,13 @@ export interface Nivel {
   pistas: [string, string];
   solucion: string;
   aprende: string;
+  /** "predecir": no se programa; se lee `codigo` y se adivina qué hará (por defecto, "programar") */
+  tipo?: "programar" | "predecir";
+  codigo?: string;
+  /** qué se le pregunta además de la casilla final */
+  preguntas?: { monedas: boolean; error: boolean };
+  /** resultado calculado a mano, para que `probar:robot` compruebe que el motor coincide */
+  esperado?: { x: number; y: number; monedas: number; error: boolean };
 }
 
 export interface MundoDef {
@@ -127,6 +134,14 @@ function anillo(a: number, b: number, monedas: [number, number][] = []): string[
   g[1][1] = ">";
   for (const [x, y] of monedas) g[y][x] = "o";
   return [...texto(g), "!meta"];
+}
+
+/** sala vacía rodeada de pared, con el robot mirando al este en (x, y) */
+function sala(ancho: number, alto: number, x: number, y: number): string[] {
+  const g = rejilla(ancho, alto);
+  for (let j = 1; j < alto - 1; j++) for (let i = 1; i < ancho - 1; i++) g[j][i] = ".";
+  g[y][x] = ">";
+  return texto(g);
 }
 
 /**
@@ -238,6 +253,25 @@ export const NIVELES: Nivel[] = [
     solucion: "for (int i = 0; i < 3; i++) {\n  for (int j = 0; j < 3; j++) {\n    avanzar();\n  }\n  girarDerecha();\n}",
     aprende: "Un bucle dentro de otro: el de fuera cuenta los <b>lados</b>, el de dentro cuenta los <b>pasos de cada lado</b>. Se usa <code>j</code> para no repetir el nombre <code>i</code>.",
   },
+  {
+    id: "r1",
+    mundo: 1,
+    tipo: "predecir",
+    titulo: "¿Cuántas vueltas?",
+    historia: "Aquí no programas: <b>lees</b>. Este código usa <code>i += 2</code> en lugar del habitual <code>i++</code>. Antes de ejecutarlo, predice dónde acabará el robot y cuántas monedas recogerá.",
+    objetivo: "Haz clic en la casilla donde acabará el robot y escribe cuántas monedas recogerá.",
+    mapas: [["##############", "#>.o.o.o.o.o.#", "##############"]],
+    codigo: "for (int i = 0; i < 7; i += 2) {\n  avanzar();\n  avanzar();\n  recoger();\n}",
+    preguntas: { monedas: true, error: false },
+    esperado: { x: 9, y: 1, monedas: 4, error: false },
+    limite: 0,
+    bloques: [],
+    sensores: [],
+    modo: "java",
+    pistas: ["Escribe en un papel los valores de <code>i</code> en cada vuelta: empieza en 0, suma 2 y el bucle sigue mientras <code>i &lt; 7</code>.", "i vale 0, 2, 4 y 6 (el siguiente, 8, ya no cumple i &lt; 7). Son 4 vueltas, y cada vuelta avanza 2 casillas."],
+    solucion: "i = 0, 2, 4, 6 → 4 vueltas × 2 casillas = 8 casillas; recoge 4 monedas.",
+    aprende: "Para saber cuántas vueltas da un <code>for</code>, escribe los valores de <code>i</code>: aquí 0, 2, 4, 6 (el 8 ya no cumple <code>i &lt; 7</code>): <b>4 vueltas</b>, no 7 ni 3. El paso del <code>for</code> manda.",
+  },
 
   // ---------------------------------------------------------------- mundo 2: el laberinto (while)
   {
@@ -330,6 +364,25 @@ export const NIVELES: Nivel[] = [
     solucion: "while (!enMeta()) {\n  if (hayPared()) {\n    girarDerecha();\n  } else {\n    avanzar();\n  }\n}",
     aprende: "Un <code>if … else</code> dentro de un <code>while</code>: el bucle repite y el <code>if</code> decide qué hacer en cada vuelta. Es la receta de muchos robots reales para seguir una pared.",
   },
+  {
+    id: "r2",
+    mundo: 2,
+    tipo: "predecir",
+    titulo: "La moneda de la última casilla",
+    historia: "Este programa recorre el pasillo mirando <b>antes</b> de avanzar. Parece correcto… ¿lo es? Predice qué hará antes de ejecutarlo.",
+    objetivo: "Haz clic en la casilla donde acabará el robot y escribe cuántas monedas recogerá.",
+    mapas: [["#########", "#>o.oo.o#", "#########"]],
+    codigo: "while (!hayPared()) {\n  if (hayMoneda()) {\n    recoger();\n  }\n  avanzar();\n}",
+    preguntas: { monedas: true, error: false },
+    esperado: { x: 7, y: 1, monedas: 3, error: false },
+    limite: 0,
+    bloques: [],
+    sensores: [],
+    modo: "java",
+    pistas: ["Sigue al robot casilla a casilla. En cada vuelta primero mira si hay moneda y <b>luego</b> avanza. ¿En qué momento deja de cumplirse <code>!hayPared()</code>?", "Cuando el robot llega a la última casilla ya tiene la pared delante, así que el bucle termina <b>sin mirar</b> esa casilla."],
+    solucion: "Acaba en la última casilla y recoge 3 monedas: la de la última casilla se queda.",
+    aprende: "El bucle comprueba <code>hayPared()</code> al empezar cada vuelta: al llegar a la última casilla ya hay pared, el bucle acaba y <b>la moneda de esa casilla se queda sin recoger</b>. Es el fallo de «mirar antes de avanzar»; se arregla avanzando primero o con un <code>if</code> después del bucle.",
+  },
 
   // ---------------------------------------------------------------- mundo 3: la máquina (do..while)
   {
@@ -396,6 +449,25 @@ export const NIVELES: Nivel[] = [
     solucion: "do {\n  if (hayMoneda()) {\n    recoger();\n  }\n  if (hayPared()) {\n    girarDerecha();\n  } else {\n    avanzar();\n  }\n} while (!enMeta());",
     aprende: "Un solo bucle puede ocuparse de varias cosas en cada vuelta: recoger, girar o avanzar. Cada <code>if</code> es una pregunta distinta sobre lo que ve el robot.",
   },
+  {
+    id: "r3",
+    mundo: 3,
+    tipo: "predecir",
+    titulo: "Actúa primero, mira después",
+    historia: "Un <code>do…while</code> parecía la solución para recoger la fila de monedas. Pero el robot empieza en una casilla <b>vacía</b>. Predice qué le pasa.",
+    objetivo: "Haz clic en la casilla donde acabará el robot, di cuántas monedas recogerá y si el programa terminará con un error.",
+    mapas: [["#######", "#>.oo.#", "#######"]],
+    codigo: "do {\n  recoger();\n  avanzar();\n} while (hayMoneda());",
+    preguntas: { monedas: true, error: true },
+    esperado: { x: 1, y: 1, monedas: 0, error: true },
+    limite: 0,
+    bloques: [],
+    sensores: [],
+    modo: "java",
+    pistas: ["En un <code>do…while</code> el cuerpo se ejecuta <b>siempre una vez</b> antes de mirar la condición. ¿Qué es lo primero que hace el cuerpo?", "Lo primero es <code>recoger()</code>, y en la casilla de salida no hay ninguna moneda: el programa falla ahí."],
+    solucion: "Error en la primera vuelta: el robot no se mueve de su casilla y recoge 0 monedas.",
+    aprende: "El <code>do…while</code> ejecuta el cuerpo <b>antes</b> de mirar la condición. Aquí intenta <code>recoger()</code> en una casilla vacía y el programa falla antes de llegar a comprobar nada. Con un <code>while</code> normal no habría pasado nada malo.",
+  },
 
   // ---------------------------------------------------------------- mundo 4: el almacén (bucles anidados)
   {
@@ -458,6 +530,25 @@ export const NIVELES: Nivel[] = [
     solucion: "while (!hayPared()) {\n  girarDerecha();\n  while (!hayPared()) {\n    avanzar();\n    if (hayMoneda()) {\n      recoger();\n    }\n  }\n  girarDerecha();\n  girarDerecha();\n  while (!hayPared()) {\n    avanzar();\n  }\n  girarDerecha();\n  avanzar();\n  avanzar();\n}",
     aprende: "Así se construyen los programas grandes: <b>de dentro hacia fuera</b>. Primero la decisión de una casilla (<code>if</code>), luego recorrer una estantería (<code>while</code>) y por último recorrer el almacén (otro <code>while</code>). Cada nivel de sangría es una pregunta distinta.",
   },
+  {
+    id: "r4",
+    mundo: 4,
+    tipo: "predecir",
+    titulo: "El caracol de i",
+    historia: "El bucle de dentro cuenta hasta <code>i</code>, así que <b>cada vuelta del de fuera avanza más</b>. Traza el recorrido en un papel y predice dónde acabará el robot (empieza mirando al este).",
+    objetivo: "Haz clic en la casilla donde acabará el robot.",
+    mapas: [sala(8, 8, 3, 2)],
+    codigo: "for (int i = 0; i < 3; i++) {\n  for (int j = 0; j <= i; j++) {\n    avanzar();\n  }\n  girarDerecha();\n}",
+    preguntas: { monedas: false, error: false },
+    esperado: { x: 1, y: 4, monedas: 0, error: false },
+    limite: 0,
+    bloques: [],
+    sensores: [],
+    modo: "java",
+    pistas: ["Haz una tabla con i, el número de pasos del bucle de dentro (j va de 0 hasta i, inclusive) y hacia dónde mira el robot después de cada giro.", "i = 0: 1 paso al este · i = 1: 2 pasos al sur · i = 2: 3 pasos al oeste. Cada tramo sale de donde acabó el anterior."],
+    solucion: "1 paso al este, 2 al sur y 3 al oeste: acaba 2 casillas a la izquierda de donde empezó y 2 más abajo.",
+    aprende: "Con bucles anidados, el de dentro se repite completo en cada vuelta del de fuera y aquí su número de vueltas depende de <code>i</code> (<code>j &lt;= i</code>: 1, 2 y 3 pasos). La forma segura de trazarlo es una tabla con <code>i</code>, <code>j</code> y la posición.",
+  },
 ];
 
 // ---------------------------------------------------------------- evaluación
@@ -496,4 +587,44 @@ export function evaluar(nivel: Nivel, prog: Sent[]): Veredicto {
   const instrucciones = contar(prog);
   const dentroDelLimite = instrucciones <= nivel.limite;
   return { mapas, instrucciones, dentroDelLimite, superado: mapas.every((m) => m.ok) && dentroDelLimite };
+}
+
+// ---------------------------------------------------------------- niveles de predicción
+export interface Prediccion {
+  x: number;
+  y: number;
+  monedas: number | null;
+  error: boolean | null;
+}
+
+export interface Real {
+  x: number;
+  y: number;
+  monedas: number;
+  error: boolean;
+  mensajeError?: string;
+}
+
+/** ejecuta de verdad el código del nivel de predicción */
+export function ejecucionDePrediccion(nivel: Nivel, prog: Sent[]): Veredicto {
+  const ejecucion = ejecutar(prog, crearMundo(nivel.mapas[0]));
+  return { mapas: [{ ok: true, motivo: "", ejecucion }], instrucciones: contar(prog), dentroDelLimite: true, superado: false };
+}
+
+export function resultadoReal(nivel: Nivel): Real {
+  const r = compilar(nivel.codigo ?? "");
+  if ("error" in r) throw new Error(`El código del nivel ${nivel.id} no compila: ${r.error.mensaje}`);
+  const mundo = crearMundo(nivel.mapas[0]);
+  const ej = ejecutar(r.prog, mundo);
+  const f = ej.final;
+  return { x: f.x, y: f.y, monedas: mundo.inicial.monedas.length - f.monedas.length, error: !!ej.error, mensajeError: ej.error?.mensaje };
+}
+
+/** compara la predicción con lo que ocurre de verdad (solo lo que el nivel pregunta cuenta) */
+export function juzgarPrediccion(nivel: Nivel, p: Prediccion): { ok: boolean; casilla: boolean; monedas: boolean | null; error: boolean | null; real: Real } {
+  const real = resultadoReal(nivel);
+  const casilla = p.x === real.x && p.y === real.y;
+  const monedas = nivel.preguntas?.monedas ? p.monedas === real.monedas : null;
+  const error = nivel.preguntas?.error ? p.error === real.error : null;
+  return { ok: casilla && monedas !== false && error !== false, casilla, monedas, error, real };
 }

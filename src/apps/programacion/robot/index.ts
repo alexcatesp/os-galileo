@@ -6,8 +6,8 @@ import "./robot.css";
 import type { AppDef } from "../../../kernel/kernel";
 import { bloqueJava, esc, progreso } from "../comun";
 import { aTexto, comoRepetir, compilar, condSimple, contar, normalizarBloques, repetir, sePuedeEnBloques, type ErrorJava, type Expr, type Sent } from "./lenguaje";
-import { SENSORES, crearMundo, type Estado, type Mundo } from "./mundo";
-import { MUNDOS, NIVELES, evaluar, type BloqueId, type Nivel, type Veredicto } from "./niveles";
+import { ACCIONES, SENSORES, crearMundo, esPared, type Estado, type Mundo } from "./mundo";
+import { MUNDOS, NIVELES, ejecucionDePrediccion, evaluar, juzgarPrediccion, type BloqueId, type Nivel, type Veredicto } from "./niveles";
 
 
 interface Registro {
@@ -124,6 +124,11 @@ export const robotGalileo: AppDef = {
     let angulo = 0;
     let temporizador = 0;
     let compilacion = 0;
+    // niveles de predicción: lo que ha marcado y contestado el alumno
+    let prediccion: { x: number; y: number } | null = null;
+    let predMonedas: number | null = null;
+    let predError: boolean | null = null;
+    let intentosPred = 0;
     interface Traza {
       ver: Veredicto;
       mapa: number;
@@ -164,6 +169,7 @@ export const robotGalileo: AppDef = {
       texto = aTexto(prog);
     }
     function guardarCodigo(): void {
+      if (nivel.tipo === "predecir") return; // el código es del nivel, no del alumno
       reg.codigos[nivel.id] = texto;
       reg.modos[nivel.id] = modo;
       guardado.guardar(reg);
@@ -209,6 +215,18 @@ export const robotGalileo: AppDef = {
         else if (texto.trim()) modo = "java";
         modelo();
       }
+      // niveles de predicción: el código lo pone el nivel y el alumno solo lo lee
+      prediccion = null;
+      predMonedas = null;
+      predError = null;
+      intentosPred = 0;
+      if (nivel.tipo === "predecir") {
+        modo = "bloques";
+        texto = nivel.codigo ?? "";
+        prog = [];
+      }
+      $(".rb-lienzo").classList.toggle("rb-predecir", nivel.tipo === "predecir");
+      $(".rb-vistas").hidden = nivel.tipo === "predecir";
       compilarAhora();
       ventana.fijarTitulo(`Robot Galileo · nivel ${i + 1}: ${nivel.titulo}`);
       const m = MUNDOS.find((x) => x.n === nivel.mundo)!;
@@ -242,6 +260,18 @@ export const robotGalileo: AppDef = {
       $(".rb-svg").innerHTML = dibujarMapa(nivel.mapas[mapaSel]);
       angulo = mundo.inicial.d * 90;
       pintarEscena();
+      pintarPrediccion();
+    }
+
+    /** marca en el mapa la casilla que ha elegido el alumno en un nivel de predicción */
+    function pintarPrediccion(): void {
+      const svg = raiz.querySelector<SVGSVGElement>(".rb-mapa");
+      if (!svg) return;
+      svg.querySelector(".rb-pred-m")?.remove();
+      if (!prediccion || nivel.tipo !== "predecir") return;
+      const px = prediccion.x * S;
+      const py = prediccion.y * S;
+      svg.insertAdjacentHTML("beforeend", `<g class="rb-pred-m" pointer-events="none"><rect x="${px + 3}" y="${py + 3}" width="${S - 6}" height="${S - 6}" rx="9" fill="rgba(247,201,72,.18)" stroke="#f7c948" stroke-width="3" stroke-dasharray="6 4"/><text x="${px + S / 2}" y="${py + S / 2 + 7}" text-anchor="middle" font-size="22" font-weight="800" fill="#f7c948">?</text></g>`);
     }
 
     function estadoActual(): Estado {
@@ -335,6 +365,22 @@ export const robotGalileo: AppDef = {
       const cuerpo = $(".rb-ed-cuerpo");
       raiz.querySelectorAll<HTMLElement>("[data-vista]").forEach((b) => b.classList.toggle("on", b.dataset.vista === modo));
       const bloquesDe = nivel.bloques;
+      if (nivel.tipo === "predecir") {
+        const p = nivel.preguntas;
+        const bloqueado = tr ? " disabled" : "";
+        cuerpo.innerHTML = `
+          <div class="rb-pred-cab">🔮 Lee el código y <b>predice</b> qué hará el robot <b>antes</b> de ejecutarlo.</div>
+          <div class="rb-java"></div>
+          <div class="rb-pred-form">
+            <div class="rb-pred-fila"><b>1.</b> ¿En qué casilla acabará? <span class="rb-pred-casilla${prediccion ? " hecha" : ""}">${prediccion ? "✓ casilla marcada en el mapa" : "← haz clic en una casilla del mapa"}</span></div>
+            ${p?.monedas ? `<label class="rb-pred-fila"><b>2.</b> ¿Cuántas monedas recogerá? <input type="number" min="0" max="99" data-pred-monedas value="${predMonedas ?? ""}" placeholder="0"${bloqueado}></label>` : ""}
+            ${p?.error ? `<div class="rb-pred-fila"><b>${p.monedas ? "3" : "2"}.</b> ¿Terminará con un error? <label><input type="radio" name="rb-err" value="no" data-pred-error${predError === false ? " checked" : ""}${bloqueado}> no</label> <label><input type="radio" name="rb-err" value="si" data-pred-error${predError === true ? " checked" : ""}${bloqueado}> sí</label></div>` : ""}
+            <button class="rb-primario rb-comprobar" data-a="comprobar"${tr ? " disabled" : ""}>✔ Comprobar mi predicción</button>
+          </div>`;
+        pintarCodigoVivo();
+        pintarMeter();
+        return;
+      }
       if (modo === "bloques") {
         const paleta = bloquesDe
           .map((id) => `<button class="rb-ficha ${BLOQUES[id].clase}" data-add="${id}"${arrastrable ? ` draggable="true"` : ""} title="${arrastrable ? "Pulsa o arrastra: " : "Añadir "}${esc(BLOQUES[id].texto)}">${BLOQUES[id].icono} ${esc(BLOQUES[id].texto)}</button>`)
@@ -365,7 +411,7 @@ export const robotGalileo: AppDef = {
       if (tr) {
         zona.innerHTML = `<div class="rb-java"></div><button class="rb-editar" data-a="editar">✎ Seguir editando</button>`;
       } else {
-        zona.innerHTML = `<textarea class="rb-ed" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Código Java" rows="${Math.max(9, texto.split("\n").length + 2)}">${esc(texto)}</textarea>`;
+        zona.innerHTML = `<textarea class="rb-ed" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Código Java" rows="${Math.max(9, texto.split("\n").length + 2)}">${esc(texto)}</textarea><div class="rb-sug" role="listbox" aria-label="Sugerencias" hidden></div>`;
       }
       pintarCodigoVivo();
     }
@@ -382,6 +428,10 @@ export const robotGalileo: AppDef = {
     }
 
     function pintarMeter(): void {
+      if (nivel.tipo === "predecir") {
+        $(".rb-meter").innerHTML = `<span class="rb-meter-t">🔮 Nivel de predicción: no hay que programar</span>`;
+        return;
+      }
       let usadas = 0;
       let valido = true;
       if (modo === "bloques") usadas = contar(prog);
@@ -425,10 +475,32 @@ export const robotGalileo: AppDef = {
       if (habia) {
         pintarEscena();
         if (modo === "java") pintarZonaJava();
+        if (nivel.tipo === "predecir") pintarEditor();
       }
     }
 
     function preparar(): boolean {
+      if (nivel.tipo === "predecir") {
+        if (!prediccion) {
+          aviso = "Primero haz tu predicción: haz clic en el mapa en la casilla donde crees que acabará el robot.";
+          pintarMensaje();
+          return false;
+        }
+        const m = raiz.querySelector<HTMLInputElement>("[data-pred-monedas]");
+        predMonedas = m && m.value.trim() !== "" ? Number(m.value) : null;
+        if (nivel.preguntas?.monedas && predMonedas === null) {
+          aviso = "Escribe cuántas monedas crees que recogerá (si ninguna, 0).";
+          pintarMensaje();
+          return false;
+        }
+        const e = raiz.querySelector<HTMLInputElement>("[data-pred-error]:checked");
+        predError = e ? e.value === "si" : null;
+        if (nivel.preguntas?.error && predError === null) {
+          aviso = "Elige si crees que el programa terminará con un error.";
+          pintarMensaje();
+          return false;
+        }
+      }
       if (modo === "java") compilarAhora();
       const r = compilar(texto);
       if ("error" in r) {
@@ -439,13 +511,14 @@ export const robotGalileo: AppDef = {
       errorJava = null;
       aviso = "";
       ocultarBanner();
-      const ver = evaluar(nivel, r.prog);
+      const ver = nivel.tipo === "predecir" ? ejecucionDePrediccion(nivel, r.prog) : evaluar(nivel, r.prog);
       const fallido = ver.mapas.findIndex((m) => !m.ok);
       if (nivel.mapas.length > 1 && fallido >= 0) mapaSel = fallido;
       tr = { ver, mapa: mapaSel, k: 0, jugando: false, fin: false };
       pintarMapas();
       pintarMapa();
       if (modo === "java") pintarZonaJava();
+      if (nivel.tipo === "predecir") pintarEditor(); // bloquea el formulario mientras se ejecuta
       pintarMensaje();
       return true;
     }
@@ -509,8 +582,36 @@ export const robotGalileo: AppDef = {
       $(".rb-banner").hidden = true;
     }
 
+    /** veredicto de un nivel de predicción: compara lo marcado con lo que ha hecho el robot de verdad */
+    function mostrarBannerPred(): void {
+      if (!prediccion) return;
+      const caja = $(".rb-banner");
+      caja.hidden = false;
+      intentosPred++;
+      const j = juzgarPrediccion(nivel, { x: prediccion.x, y: prediccion.y, monedas: predMonedas, error: predError });
+      const fila = (ok: boolean, txt: string) => `<li class="${ok ? "si" : "no"}">${ok ? "✓" : "✗"} ${txt}</li>`;
+      const filas = [fila(j.casilla, j.casilla ? "Casilla final: ¡acertaste!" : "Casilla final: no era la que marcaste; el robot ha acabado donde lo ves ahora.")];
+      if (j.monedas !== null) filas.push(fila(j.monedas, `Monedas: dijiste ${predMonedas} y ha recogido ${j.real.monedas}.`));
+      if (j.error !== null) filas.push(fila(j.error, j.real.error ? `Error: sí, el programa falla (${esc(j.real.mensajeError ?? "")})` : "Error: no, ha terminado sin fallos."));
+      const lista = `<ul class="rb-pred-res">${filas.join("")}</ul>`;
+      if (j.ok) {
+        const estrellas = intentosPred === 1 ? 3 : 2;
+        if (!reg.hechas.includes(nivel.id)) reg.hechas.push(nivel.id);
+        reg.estrellas[nivel.id] = Math.max(reg.estrellas[nivel.id] ?? 0, estrellas);
+        guardado.guardar(reg);
+        barraNiveles();
+        const hay = i < NIVELES.length - 1;
+        caja.className = "rb-banner ganas";
+        caja.innerHTML = `<div class="rb-tarjeta"><div class="rb-confeti">🔮</div><h3>¡Predicción correcta!</h3><div class="rb-stars" aria-label="${estrellas} estrellas">${"⭐".repeat(estrellas)}${"☆".repeat(3 - estrellas)}</div>${lista}<div class="rb-tarjeta-bt"><button data-a="repetir">↺ Ver otra vez</button>${hay ? `<button data-a="sig" class="rb-primario">Siguiente nivel ▸</button>` : `<span class="rb-fin">🏁 ¡Has terminado todos los niveles disponibles!</span>`}</div><p class="rb-aprende">${nivel.aprende}</p></div>`;
+        return;
+      }
+      caja.className = "rb-banner pierdes";
+      caja.innerHTML = `<div class="rb-tarjeta"><div class="rb-confeti">🔮</div><h3>No exactamente</h3>${lista}<p class="rb-pred-ayuda">Usa <b>⏭ Paso</b> para seguir el código línea a línea y ver dónde se aparta de tu predicción.</p><div class="rb-tarjeta-bt"><button data-a="reintentar" class="rb-primario">Intentarlo otra vez</button></div></div>`;
+    }
+
     function mostrarBanner(): void {
       if (!tr) return;
+      if (nivel.tipo === "predecir") return mostrarBannerPred();
       const ver = tr.ver;
       const caja = $(".rb-banner");
       caja.hidden = false;
@@ -745,9 +846,141 @@ export const robotGalileo: AppDef = {
       ed.dispatchEvent(new Event("input", { bubbles: true }));
     }
 
+    // ---------------------------------------------------------------- autocompletado (modo Java)
+    interface Sug {
+      /** lo que se compara con lo que escribe el alumno */
+      etq: string;
+      firma: string;
+      doc: string;
+      /** `§` marca dónde queda el cursor */
+      plantilla: string;
+    }
+    let sugs: Sug[] = [];
+    let sugSel = 0;
+    let sugDesde = 0;
+
+    /** sugerencias del nivel: órdenes y estructuras fuera de un paréntesis; sensores y variables dentro de uno */
+    function candidatos(enCondicion: boolean, vars: string[]): Sug[] {
+      if (enCondicion) {
+        return [
+          ...nivel.sensores.map((s) => ({ etq: s, firma: `${s}()`, doc: SENSORES[s].doc, plantilla: `${s}()` })),
+          ...vars.map((v) => ({ etq: v, firma: v, doc: "variable del bucle", plantilla: v })),
+        ];
+      }
+      const sal: Sug[] = [];
+      for (const id of nivel.bloques) {
+        if (id in ACCIONES) sal.push({ etq: id, firma: `${id}();`, doc: ACCIONES[id].doc, plantilla: `${id}();` });
+      }
+      const tiene = (id: BloqueId) => nivel.bloques.includes(id);
+      if (tiene("repetir")) sal.push({ etq: "for", firma: "for (int i = 0; i < N; i++) { … }", doc: "repite un número fijo de veces", plantilla: PLANTILLAS.repetir });
+      if (tiene("mientras")) sal.push({ etq: "while", firma: "while (condición) { … }", doc: "repite mientras se cumpla la condición (la mira antes)", plantilla: PLANTILLAS.mientras });
+      if (tiene("hacerMientras")) sal.push({ etq: "do", firma: "do { … } while (condición);", doc: "repite al menos una vez (la condición se mira después)", plantilla: PLANTILLAS.hacerMientras });
+      if (tiene("si")) {
+        sal.push({ etq: "if", firma: "if (condición) { … }", doc: "hace algo solo si se cumple la condición", plantilla: PLANTILLAS.si });
+        sal.push({ etq: "else", firma: "else { … }", doc: "lo que se hace si el if no se cumple", plantilla: "else {\n  §\n}" });
+      }
+      return sal;
+    }
+
+    const cajaSug = () => raiz.querySelector<HTMLElement>(".rb-sug");
+    const sugVisible = () => !!cajaSug() && !cajaSug()!.hidden && sugs.length > 0;
+    function ocultarSug(): void {
+      sugs = [];
+      const c = cajaSug();
+      if (c) c.hidden = true;
+    }
+    function pintarSug(): void {
+      const c = cajaSug();
+      if (!c) return;
+      c.hidden = !sugs.length;
+      c.innerHTML = sugs
+        .map((s, k) => `<button type="button" role="option" data-sug="${k}" class="${k === sugSel ? "on" : ""}" aria-selected="${k === sugSel}"><code>${esc(s.firma)}</code><span>${esc(s.doc)}</span></button>`)
+        .join("");
+      c.querySelector<HTMLElement>(".on")?.scrollIntoView({ block: "nearest" });
+    }
+
+    function mostrarSugerencias(forzar = false): void {
+      const ed = raiz.querySelector<HTMLTextAreaElement>(".rb-ed");
+      if (!ed || !cajaSug()) return;
+      const pos = ed.selectionStart;
+      if (ed.selectionEnd !== pos) return ocultarSug();
+      const antes = ed.value.slice(0, pos);
+      const prefijo = /[A-Za-z_][A-Za-z0-9_]*$/.exec(antes)?.[0] ?? "";
+      // si se edita en mitad de una palabra no se molesta
+      if ((!prefijo && !forzar) || /[A-Za-z0-9_]/.test(ed.value[pos] ?? "")) return ocultarSug();
+      const linea = antes.slice(antes.lastIndexOf("\n") + 1, antes.length - prefijo.length);
+      const abiertos = (linea.match(/\(/g) ?? []).length - (linea.match(/\)/g) ?? []).length;
+      const vars = [...new Set([...antes.matchAll(/\bint\s+([A-Za-z_]\w*)/g)].map((m) => m[1]))];
+      sugs = candidatos(abiertos > 0, vars).filter((c) => c.etq.toLowerCase().startsWith(prefijo.toLowerCase()) && c.plantilla !== prefijo);
+      sugSel = 0;
+      sugDesde = pos - prefijo.length;
+      pintarSug();
+    }
+
+    function aceptarSug(k: number): void {
+      const s = sugs[k];
+      const ed = raiz.querySelector<HTMLTextAreaElement>(".rb-ed");
+      if (!s || !ed) return;
+      const fin = ed.selectionStart;
+      const previo = ed.value.slice(0, sugDesde);
+      const sang = /^[ \t]*/.exec(previo.slice(previo.lastIndexOf("\n") + 1))![0];
+      const frag = s.plantilla.replace(/\n/g, "\n" + sang);
+      const marca = frag.indexOf("§");
+      const limpio = frag.replace(/§/g, "");
+      ed.setRangeText(limpio, sugDesde, fin, "end");
+      const cursor = marca >= 0 ? sugDesde + marca : sugDesde + limpio.length;
+      ed.setSelectionRange(cursor, cursor);
+      ocultarSug();
+      ed.focus();
+      ed.dispatchEvent(new Event("input", { bubbles: true }));
+      // tras abrir un paréntesis (while, if…), enseguida se ofrecen los sensores
+      if (marca > 0 && frag[marca - 1] === "(") mostrarSugerencias(true);
+    }
+
+    raiz.addEventListener("mousedown", (e) => {
+      if ((e.target as HTMLElement).closest(".rb-sug")) e.preventDefault(); // no quitar el foco al editor
+    });
+    raiz.addEventListener("focusout", (e) => {
+      if ((e.target as HTMLElement).classList?.contains("rb-ed")) window.setTimeout(ocultarSug, 120);
+    });
+
     // ---------------------------------------------------------------- eventos
+    /** en un nivel de predicción, un clic en el mapa elige la casilla donde acabará el robot */
+    function elegirCasilla(e: MouseEvent): void {
+      const svg = raiz.querySelector<SVGSVGElement>(".rb-mapa");
+      const ctm = svg?.getScreenCTM();
+      if (!svg || !ctm) return;
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const p = pt.matrixTransform(ctm.inverse());
+      const x = Math.floor(p.x / S);
+      const y = Math.floor(p.y / S);
+      if (esPared(mundo, x, y)) return; // el robot nunca acaba dentro de una pared
+      prediccion = { x, y };
+      aviso = "";
+      pintarPrediccion();
+      pintarEditor();
+      pintarMensaje();
+    }
+
+    function reintentarPrediccion(): void {
+      prediccion = null;
+      predMonedas = null;
+      predError = null;
+      aviso = "";
+      reiniciarTraza();
+      pintarMapa();
+      pintarEditor();
+      pintarMensaje();
+    }
+
     raiz.addEventListener("click", (e) => {
       const t = e.target as HTMLElement;
+      if (nivel.tipo === "predecir" && t.closest(".rb-mapa") && !t.closest("button")) {
+        if (!tr) elegirCasilla(e);
+        return;
+      }
       const b = t.closest<HTMLElement>("button");
       if (!b) {
         // clic en una zona vacía o en la cabecera de un contenedor: destino de los bloques nuevos
@@ -789,6 +1022,7 @@ export const robotGalileo: AppDef = {
         if (ruta) operar(d.op, ruta);
         return;
       }
+      if (d.sug !== undefined) return aceptarSug(Number(d.sug));
       if (d.ins) return insertar(PLANTILLAS[d.ins as BloqueId]);
       if (d.sen) return insertar(`${d.sen}()`);
       if (d.vel !== undefined) {
@@ -822,7 +1056,12 @@ export const robotGalileo: AppDef = {
           return jugar();
         case "sig":
           return cargarNivel(i + 1);
+        case "comprobar":
+          return jugar();
+        case "reintentar":
+          return reintentarPrediccion();
         case "cero":
+          if (nivel.tipo === "predecir") return reintentarPrediccion();
           texto = nivel.modo === "java" ? inicialJava : "";
           prog = [];
           destino = [];
@@ -881,6 +1120,7 @@ export const robotGalileo: AppDef = {
       if (!t.classList.contains("rb-ed")) return;
       texto = (t as HTMLTextAreaElement).value;
       guardarCodigo();
+      mostrarSugerencias();
       window.clearTimeout(compilacion);
       compilacion = window.setTimeout(() => {
         compilarAhora();
@@ -898,6 +1138,25 @@ export const robotGalileo: AppDef = {
       }
       const ed = ev.target as HTMLTextAreaElement;
       if (!ed.classList?.contains("rb-ed")) return;
+      if (ev.key === " " && ev.ctrlKey) {
+        ev.preventDefault();
+        return mostrarSugerencias(true);
+      }
+      if (sugVisible()) {
+        if (ev.key === "Tab" && !ev.ctrlKey && !ev.altKey) {
+          ev.preventDefault();
+          return aceptarSug(sugSel);
+        }
+        if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+          ev.preventDefault();
+          sugSel = (sugSel + (ev.key === "ArrowDown" ? 1 : sugs.length - 1)) % sugs.length;
+          return pintarSug();
+        }
+        if (ev.key === "Escape") {
+          ev.preventDefault();
+          return ocultarSug();
+        }
+      }
       if (ev.key === "Tab" && !ev.ctrlKey && !ev.altKey) {
         ev.preventDefault();
         ed.setRangeText("  ", ed.selectionStart, ed.selectionEnd, "end");
