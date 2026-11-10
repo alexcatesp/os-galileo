@@ -105,6 +105,30 @@ function caracol(N: number): string[] {
   return texto(g);
 }
 
+/** fila de `n` monedas empezando por la casilla del robot (n = 0: fila vacía) y una casilla libre al final */
+const filaMonedas = (n: number): string[] => (n === 0 ? ["###", "#>#", "###"] : ["#".repeat(n + 3), `#>${"o".repeat(n - 1)}.#`, "#".repeat(n + 3), "!moneda"]);
+
+/** pasillo con puertas a la derecha: el robot empieza en una puerta y la meta está en la siguiente, a `d` casillas */
+function puertas(d: number): string[] {
+  const g = rejilla(d + 6, 4);
+  for (let x = 1; x <= d + 4; x++) g[1][x] = ".";
+  g[1][1] = ">";
+  g[2][1] = ".";
+  g[2][1 + d] = "G";
+  g[2][d + 3] = ".";
+  return texto(g);
+}
+
+/** anillo de pasillo: el robot empieza (y la meta está) en la esquina superior izquierda */
+function anillo(a: number, b: number, monedas: [number, number][] = []): string[] {
+  const g = rejilla(a + 3, b + 3);
+  for (let x = 1; x <= 1 + a; x++) g[1][x] = g[1 + b][x] = ".";
+  for (let y = 1; y <= 1 + b; y++) g[y][1] = g[y][1 + a] = ".";
+  g[1][1] = ">";
+  for (const [x, y] of monedas) g[y][x] = "o";
+  return [...texto(g), "!meta"];
+}
+
 export const NIVELES: Nivel[] = [
   {
     id: "p1",
@@ -141,7 +165,7 @@ export const NIVELES: Nivel[] = [
     mundo: 1,
     titulo: "Monedas en fila",
     historia: "Hay una moneda en cada casilla del pasillo. El robot debe <b>recogerlas todas</b> y no tiene sitio para tantas órdenes.",
-    objetivo: "Recoge las 6 monedas <b>🪙</b> con como mucho 4 instrucciones.",
+    objetivo: "Recoge las 6 monedas <b>💰</b> con como mucho 4 instrucciones.",
     mapas: [["#########", "#>oooooo#", "#########"]],
     limite: 4,
     bloques: ["avanzar", "recoger", "repetir"],
@@ -288,6 +312,72 @@ export const NIVELES: Nivel[] = [
     solucion: "while (!enMeta()) {\n  if (hayPared()) {\n    girarDerecha();\n  } else {\n    avanzar();\n  }\n}",
     aprende: "Un <code>if … else</code> dentro de un <code>while</code>: el bucle repite y el <code>if</code> decide qué hacer en cada vuelta. Es la receta de muchos robots reales para seguir una pared.",
   },
+
+  // ---------------------------------------------------------------- mundo 3: la máquina (do..while)
+  {
+    id: "m1",
+    mundo: 3,
+    titulo: "¿Y si no hay ninguna?",
+    historia: "Galileo está sobre la primera moneda de una fila. Pero ojo: <b>a veces la fila está vacía</b> y entonces no debe hacer nada. Aquí vas a ver cuándo un <code>do…while</code> es mala idea.",
+    objetivo: "Recoge todas las monedas en los 3 mapas (¡uno está vacío!) con como mucho 4 instrucciones.",
+    mapas: [filaMonedas(4), filaMonedas(0), filaMonedas(7)],
+    limite: 4,
+    bloques: ["avanzar", "recoger", "mientras", "hacerMientras"],
+    sensores: ["hayMoneda", "hayPared"],
+    modo: "bloques",
+    pistas: ["En el mapa vacío el robot no debe hacer nada: tiene que <b>preguntar primero</b> «¿hay moneda?» y solo si la hay, actuar. Cuidado: el bloque «mientras» empieza con «no», quítalo.", "mientras hayMoneda(): recoger y avanzar. Después de la última moneda hay una casilla libre."],
+    solucion: "while (hayMoneda()) {\n  recoger();\n  avanzar();\n}",
+    aprende: "El <code>while</code> mira <b>antes</b>, así que puede no ejecutar el cuerpo ni una vez. Un <code>do…while</code> aquí fallaría en el mapa vacío: actúa primero (<code>recoger()</code> sin moneda) y mira después.",
+  },
+  {
+    id: "m2",
+    mundo: 3,
+    titulo: "La próxima puerta",
+    historia: "En el pasillo hay puertas a la derecha. Galileo está justo <b>en una de ellas</b> y debe entrar por la <b>siguiente</b>, que es la de la meta. Hay otra puerta más allá que no sirve.",
+    objetivo: "Llega a la meta en los 3 pasillos con como mucho 4 instrucciones.",
+    mapas: [puertas(3), puertas(6), puertas(2)],
+    limite: 4,
+    bloques: ["avanzar", "girarDerecha", "girarIzquierda", "mientras", "hacerMientras"],
+    sensores: ["hayParedDerecha", "hayPared"],
+    modo: "bloques",
+    pistas: ["Ahora mismo no hay pared a tu derecha (estás en una puerta). Si miras antes de avanzar, el bucle no arranca. Avanza primero y luego mira.", "hacer { avanzar } mientras hayParedDerecha(); después girarDerecha y avanzar."],
+    solucion: "do {\n  avanzar();\n} while (hayParedDerecha());\ngirarDerecha();\navanzar();",
+    aprende: "Misma idea con otro sensor: el <code>do…while</code> sirve para «salir de donde estoy y buscar la siguiente». Si la condición ya se cumple al empezar, el <code>while</code> normal no daría ni un paso.",
+  },
+  {
+    id: "m3",
+    mundo: 3,
+    titulo: "La ronda",
+    historia: "El vigilante empieza su ronda sobre la meta y debe <b>recorrer todo el pasillo en anillo hasta volver a ella</b>. Como ya está en la meta, un <code>while (!enMeta())</code> no se movería. Este nivel lo escribes en Java.",
+    objetivo: "Recorre todo el anillo y vuelve al punto de partida, en los 3 mapas, con como mucho 6 instrucciones.",
+    mapas: [anillo(4, 3), anillo(6, 2), anillo(3, 5)],
+    limite: 6,
+    bloques: ["avanzar", "girarDerecha", "girarIzquierda", "mientras", "hacerMientras", "si"],
+    sensores: ["enMeta", "hayPared"],
+    modo: "java",
+    pistas: ["Al empezar ya estás en la meta, así que hay que moverse primero y comprobar después. En cada vuelta solo hay dos casos: si hay pared delante, gira; si no, avanza.", "do { if (hayPared()) { girarDerecha(); } else { avanzar(); } } while (!enMeta());"],
+    solucion: "do {\n  if (hayPared()) {\n    girarDerecha();\n  } else {\n    avanzar();\n  }\n} while (!enMeta());",
+    aprende: "«Repetir hasta volver al punto de partida» es el caso clásico del <code>do…while</code>: el punto de partida cumple la condición de parada <i>desde el principio</i>, pero todavía no has dado la vuelta.",
+  },
+  {
+    id: "m4",
+    mundo: 3,
+    titulo: "La ronda con monedas",
+    historia: "El anillo tiene ahora monedas repartidas por el camino. Durante la ronda, el vigilante debe <b>recogerlas todas</b>.",
+    objetivo: "Da la vuelta completa y recoge todas las monedas en los 3 mapas con como mucho 7 instrucciones.",
+    mapas: [
+      anillo(4, 3, [[3, 1], [5, 2], [2, 4]]),
+      anillo(6, 2, [[2, 1], [7, 1], [7, 3], [4, 3]]),
+      anillo(3, 5, [[4, 1], [4, 3], [1, 3]]),
+    ],
+    limite: 7,
+    bloques: ["avanzar", "girarDerecha", "girarIzquierda", "recoger", "mientras", "hacerMientras", "si"],
+    sensores: ["enMeta", "hayPared", "hayMoneda"],
+    modo: "java",
+    pistas: ["Es la ronda de antes, pero en cada vuelta además hay que preguntar si hay moneda en la casilla donde estás.", "do { if (hayMoneda()) { recoger(); } if (hayPared()) { girarDerecha(); } else { avanzar(); } } while (!enMeta());"],
+    solucion: "do {\n  if (hayMoneda()) {\n    recoger();\n  }\n  if (hayPared()) {\n    girarDerecha();\n  } else {\n    avanzar();\n  }\n} while (!enMeta());",
+    aprende: "Un solo bucle puede ocuparse de varias cosas en cada vuelta: recoger, girar o avanzar. Cada <code>if</code> es una pregunta distinta sobre lo que ve el robot.",
+  },
 ];
 
 // ---------------------------------------------------------------- evaluación
@@ -313,6 +403,14 @@ export function evaluar(nivel: Nivel, prog: Sent[]): Veredicto {
     if (ejecucion.error) motivo = ejecucion.error.mensaje;
     else if (f.monedas.length) motivo = `Quedan ${f.monedas.length} moneda${f.monedas.length > 1 ? "s" : ""} sin recoger.`;
     else if (mundo.meta && (f.x !== mundo.meta.x || f.y !== mundo.meta.y)) motivo = "El robot terminó, pero no está sobre la meta.";
+    else if (mundo.meta && mundo.meta.x === mundo.inicial.x && mundo.meta.y === mundo.inicial.y) {
+      // la meta es el punto de partida: hay que recorrer todo el camino y volver
+      const visitadas = new Set(ejecucion.pasos.map((p) => `${p.estado.x},${p.estado.y}`));
+      visitadas.add(`${mundo.inicial.x},${mundo.inicial.y}`);
+      let libres = 0;
+      for (let y = 0; y < mundo.alto; y++) for (let x = 0; x < mundo.ancho; x++) if (!mundo.paredes[y][x]) libres++;
+      if (visitadas.size < libres) motivo = "Terminó donde empezó, pero sin recorrer todo el camino: la ronda debe dar la vuelta completa.";
+    }
     return { ok: !motivo, motivo, ejecucion };
   });
   const instrucciones = contar(prog);

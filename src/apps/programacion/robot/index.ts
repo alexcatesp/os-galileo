@@ -32,7 +32,7 @@ const BLOQUES: Record<BloqueId, { texto: string; clase: string; icono: string }>
   avanzar: { texto: "avanzar()", clase: "mov", icono: "⬆" },
   girarIzquierda: { texto: "girarIzquierda()", clase: "mov", icono: "↶" },
   girarDerecha: { texto: "girarDerecha()", clase: "mov", icono: "↷" },
-  recoger: { texto: "recoger()", clase: "rec", icono: "🪙" },
+  recoger: { texto: "recoger()", clase: "rec", icono: "💰" },
   repetir: { texto: "repetir … veces", clase: "bucle", icono: "🔁" },
   mientras: { texto: "mientras …", clase: "bucle", icono: "🔄" },
   hacerMientras: { texto: "hacer … mientras", clase: "bucle", icono: "🔂" },
@@ -87,7 +87,12 @@ function dibujarMapa(filas: string[]): string {
     const [x, y] = k.split(",").map(Number);
     extra += `<g class="rb-moneda" data-k="${k}"><circle cx="${x * S + 24}" cy="${y * S + 24}" r="10.5" fill="#f7c948" stroke="#b8860b" stroke-width="2"/><circle cx="${x * S + 24}" cy="${y * S + 24}" r="6" fill="none" stroke="#b8860b" stroke-width="1.8"/><path d="M${x * S + 20} ${y * S + 19}l2 -2" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g>`;
   }
-  return `<svg class="rb-mapa" viewBox="0 0 ${m.ancho * S} ${m.alto * S}" role="img" aria-label="Mapa de ${m.ancho} por ${m.alto} casillas">${celdas}${extra}${ROBOT}</svg>`;
+  // si el robot empieza sobre la meta o una moneda, un pequeño aviso en la esquina de su casilla (solo mientras está encima)
+  const ini = m.inicial;
+  let marcas = "";
+  if (m.meta && m.meta.x === ini.x && m.meta.y === ini.y) marcas += `<g class="rb-marca"><path d="M${ini.x * S + 37} ${ini.y * S + 3}v17" stroke="#e8e4ff" stroke-width="2" stroke-linecap="round"/><path d="M${ini.x * S + 37} ${ini.y * S + 3}h10l-2.5 3.8 2.5 3.8H${ini.x * S + 37}z" fill="#da251c" stroke="#fff" stroke-width=".8"/></g>`;
+  if (ini.monedas.includes(`${ini.x},${ini.y}`)) marcas += `<g class="rb-marca rb-moneda" data-k="${ini.x},${ini.y}"><circle cx="${ini.x * S + 39}" cy="${ini.y * S + 9}" r="7" fill="#f7c948" stroke="#b8860b" stroke-width="1.6"/></g>`;
+  return `<svg class="rb-mapa" viewBox="0 0 ${m.ancho * S} ${m.alto * S}" role="img" aria-label="Mapa de ${m.ancho} por ${m.alto} casillas">${celdas}${extra}${ROBOT}${marcas}</svg>`;
 }
 
 // ---------------------------------------------------------------- la app
@@ -254,6 +259,8 @@ export const robotGalileo: AppDef = {
         angulo += delta;
         giro.style.transform = `rotate(${angulo}deg)`;
         svg.querySelectorAll<SVGGElement>(".rb-moneda").forEach((m) => m.classList.toggle("tomada", !e.monedas.includes(m.dataset.k!)));
+        const enSalida = e.x === mundo.inicial.x && e.y === mundo.inicial.y;
+        svg.querySelectorAll<SVGGElement>(".rb-marca").forEach((m) => (m.style.display = enSalida ? "" : "none"));
         const pasos = tr ? tr.ver.mapas[tr.mapa].ejecucion.pasos : [];
         const ultimo = tr && tr.k > 0 ? pasos[tr.k - 1] : null;
         robot.classList.toggle("fallo", ultimo?.tipo === "fallo");

@@ -25,8 +25,11 @@ export interface Mundo {
 /**
  * Un mapa es una lista de filas de texto:
  * `#` pared · `.` suelo · `o` moneda · `G` meta · `^ > v <` robot al empezar (y hacia dónde mira).
+ * Una fila que empieza por `!` es una directiva: `!meta` pone la meta bajo el robot y `!moneda`, una moneda.
  */
-export function crearMundo(filas: string[]): Mundo {
+export function crearMundo(todas: string[]): Mundo {
+  const filas = todas.filter((f) => !f.startsWith("!"));
+  const directivas = todas.filter((f) => f.startsWith("!"));
   const alto = filas.length;
   const ancho = Math.max(...filas.map((f) => f.length));
   const paredes: boolean[][] = [];
@@ -45,6 +48,8 @@ export function crearMundo(filas: string[]): Mundo {
   }
   if (!inicial) throw new Error("El mapa no tiene robot");
   inicial.monedas = monedas;
+  if (directivas.includes("!meta")) meta = { x: inicial.x, y: inicial.y };
+  if (directivas.includes("!moneda")) inicial.monedas.unshift(`${inicial.x},${inicial.y}`);
   return { ancho, alto, paredes, meta, inicial };
 }
 

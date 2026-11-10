@@ -44,6 +44,17 @@ const casos: [string, string, boolean][] = [
   ["l6", "while (!hayPared()) { avanzar(); }", false],
   ["l6", "while (!enMeta()) { if (!hayPared()) { avanzar(); } if (hayPared()) { girarDerecha(); } }", true], // sin else también vale
   ["l6", "while (!enMeta()) { if (hayPared()) { girarDerecha(); } else { avanzar(); } }", true],
+  // mundo 3: do..while
+  ["m1", "while (hayMoneda()) { recoger(); avanzar(); }", true],
+  ["m1", "do { recoger(); avanzar(); } while (hayMoneda());", false], // en el mapa vacío recoge donde no hay nada
+  ["m1", "while (!hayMoneda()) { avanzar(); }", false],
+  ["m2", "do { avanzar(); } while (hayParedDerecha()); girarDerecha(); avanzar();", true],
+  ["m2", "while (hayParedDerecha()) { avanzar(); } girarDerecha(); avanzar();", false], // se queda en la primera puerta
+  ["m3", "do { if (hayPared()) { girarDerecha(); } else { avanzar(); } } while (!enMeta());", true],
+  ["m3", "while (!enMeta()) { if (hayPared()) { girarDerecha(); } else { avanzar(); } }", false], // ya está en la meta: no se mueve
+  ["m3", "do { avanzar(); } while (!enMeta());", false],
+  ["m4", "do { if (hayMoneda()) { recoger(); } if (hayPared()) { girarDerecha(); } else { avanzar(); } } while (!enMeta());", true],
+  ["m4", "do { if (hayPared()) { girarDerecha(); } else { avanzar(); } } while (!enMeta());", false], // da la vuelta pero no recoge
 ];
 for (const [id, cod, esperado] of casos) {
   const n = NIVELES.find((x) => x.id === id)!;
