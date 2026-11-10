@@ -523,7 +523,7 @@ export const robotGalileo: AppDef = {
         barraNiveles();
         const hay = i < NIVELES.length - 1;
         caja.className = "rb-banner ganas";
-        caja.innerHTML = `<div class="rb-tarjeta"><div class="rb-confeti">🎉</div><h3>¡Nivel superado!</h3><div class="rb-stars" aria-label="${estrellas} estrellas">${"⭐".repeat(estrellas)}${"☆".repeat(3 - estrellas)}</div><p class="rb-uso">${ver.instrucciones} instrucciones (máximo ${nivel.limite})${estrellas < 3 ? ` · la solución más corta usa ${optimo}` : " · ¡solución óptima!"}</p><p class="rb-aprende">${nivel.aprende}</p><div class="rb-tarjeta-bt"><button data-a="repetir">↺ Ver otra vez</button>${hay ? `<button data-a="sig" class="rb-primario">Siguiente nivel ▸</button>` : `<span class="rb-fin">🏁 ¡Has terminado todos los niveles disponibles!</span>`}</div></div>`;
+        caja.innerHTML = `<div class="rb-tarjeta"><div class="rb-confeti">🎉</div><h3>¡Nivel superado!</h3><div class="rb-stars" aria-label="${estrellas} estrellas">${"⭐".repeat(estrellas)}${"☆".repeat(3 - estrellas)}</div><p class="rb-uso">${ver.instrucciones} instrucciones (máximo ${nivel.limite})${estrellas < 3 ? ` · la solución más corta usa ${optimo}` : " · ¡solución óptima!"}</p><div class="rb-tarjeta-bt"><button data-a="repetir">↺ Ver otra vez</button>${hay ? `<button data-a="sig" class="rb-primario">Siguiente nivel ▸</button>` : `<span class="rb-fin">🏁 ¡Has terminado todos los niveles disponibles!</span>`}</div><p class="rb-aprende">${nivel.aprende}</p></div>`;
         return;
       }
       const mal = ver.mapas.map((m, k) => ({ m, k })).filter((x) => !x.m.ok);
@@ -576,8 +576,8 @@ export const robotGalileo: AppDef = {
       const esContenedor = "cuerpo" in nuevo;
       if (esContenedor) destino = [...destino, lista.length - 1];
       cambio();
-      const ws = raiz.querySelector(".rb-ws");
-      if (ws) ws.scrollTop = ws.scrollHeight;
+      // que el bloque recién añadido quede a la vista
+      (raiz.querySelector(".dest > .rb-b:last-child") ?? raiz.querySelector(".dest"))?.scrollIntoView({ block: "nearest" });
     }
 
     function operar(op: string, ruta: number[]): void {

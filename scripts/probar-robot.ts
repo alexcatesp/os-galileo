@@ -21,7 +21,18 @@ for (const n of NIVELES) {
 }
 
 // trampas concretas
+const sol = (id: string) => NIVELES.find((x) => x.id === id)!.solucion;
 const casos: [string, string, boolean][] = [
+  // mundo 4: bucles anidados; la solución de cada nivel no sirve en el siguiente
+  ["a2", sol("a1"), false], // contar casillas no vale con estanterías desiguales
+  ["a2", sol("a2"), true],
+  ["a3", sol("a2"), false], // el exterior cuenta 3 estanterías y hay mapas con otro número
+  ["a3", sol("a3"), true],
+  ["a3", sol("a2").replace("for (int i = 0; i < 3; i++)", "while (!hayPared())"), true], // equivalente a la solución
+  ["a4", sol("a3"), false], // recoger donde no hay moneda
+  ["a4", sol("a4"), true],
+  ["a1", sol("a1").replace("i < 3", "i < 2"), false], // una estantería sin recorrer
+  ["a1", sol("a1").replace("j < 3; j++) {\n    avanzar();\n    recoger", "j < 4; j++) {\n    avanzar();\n    recoger"), false], // una vuelta de más: choca
   ["p1", "for (int i = 0; i <= 7; i++) { avanzar(); }", false], // una vuelta de más: choca
   ["p1", "for (int i = 0; i < 6; i++) { avanzar(); }", false], // se queda corto
   ["p1", "avanzar();avanzar();avanzar();avanzar();avanzar();avanzar();avanzar();", false], // no cabe en el límite

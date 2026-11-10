@@ -129,6 +129,24 @@ function anillo(a: number, b: number, monedas: [number, number][] = []): string[
   return [...texto(g), "!meta"];
 }
 
+/**
+ * almacén: un pasillo central (columna 1) por el que sube el robot, con una estantería a la derecha cada dos
+ * filas. `largos[i]` es la longitud de la estantería i (de abajo arriba). Tras la última quedan dos casillas
+ * de pasillo. `hay(i, j)` decide si la casilla j de la estantería i tiene moneda (por defecto, todas).
+ */
+function almacen(largos: number[], hay: (i: number, j: number) => boolean = () => true): string[] {
+  const k = largos.length;
+  const H = 2 * k + 3;
+  const g = rejilla(Math.max(...largos) + 3, H);
+  for (let y = 1; y <= 2 * k + 1; y++) g[y][1] = ".";
+  g[2 * k + 1][1] = "^";
+  largos.forEach((largo, i) => {
+    const y = 2 * k + 1 - 2 * i;
+    for (let j = 0; j < largo; j++) g[y][2 + j] = hay(i, j) ? "o" : ".";
+  });
+  return texto(g);
+}
+
 export const NIVELES: Nivel[] = [
   {
     id: "p1",
@@ -377,6 +395,68 @@ export const NIVELES: Nivel[] = [
     pistas: ["Es la ronda de antes, pero en cada vuelta además hay que preguntar si hay moneda en la casilla donde estás.", "do { if (hayMoneda()) { recoger(); } if (hayPared()) { girarDerecha(); } else { avanzar(); } } while (!enMeta());"],
     solucion: "do {\n  if (hayMoneda()) {\n    recoger();\n  }\n  if (hayPared()) {\n    girarDerecha();\n  } else {\n    avanzar();\n  }\n} while (!enMeta());",
     aprende: "Un solo bucle puede ocuparse de varias cosas en cada vuelta: recoger, girar o avanzar. Cada <code>if</code> es una pregunta distinta sobre lo que ve el robot.",
+  },
+
+  // ---------------------------------------------------------------- mundo 4: el almacén (bucles anidados)
+  {
+    id: "a1",
+    mundo: 4,
+    titulo: "Tres estanterías",
+    historia: "El almacén tiene un pasillo central y <b>tres estanterías</b> a la derecha, cada una de 3 casillas con monedas. Por cada estantería: entrar recogiendo, dar la vuelta, salir y subir a la siguiente. <b>Un bucle dentro de otro.</b>",
+    objetivo: "Recoge las 9 monedas con como mucho 13 instrucciones. El robot empieza mirando al norte, en la primera estantería.",
+    mapas: [almacen([3, 3, 3])],
+    limite: 13,
+    bloques: ["avanzar", "girarDerecha", "girarIzquierda", "recoger", "repetir"],
+    sensores: [],
+    modo: "bloques",
+    pistas: ["Por cada estantería haces lo mismo, así que hay un bucle exterior de 3 vueltas. Y dentro de cada estantería, «avanzar y recoger» se repite 3 veces: otro bucle, <b>dentro</b> del primero.", "repetir 3 { girarDerecha · repetir 3 {avanzar, recoger} · girarDerecha · girarDerecha · repetir 3 {avanzar} · girarDerecha · avanzar · avanzar }"],
+    solucion: "for (int i = 0; i < 3; i++) {\n  girarDerecha();\n  for (int j = 0; j < 3; j++) {\n    avanzar();\n    recoger();\n  }\n  girarDerecha();\n  girarDerecha();\n  for (int j = 0; j < 3; j++) {\n    avanzar();\n  }\n  girarDerecha();\n  avanzar();\n  avanzar();\n}",
+    aprende: "El bucle de fuera cuenta <b>estanterías</b>; los de dentro cuentan <b>casillas</b>. Por cada vuelta del exterior, el interior da todas las suyas: 3 × 3 = 9 veces «avanzar y recoger». Sin bucles harían falta 45 instrucciones.",
+  },
+  {
+    id: "a2",
+    mundo: 4,
+    titulo: "Estanterías desiguales",
+    historia: "Siguen siendo tres estanterías, pero <b>cada una mide distinto</b> y cada almacén es diferente. El bucle de dentro ya no puede contar: tiene que preguntar.",
+    objetivo: "Recoge todas las monedas en los 3 almacenes con como mucho 13 instrucciones.",
+    mapas: [almacen([3, 1, 4]), almacen([2, 4, 2]), almacen([5, 2, 3])],
+    limite: 13,
+    bloques: ["avanzar", "girarDerecha", "girarIzquierda", "recoger", "repetir", "mientras"],
+    sensores: ["hayPared"],
+    modo: "bloques",
+    pistas: ["Mantén el bucle de fuera (3 estanterías), pero cambia los de dentro: «avanzar y recoger» y «volver» ya no se repiten un número fijo de veces, sino <b>hasta topar con la pared</b>.", "repetir 3 { girarDerecha · mientras !hayPared() {avanzar, recoger} · girarDerecha · girarDerecha · mientras !hayPared() {avanzar} · girarDerecha · avanzar · avanzar }"],
+    solucion: "for (int i = 0; i < 3; i++) {\n  girarDerecha();\n  while (!hayPared()) {\n    avanzar();\n    recoger();\n  }\n  girarDerecha();\n  girarDerecha();\n  while (!hayPared()) {\n    avanzar();\n  }\n  girarDerecha();\n  avanzar();\n  avanzar();\n}",
+    aprende: "Un <code>for</code> puede contener <code>while</code>: el exterior sabe cuántas veces (3 estanterías) y el interior se adapta a lo que ve (el largo de cada una). Se mezclan según lo que sepas de antemano.",
+  },
+  {
+    id: "a3",
+    mundo: 4,
+    titulo: "El almacén sin planos",
+    historia: "Ahora tampoco sabes <b>cuántas estanterías hay</b>. Cuando el robot llega al final del pasillo central, no queda ninguna más. Dos <code>while</code> anidados. Este nivel lo escribes en Java.",
+    objetivo: "Recoge todas las monedas en los 3 almacenes con como mucho 13 instrucciones.",
+    mapas: [almacen([3, 1]), almacen([2, 4, 3, 1]), almacen([4, 2, 5])],
+    limite: 13,
+    bloques: ["avanzar", "girarDerecha", "girarIzquierda", "recoger", "repetir", "mientras"],
+    sensores: ["hayPared"],
+    modo: "java",
+    pistas: ["El bucle de fuera también pregunta: «mientras no haya pared delante» (en el pasillo central, mirando al norte). Tras la última estantería, el robot sube dos casillas y llega al final del pasillo.", "while (!hayPared()) { girarDerecha(); while (!hayPared()) { avanzar(); recoger(); } girarDerecha(); girarDerecha(); while (!hayPared()) { avanzar(); } girarDerecha(); avanzar(); avanzar(); }"],
+    solucion: "while (!hayPared()) {\n  girarDerecha();\n  while (!hayPared()) {\n    avanzar();\n    recoger();\n  }\n  girarDerecha();\n  girarDerecha();\n  while (!hayPared()) {\n    avanzar();\n  }\n  girarDerecha();\n  avanzar();\n  avanzar();\n}",
+    aprende: "La misma pregunta, <code>!hayPared()</code>, sirve para dos cosas distintas según <b>hacia dónde mira</b> el robot: en el pasillo central decide si queda otra estantería; dentro de una, si queda otra casilla.",
+  },
+  {
+    id: "a4",
+    mundo: 4,
+    titulo: "Paquetes sueltos",
+    historia: "Las estanterías no están llenas: hay <b>huecos</b>, y recoger donde no hay nada es un error. Tres estructuras a la vez: un bucle para las estanterías, otro para las casillas y un <code>if</code> para decidir si recoger.",
+    objetivo: "Recoge todas las monedas en los 3 almacenes con como mucho 14 instrucciones.",
+    mapas: [almacen([4, 3, 5], (i, j) => (i + j) % 2 === 0), almacen([3, 5], (i, j) => j % 2 === 1 || (i === 0 && j === 0)), almacen([2, 4, 3, 5], (i, j) => (i * 2 + j) % 3 === 0)],
+    limite: 14,
+    bloques: ["avanzar", "girarDerecha", "girarIzquierda", "recoger", "repetir", "mientras", "si"],
+    sensores: ["hayPared", "hayMoneda"],
+    modo: "java",
+    pistas: ["Parte del nivel anterior: el recorrido es el mismo. Lo único que cambia es que, al llegar a cada casilla de la estantería, hay que mirar si hay moneda antes de recoger.", "Dentro del bucle de la ida: avanzar(); if (hayMoneda()) { recoger(); }"],
+    solucion: "while (!hayPared()) {\n  girarDerecha();\n  while (!hayPared()) {\n    avanzar();\n    if (hayMoneda()) {\n      recoger();\n    }\n  }\n  girarDerecha();\n  girarDerecha();\n  while (!hayPared()) {\n    avanzar();\n  }\n  girarDerecha();\n  avanzar();\n  avanzar();\n}",
+    aprende: "Así se construyen los programas grandes: <b>de dentro hacia fuera</b>. Primero la decisión de una casilla (<code>if</code>), luego recorrer una estantería (<code>while</code>) y por último recorrer el almacén (otro <code>while</code>). Cada nivel de sangría es una pregunta distinta.",
   },
 ];
 
