@@ -19,6 +19,7 @@ import { javadocEnJuego } from "./apps/programacion/api";
 import { cazadorDeErrores } from "./apps/programacion/errores";
 import { laboratorioJava } from "./apps/programacion/laboratorio";
 import { ctfDeStrings } from "./apps/programacion/ctf";
+import { robotGalileo } from "./apps/programacion/robot";
 import { appWeb } from "./apps/app-web";
 import { arrancar, iniciarSesion } from "./shell/arranque";
 import { montarEscritorio } from "./shell/escritorio";
@@ -47,6 +48,7 @@ so.registrar(javadocEnJuego);
 so.registrar(cazadorDeErrores);
 so.registrar(laboratorioJava);
 so.registrar(ctfDeStrings);
+so.registrar(robotGalileo);
 so.registrar(calculadora);
 // GASA (el campus de aventuras gráficas) es la web hermana en /gasa/ y se abre dentro de una ventana
 so.registrar(

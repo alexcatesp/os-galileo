@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "probar:robot": "esbuild scripts/probar-robot.ts --bundle --platform=node --format=cjs --outfile=.tmp/probar-robot.cjs --log-level=error && node .tmp/probar-robot.cjs",
     "probar:isla": "esbuild scripts/probar-isla.ts --bundle --platform=node --format=cjs --outfile=.tmp/probar-isla.cjs --log-level=error && node .tmp/probar-isla.cjs"
   },
   "devDependencies": {

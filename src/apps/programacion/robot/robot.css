@@ -1,0 +1,137 @@
+/* ---------- Robot Galileo (playground de bucles) ---------- */
+.rb { display: flex; flex-direction: column; height: 100%; background: radial-gradient(ellipse at 30% 0%, #2a1770 0%, #12103a 55%, #0b0a24 100%); color: #e8e4ff; }
+.rb button, .rb select, .rb input { font: inherit; font-size: 13px; color: #e8e4ff; background: #2a2468; border: 1px solid #4a3fb0; border-radius: 9px; padding: 6px 10px; cursor: pointer; }
+.rb button:hover:not(:disabled) { background: #3a31a0; }
+.rb button:disabled { opacity: 0.5; cursor: default; }
+.rb kbd { font: 11px Consolas, monospace; background: #1b1740; border: 1px solid #4a3fb0; border-radius: 4px; padding: 0 4px; }
+.rb code { font-family: Consolas, "Cascadia Mono", monospace; }
+.rb-barra { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(13, 11, 30, 0.7); border-bottom: 1px solid #3a31a0; flex-wrap: wrap; }
+.rb-logo { font-weight: 800; letter-spacing: 0.02em; white-space: nowrap; }
+.rb-niveles { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.rb-mundo { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #a79cf0; margin: 0 4px 0 8px; }
+.rb .rb-niveles button { width: 30px; height: 28px; padding: 0; font-weight: 700; }
+.rb .rb-niveles button.ok { background: #1f6f41; border-color: #4cd68a; }
+.rb .rb-niveles button.on { background: #da251c; border-color: #ff7b72; color: #fff; }
+.rb-estrellas { font-size: 13px; color: #f7c948; white-space: nowrap; }
+.rb-split { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 0; }
+.rb-escena { display: flex; flex-direction: column; gap: 8px; min-height: 0; min-width: 0; padding: 10px 12px; }
+.rb-editor { display: flex; flex-direction: column; min-height: 0; min-width: 0; background: rgba(13, 11, 30, 0.72); border-left: 1px solid #3a31a0; }
+.rb-mision { background: rgba(13, 11, 30, 0.6); border: 1px solid #3a31a0; border-radius: 12px; padding: 6px 12px; font-size: 13px; line-height: 1.5; }
+.rb-mision summary { cursor: pointer; list-style: none; }
+.rb-mision summary::-webkit-details-marker { display: none; }
+.rb-mision summary b { font-size: 16px; color: #fff; }
+.rb-mundo-ins { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #a79cf0; }
+.rb-mision-txt p { margin: 4px 0; }
+.rb-objetivo { color: #f7e26b; }
+.rb-mapas { display: flex; gap: 4px; }
+.rb .rb-mapas button.on { background: #8c6dff; border-color: #e8e4ff; }
+.rb .rb-mapas button.ok { border-color: #4cd68a; }
+.rb .rb-mapas button.mal { border-color: #ff7b72; }
+.rb-lienzo { position: relative; flex: 1; min-height: 160px; border-radius: 16px; border: 2px solid #4a3fb0; background: radial-gradient(circle at 50% 40%, #1d1847, #0d0b1e); box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5), 0 6px 22px rgba(0, 0, 0, 0.35); overflow: hidden; display: grid; place-items: center; padding: 10px; }
+.rb-svg { width: 100%; height: 100%; display: grid; place-items: center; min-height: 0; }
+.rb-mapa { width: 100%; height: 100%; max-width: 100%; max-height: 100%; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5)); }
+.rb-robot { transition: transform 0.3s ease-in-out; }
+.rb-giro { transition: transform 0.25s ease-in-out; transform-origin: 24px 24px; }
+.rb-robot.fallo .rb-giro { filter: drop-shadow(0 0 6px #ff3b30); }
+.rb-robot.fallo { animation: rb-sacude 0.4s; }
+@keyframes rb-sacude { 25% { translate: -4px 0; } 50% { translate: 4px 0; } 75% { translate: -3px 0; } }
+.rb-moneda { transform-box: fill-box; transform-origin: center; transition: opacity 0.25s, transform 0.3s; animation: rb-brilla 1.6s ease-in-out infinite; }
+.rb-moneda.tomada { opacity: 0; transform: scale(1.8) translateY(-8px); animation: none; }
+@keyframes rb-brilla { 50% { transform: scale(1.12); } }
+.rb-meta { transform-box: fill-box; transform-origin: bottom center; animation: rb-ondea 1.8s ease-in-out infinite; }
+@keyframes rb-ondea { 50% { transform: rotate(3deg); } }
+.rb-nota { min-height: 44px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 6px 12px; border-radius: 10px; background: rgba(13, 11, 30, 0.6); border: 1px solid #3a31a0; font-size: 13px; }
+.rb-nota-vacia { color: #a79cf0; }
+.rb-paso code { background: #1b1740; border-radius: 5px; padding: 1px 5px; color: #a79cf0; font-size: 12px; }
+.rb-paso.si { color: #8af0b0; }
+.rb-paso.no { color: #ffb38a; }
+.rb-paso.mal { color: #ff8f86; font-weight: 700; }
+.rb-vuelta { font-size: 11px; background: #8c6dff; color: #fff; padding: 1px 8px; border-radius: 999px; }
+.rb-vars { display: flex; gap: 6px; margin-left: auto; }
+.rb-var { background: #1b1740; border: 1px solid #5eead4; border-radius: 8px; padding: 1px 8px; font: 13px Consolas, monospace; }
+.rb-var i { font-style: normal; color: #5eead4; }
+.rb-mandos { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rb .rb-jugar { background: #da251c; border-color: #ff7b72; color: #fff; font-weight: 800; padding: 8px 18px; font-size: 15px; border-radius: 12px; }
+.rb .rb-jugar:hover:not(:disabled) { background: #f0382e; }
+.rb-scrub { flex: 1; min-width: 80px; padding: 0 !important; accent-color: #8c6dff; }
+.rb-vel { display: flex; gap: 3px; }
+.rb .rb-vel button { padding: 4px 8px; }
+.rb .rb-vel button.on { background: #8c6dff; border-color: #e8e4ff; }
+.rb-banner { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(8, 6, 24, 0.72); backdrop-filter: blur(3px); padding: 12px; z-index: 5; overflow: auto; }
+.rb-banner[hidden] { display: none; }
+.rb-banner.pierdes { background: none; backdrop-filter: none; place-items: end center; pointer-events: none; }
+.rb-banner.pierdes .rb-tarjeta { pointer-events: auto; max-width: 92%; padding: 8px 14px; display: flex; align-items: center; gap: 10px; text-align: left; flex-wrap: wrap; justify-content: center; }
+.rb-banner.pierdes h3, .rb-banner.pierdes .rb-confeti { display: none; }
+.rb-banner.pierdes .rb-tarjeta p { margin: 0; font-size: 13px; }
+.rb-banner.pierdes .rb-tarjeta-bt { margin: 0; }
+.rb-tarjeta { max-width: 420px; background: #1b1740; border: 2px solid #8c6dff; border-radius: 18px; padding: 16px 20px; text-align: center; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); animation: rb-entra 0.35s ease-out; }
+.rb-banner.ganas .rb-tarjeta { border-color: #f7c948; }
+.rb-banner.pierdes .rb-tarjeta { border-color: #ff7b72; }
+@keyframes rb-entra { from { transform: scale(0.8); opacity: 0; } }
+.rb-tarjeta h3 { margin: 0 0 4px; font-size: 22px; }
+.rb-confeti { font-size: 34px; }
+.rb-stars { font-size: 30px; letter-spacing: 4px; }
+.rb-uso { margin: 4px 0; font-size: 12px; color: #a79cf0; }
+.rb-aprende { margin: 8px 0; font-size: 13px; line-height: 1.5; text-align: left; background: #12103a; border-radius: 10px; padding: 8px 12px; }
+.rb-tarjeta p { margin: 6px 0; font-size: 14px; line-height: 1.5; }
+.rb-tarjeta-bt { display: flex; gap: 8px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+.rb .rb-primario { background: #8c6dff; border-color: #e8e4ff; color: #fff; font-weight: 700; }
+.rb-ed-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid #3a31a0; flex-wrap: wrap; }
+.rb-vistas { display: flex; }
+.rb .rb-vistas button { border-radius: 0; }
+.rb .rb-vistas button:first-child { border-radius: 9px 0 0 9px; }
+.rb .rb-vistas button:last-child { border-radius: 0 9px 9px 0; border-left: 0; }
+.rb .rb-vistas button.on { background: #8c6dff; border-color: #e8e4ff; color: #fff; font-weight: 700; }
+.rb-meter { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.rb-meter-t { color: #a79cf0; }
+.rb-pastillas { display: flex; gap: 3px; flex-wrap: wrap; max-width: 140px; }
+.rb-pastillas i { width: 10px; height: 14px; border-radius: 3px; background: #2a2468; border: 1px solid #4a3fb0; }
+.rb-pastillas i.llena { background: #5eead4; border-color: #5eead4; }
+.rb-pastillas i.de-mas { background: #ff7b72; border-color: #ff7b72; }
+.rb-meter b.pasa { color: #ff7b72; }
+.rb-ed-cuerpo { flex: 1; min-height: 0; overflow: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.rb-paleta, .rb-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rb .rb-ficha, .rb .rb-chip { font-weight: 700; border-radius: 10px; }
+.rb .mov { background: #1f4fb0; border-color: #6fa0ff; }
+.rb .rec { background: #a37a0c; border-color: #f7c948; }
+.rb .bucle { background: #6b2fc7; border-color: #b58cff; }
+.rb .cond { background: #c25a12; border-color: #ffb066; }
+.rb .sens { background: #14756b; border-color: #5eead4; }
+.rb .rb-chip { font: 12px Consolas, monospace; font-weight: 700; padding: 4px 8px; }
+.rb-ws { min-height: 120px; flex: 1; background: #12103a; border: 2px dashed #3a31a0; border-radius: 12px; padding: 8px; overflow: auto; display: flex; flex-direction: column; gap: 5px; }
+.rb-ws.dest, .rb-hijos.dest { border-color: #f7e26b; box-shadow: 0 0 0 2px rgba(247, 226, 107, 0.25); }
+.rb-vacio { color: #7a73b8; font-size: 12px; text-align: center; padding: 8px; }
+.rb-b { border: 1px solid; border-radius: 10px; padding: 4px 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 700 13px Consolas, "Cascadia Mono", monospace; color: #fff; }
+.rb-b.rb-cont { display: block; padding: 4px 6px 6px; }
+.rb-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; padding: 0 2px; }
+.rb-hijos { margin: 4px 0 0 10px; padding: 5px; border: 2px dashed rgba(255, 255, 255, 0.25); border-radius: 8px; background: rgba(8, 6, 24, 0.35); display: flex; flex-direction: column; gap: 4px; min-height: 30px; cursor: pointer; }
+.rb-pie-bloque { margin-top: 4px; padding: 0 2px; }
+.rb-b input[type="number"] { width: 52px; padding: 2px 4px; text-align: center; background: #12103a; }
+.rb-b select { padding: 2px 4px; background: #12103a; font: 12px Consolas, monospace; }
+.rb-ctl { display: flex; gap: 2px; flex: none; }
+.rb .rb-ctl button { padding: 0 6px; height: 22px; font-size: 12px; background: rgba(0, 0, 0, 0.3); border-color: rgba(255, 255, 255, 0.25); }
+.rb-java-cab { font-size: 12px; font-weight: 700; color: #a79cf0; }
+.rb-java-cab span { font-weight: 400; }
+.rb .jv-codigo { background: #0d0b1e; border: 1px solid #3a31a0; max-height: 220px; }
+.rb-java-zona { display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0; }
+.rb .rb-ed { width: 100%; box-sizing: border-box; flex: 1; min-height: 190px; font: 14px/1.5 Consolas, "Cascadia Mono", monospace; background: #0d0b1e; color: #e8e4ff; border: 1px solid #4a3fb0; border-radius: 10px; padding: 8px 12px; resize: vertical; white-space: pre; tab-size: 2; cursor: text; }
+.rb .rb-editar { align-self: flex-start; }
+.rb-ed-pie { border-top: 1px solid #3a31a0; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
+.rb-mensaje { margin: 0; min-height: 20px; font-size: 13px; line-height: 1.5; color: #c9c2f5; }
+.rb-mensaje.mal { color: #ff8f86; font-weight: 600; }
+.rb-mensaje.pista { color: #fff3c4; background: rgba(247, 226, 107, 0.12); border-left: 3px solid #f7e26b; padding: 6px 10px; border-radius: 0 8px 8px 0; }
+.rb-sol { margin: 4px 0 0; background: #0d0b1e; padding: 6px 10px; border-radius: 8px; font: 13px Consolas, monospace; color: #b6f2c0; }
+.rb-pie-botones { display: flex; gap: 6px; flex-wrap: wrap; }
+@media (max-width: 760px) {
+  .rb { height: auto; min-height: 100%; }
+  .rb-split { display: block; overflow: auto; }
+  .rb-lienzo { height: auto; flex: none; min-height: 150px; max-height: 44vh; }
+  .rb-svg { height: auto; }
+  .rb-mapa { height: auto; max-height: 40vh; }
+  .rb-escena { gap: 6px; padding: 8px; }
+  .rb-editor { border-left: 0; border-top: 1px solid #3a31a0; }
+  .rb .rb-ed { font-size: 16px; }
+  .rb-b input[type="number"], .rb-b select { font-size: 16px; }
+  .rb-vars { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .rb-robot, .rb-giro, .rb-moneda, .rb-meta { transition: none; animation: none; } }
