@@ -873,3 +873,32 @@ svg { display: block; }
 .jv .jv-ce small { font-weight: 400; opacity: 0.8; }
 .jv .jv-ce.on { background: var(--morado); border-color: var(--morado); color: #fff; }
 .jv .jv-ce.ok:not(.on) { background: #dff5e6; border-color: #1f9d4d; color: #1f7a3d; }
+
+/* ---------- 0485 · CTF de Strings ---------- */
+.ctf-etq { font-size: 12px; color: #6a62a8; margin-bottom: 3px; }
+.ctf-etq kbd { font: 11px Consolas, monospace; background: #fff; border: 1px solid #c9c2ee; border-radius: 4px; padding: 0 4px; }
+.ctf-msg { margin: 0; background: #0d0b1e; color: #b6f2c0; font: 15px/1.5 Consolas, "Cascadia Mono", monospace; border-radius: 8px; padding: 8px 12px; white-space: pre-wrap; word-break: break-all; }
+.ctf-editor { position: relative; }
+.cj .ctf-ed { width: 100%; box-sizing: border-box; font: 14px/1.5 Consolas, "Cascadia Mono", monospace; background: #1b1740; color: #e8e4ff; border: 1px solid #1b1740; border-radius: 8px; padding: 8px 12px; resize: vertical; white-space: pre; tab-size: 2; }
+.cj .ctf-ed:focus { outline: 2px solid #f7e26b; }
+.ctf-sug { display: grid; margin-top: 4px; background: #fff; border: 1px solid #c9c2ee; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 14px rgba(26, 20, 64, 0.18); }
+.ctf-sug[hidden] { display: none; }
+.cj .ctf-sug button { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px; text-align: left; border: 0; border-radius: 0; border-top: 1px solid #f0edfb; padding: 5px 10px; }
+.cj .ctf-sug button.on { background: #ece8fb; }
+.ctf-sug code { font: 12.5px Consolas, monospace; word-break: break-word; }
+.ctf-sug span { font-size: 12px; color: #5b5486; }
+.ctf-traza { display: grid; gap: 4px; }
+.ctf-paso { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 2px 10px; background: #fff; border: 1px solid #e3def7; border-radius: 8px; padding: 5px 10px; font-size: 13px; }
+.ctf-paso.ctf-inicio { background: #f7f5ff; }
+.ctf-n { grid-row: span 2; color: #6a62a8; font-size: 11px; align-self: center; }
+.ctf-paso code { font: 13px Consolas, monospace; background: #1b1740; color: #e8e4ff; border-radius: 4px; padding: 1px 6px; justify-self: start; max-width: 100%; overflow-x: auto; }
+.ctf-res { font: 13px Consolas, monospace; word-break: break-all; }
+.ctf-res i { color: #6a62a8; font-style: normal; }
+.ctf-paso.ctf-inicio .ctf-res { grid-column: 2; }
+.ctf-aviso { grid-column: 2; color: #8a5a00; background: #fff4d6; border-radius: 4px; padding: 2px 6px; font-size: 12.5px; }
+.ctf-error { background: #fff0ee; color: #8a1a12; border-left: 3px solid #da251c; border-radius: 0 8px 8px 0; padding: 6px 10px; font-size: 13px; line-height: 1.5; word-break: break-word; }
+.ctf-bandera { font: 700 16px Consolas, monospace; color: #1f7a3d; }
+.ctf-final { margin-top: 8px; padding: 6px 10px; background: #f0fbf3; border-radius: 8px; }
+.ctf-ayuda { background: #fff; border: 1px solid #c9c2ee; border-radius: 8px; padding: 6px 12px; font-size: 13px; }
+.ctf-ayuda summary { cursor: pointer; }
+@media (max-width: 760px) { .cj .ctf-ed { font-size: 16px; } .cj .ctf-sug button { grid-template-columns: 1fr; } .ctf-paso { grid-template-columns: 1fr; } .ctf-n { grid-row: auto; } }

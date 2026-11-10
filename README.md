@@ -88,6 +88,8 @@ Cuatro apps de la UT02 «Objetos ya hechos: la biblioteca estándar de Java» (D
 - **Cazador de errores** (`errores/`): 19 casos con mensajes reales de Eclipse y de la JVM; hay que señalar la línea culpable y elegir el arreglo (`casos.ts`).
 - **Laboratorio: String y fechas** (`laboratorio/`): *String es inmutable* (frente a `StringBuilder`), *Concatenar: el coste* (modelo exacto de copias y medición en JavaScript) y *Fechas* (`fechas.ts` replica `LocalDate`, `Period`, `ChronoUnit`, semana ISO y bisiestos; incluye comprobador del reto D de la Profundización).
 
+- **CTF de Strings** (`ctf/`): nueve pruebas de «capturar la bandera» (leetspeak, ruido, separadores, corchetes, inversión, la trampa de la inmutabilidad, posiciones, el orden de los `replace` y un jefe final). El alumno escribe un **script de Java real** sobre la variable `s`; `interprete.ts` es un intérprete propio de un subconjunto de Java (sin `eval`; variables, `+`, métodos de `String`/`StringBuilder`, arrays, `String.join`, `Integer.parseInt`) con errores al estilo Eclipse/JVM. La traza muestra `s` tras cada sentencia y avisa (⚠) de las llamadas cuyo resultado se descarta. `autocompletar.ts` sugiere métodos según el tipo de lo que hay a la izquierda del punto (Tab acepta, Ctrl+Espacio las abre). Las entradas se generan a partir de la bandera, así que todas tienen solución (`pruebas.ts`). Pistas en 3 pasos y solución guardada al capturar cada bandera.
+
 ## Hoja de ruta
 1. Logo definitivo en el arranque.
 2. Terminal: tuberías, permisos y usuarios; explorador: mover/copiar arrastrando.
