@@ -14,7 +14,9 @@
 .rb .rb-niveles button.on { background: #da251c; border-color: #ff7b72; color: #fff; }
 .rb-estrellas { font-size: 13px; color: #f7c948; white-space: nowrap; }
 .rb-split { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 0; }
-.rb-escena { display: flex; flex-direction: column; gap: 8px; min-height: 0; min-width: 0; padding: 10px 12px; }
+.rb-escena { display: flex; flex-direction: column; gap: 8px; min-height: 0; min-width: 0; padding: 10px 12px; overflow-y: auto; }
+.rb-escena > * { flex-shrink: 0; }
+.rb-escena > .rb-lienzo { flex: 1 0 220px; }
 .rb-editor { display: flex; flex-direction: column; min-height: 0; min-width: 0; background: rgba(13, 11, 30, 0.72); border-left: 1px solid #3a31a0; }
 .rb-mision { background: rgba(13, 11, 30, 0.6); border: 1px solid #3a31a0; border-radius: 12px; padding: 6px 12px; font-size: 13px; line-height: 1.5; }
 .rb-mision summary { cursor: pointer; list-style: none; }
@@ -25,6 +27,21 @@
 .rb-objetivo { color: #f7e26b; }
 .rb-mapas { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 .rb-mapas[hidden] { display: none; }
+.rb-lab { display: grid; gap: 6px; }
+.rb-lab[hidden], .rb-lab-panel[hidden] { display: none; }
+.rb-lab-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.rb-lab-herr, .rb-lab-acc { display: flex; gap: 3px; }
+.rb .rb-lab-herr button { font-size: 16px; padding: 4px 9px; }
+.rb .rb-lab-herr button.on { background: #8c6dff; border-color: #f7e26b; box-shadow: 0 0 0 2px rgba(247, 226, 107, 0.4); }
+.rb-lab-tam { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+.rb .rb-lab-tam button { padding: 2px 8px; }
+.rb-lab-tam b { min-width: 18px; text-align: center; }
+.rb-lab-panel { display: grid; gap: 6px; background: #12103a; border: 1px solid #3a31a0; border-radius: 12px; padding: 8px 10px; }
+.rb .rb-lab-texto { width: 100%; box-sizing: border-box; font: 14px/1.4 Consolas, "Cascadia Mono", monospace; background: #0d0b1e; color: #e8e4ff; border: 1px solid #4a3fb0; border-radius: 8px; padding: 6px 10px; resize: vertical; white-space: pre; cursor: text; }
+.rb-lab-ayuda { margin: 0; font-size: 12px; color: #a79cf0; }
+.rb-lab-botones { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rb-lab-msg { font-size: 12px; color: #8af0b0; }
+.rb-lienzo.rb-lab-edit .rb-svg { touch-action: none; cursor: crosshair; user-select: none; }
 .rb-azar-etq { font-size: 12px; font-weight: 700; color: #f7c948; margin-right: 2px; }
 .rb .rb-azar-volver { margin-left: auto; font-size: 12px; padding: 4px 8px; }
 .rb .rb-mapas button.on { background: #8c6dff; border-color: #e8e4ff; }

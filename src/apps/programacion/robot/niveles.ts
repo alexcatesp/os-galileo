@@ -3,6 +3,7 @@
 
 import { ejecutar, type Ejecucion } from "./ejecutor";
 import { compilar, contar, type Sent } from "./lenguaje";
+import { MAPA_INICIAL, conBordes } from "./lab";
 import { crearMundo } from "./mundo";
 
 export type BloqueId = "avanzar" | "girarIzquierda" | "girarDerecha" | "recoger" | "repetir" | "mientras" | "hacerMientras" | "si";
@@ -25,7 +26,7 @@ export interface Nivel {
   solucion: string;
   aprende: string;
   /** "predecir": no se programa; se lee `codigo` y se adivina qué hará (por defecto, "programar") */
-  tipo?: "programar" | "predecir";
+  tipo?: "programar" | "predecir" | "laboratorio";
   codigo?: string;
   /** qué se le pregunta además de la casilla final */
   preguntas?: { monedas: boolean; error: boolean };
@@ -63,6 +64,7 @@ export const MUNDOS: MundoDef[] = [
   { n: 2, nombre: "El laberinto", emoji: "🧭", lema: "while: miro y decido" },
   { n: 3, nombre: "La máquina", emoji: "⚙️", lema: "do..while: primero hago, luego miro" },
   { n: 4, nombre: "El almacén", emoji: "📦", lema: "todos juntos" },
+  { n: 5, nombre: "Laboratorio", emoji: "🧪", lema: "crea tu propio mapa" },
 ];
 
 
@@ -566,6 +568,22 @@ export const NIVELES: Nivel[] = [
     pistas: ["Haz una tabla con i, el número de pasos del bucle de dentro (j va de 0 hasta i, inclusive) y hacia dónde mira el robot después de cada giro.", "i = 0: 1 paso al este · i = 1: 2 pasos al sur · i = 2: 3 pasos al oeste. Cada tramo sale de donde acabó el anterior."],
     solucion: "1 paso al este, 2 al sur y 3 al oeste: acaba 2 casillas a la izquierda de donde empezó y 2 más abajo.",
     aprende: "Con bucles anidados, el de dentro se repite completo en cada vuelta del de fuera y aquí su número de vueltas depende de <code>i</code> (<code>j &lt;= i</code>: 1, 2 y 3 pasos). La forma segura de trazarlo es una tabla con <code>i</code>, <code>j</code> y la posición.",
+  },
+  {
+    id: "lab",
+    mundo: 5,
+    tipo: "laboratorio",
+    titulo: "Mi mapa",
+    historia: "Aquí no hay enunciado: <b>diseñas tú el mapa</b> y programas al robot para resolverlo. Pinta paredes, monedas y una meta, prueba cualquier programa (sin límite de instrucciones) y, si quieres, pásale el mapa a un compañero con «🔤 Texto».",
+    objetivo: "Crea un mapa con una meta 🏁 o monedas 💰 y haz que el robot lo resuelva. Tu mapa se guarda en este navegador.",
+    mapas: [conBordes(MAPA_INICIAL)],
+    limite: 99,
+    bloques: ["avanzar", "girarIzquierda", "girarDerecha", "recoger", "repetir", "mientras", "hacerMientras", "si"],
+    sensores: ["hayPared", "hayParedIzquierda", "hayParedDerecha", "hayMoneda", "enMeta"],
+    modo: "bloques",
+    pistas: ["", ""],
+    solucion: "",
+    aprende: "",
   },
 ];
 

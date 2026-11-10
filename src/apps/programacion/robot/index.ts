@@ -7,6 +7,7 @@ import type { AppDef } from "../../../kernel/kernel";
 import { bloqueJava, esc, progreso } from "../comun";
 import { aTexto, comoRepetir, compilar, condSimple, contar, normalizarBloques, repetir, sePuedeEnBloques, type ErrorJava, type Expr, type Sent } from "./lenguaje";
 import { ACCIONES, SENSORES, crearMundo, esPared, type Estado, type Mundo } from "./mundo";
+import { MAPA_INICIAL, MAX_ALTO, MAX_ANCHO, MIN_ALTO, MIN_ANCHO, conBordes, desdeTexto, pintar, redimensionar, vaciar, validar, type Herramienta } from "./lab";
 import { MUNDOS, NIVELES, azarConSemilla, ejecucionDePrediccion, evaluar, juzgarPrediccion, type BloqueId, type Nivel, type Veredicto } from "./niveles";
 
 
@@ -17,6 +18,8 @@ interface Registro {
   codigos: Record<string, string>;
   /** vista con la que dejó cada nivel */
   modos: Record<string, "bloques" | "java">;
+  /** interior del mapa del laboratorio */
+  mapaLab?: string[];
 }
 const guardado = progreso<Registro>("osg-java-robot", { hechas: [], estrellas: {}, codigos: {}, modos: {} });
 
@@ -115,6 +118,11 @@ export const robotGalileo: AppDef = {
     // mapas con los que se prueba ahora: los del nivel o, tras «🎲 Mapas nuevos», seis sorteados
     let mapasNivel: string[][] = nivel.mapas;
     let pruebaAzar = false;
+    // laboratorio: interior del mapa que edita el alumno y herramienta activa
+    let labFilas: string[] = reg.mapaLab && validar(reg.mapaLab) === null ? reg.mapaLab : MAPA_INICIAL;
+    let herramienta: Herramienta = "pared";
+    let pintando = false;
+    let ultimaCelda = "";
     let modo: "bloques" | "java" = "bloques";
     let texto = "";
     let prog: Sent[] = [];
@@ -147,6 +155,18 @@ export const robotGalileo: AppDef = {
         <section class="rb-escena" aria-label="Escena">
           <details class="rb-mision" open><summary></summary><div class="rb-mision-txt"></div></details>
           <div class="rb-mapas" role="tablist" aria-label="Mapas del nivel"></div>
+          <div class="rb-lab" hidden>
+            <div class="rb-lab-fila">
+              <div class="rb-lab-herr" role="group" aria-label="Herramientas del mapa"><button data-herr="pared" title="Pared">🧱</button><button data-herr="suelo" title="Borrar (dejar suelo)">⬜</button><button data-herr="moneda" title="Moneda (pulsa otra vez para quitarla)">💰</button><button data-herr="meta" title="Meta (solo una)">🏁</button><button data-herr="robot" title="Robot: pulsa una casilla para moverlo y el robot para girarlo">🤖</button></div>
+              <div class="rb-lab-tam">↔ <button data-lab="ancho-" aria-label="Menos columnas">−</button><b class="rb-lab-w"></b><button data-lab="ancho+" aria-label="Más columnas">+</button> ↕ <button data-lab="alto-" aria-label="Menos filas">−</button><b class="rb-lab-h"></b><button data-lab="alto+" aria-label="Más filas">+</button></div>
+              <div class="rb-lab-acc"><button data-lab="vaciar" title="Vacía el mapa">🗑</button><button data-lab="texto" title="Ver o pegar el mapa como texto">🔤 Texto</button></div>
+            </div>
+            <div class="rb-lab-panel" hidden>
+              <textarea class="rb-lab-texto" spellcheck="false" rows="4" aria-label="Mapa en texto"></textarea>
+              <p class="rb-lab-ayuda"><code>#</code> pared · <code>.</code> suelo · <code>o</code> moneda · <code>G</code> meta · <code>^ &gt; v &lt;</code> robot (y hacia dónde mira). Sin el marco: se añade solo.</p>
+              <div class="rb-lab-botones"><button data-lab="copiar">📋 Copiar</button><button data-lab="aplicar" class="rb-primario">Aplicar texto</button><span class="rb-lab-msg" aria-live="polite"></span></div>
+            </div>
+          </div>
           <div class="rb-lienzo"><div class="rb-svg"></div><div class="rb-banner" hidden></div></div>
           <div class="rb-nota" aria-live="polite"></div>
           <div class="rb-mandos">
@@ -195,7 +215,7 @@ export const robotGalileo: AppDef = {
       }
       $(".rb-niveles").innerHTML = html;
       const total = Object.values(reg.estrellas).reduce((a, b) => a + b, 0);
-      $(".rb-estrellas").textContent = `⭐ ${total} / ${NIVELES.length * 3}`;
+      $(".rb-estrellas").textContent = `⭐ ${total} / ${NIVELES.filter((n) => n.tipo !== "laboratorio").length * 3}`;
     }
 
     function cargarNivel(n: number): void {
@@ -205,6 +225,15 @@ export const robotGalileo: AppDef = {
       mapasNivel = nivel.mapas;
       pruebaAzar = false;
       raiz.querySelector<HTMLElement>('[data-a="azar"]')!.hidden = !nivel.generar || nivel.tipo === "predecir";
+      const esLab = nivel.tipo === "laboratorio";
+      $(".rb-lab").hidden = !esLab;
+      $(".rb-lienzo").classList.toggle("rb-lab-edit", esLab);
+      raiz.querySelector<HTMLElement>('[data-a="pista"]')!.hidden = esLab;
+      $<HTMLDetailsElement>(".rb-mision").open = !esLab; // en el laboratorio el mapa necesita el sitio
+      if (esLab) {
+        mapasNivel = [conBordes(labFilas)];
+        sincronizarLab();
+      }
       pedidas = 0;
       aviso = "";
       mapaSel = 0;
@@ -261,6 +290,111 @@ export const robotGalileo: AppDef = {
         .join("");
       caja.innerHTML = pruebaAzar ? `<span class="rb-azar-etq">🎲 mapas al azar</span>${pestanas}<button data-a="volverMapas" class="rb-azar-volver" title="Volver a los mapas del nivel">↩ Mapas del nivel</button>` : pestanas;
     }
+
+    // ---------------------------------------------------------------- laboratorio (editor de mapas)
+    function sincronizarLab(): void {
+      raiz.querySelectorAll<HTMLElement>("[data-herr]").forEach((b) => b.classList.toggle("on", b.dataset.herr === herramienta));
+      $(".rb-lab-w").textContent = String(labFilas[0].length);
+      $(".rb-lab-h").textContent = String(labFilas.length);
+      const t = raiz.querySelector<HTMLTextAreaElement>(".rb-lab-texto");
+      if (t) t.value = labFilas.join("\n");
+    }
+
+    /** cualquier cambio del mapa guarda, para la ejecución y redibuja */
+    function aplicarLab(nuevas: string[]): void {
+      labFilas = nuevas;
+      reg.mapaLab = nuevas;
+      guardado.guardar(reg);
+      reiniciarTraza();
+      mapasNivel = [conBordes(labFilas)];
+      mapaSel = 0;
+      sincronizarLab();
+      pintarMapa();
+    }
+
+    function celdaLab(e: PointerEvent): { x: number; y: number } | null {
+      const svg = raiz.querySelector<SVGSVGElement>(".rb-mapa");
+      const ctm = svg?.getScreenCTM();
+      if (!svg || !ctm) return null;
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const p = pt.matrixTransform(ctm.inverse());
+      const x = Math.floor(p.x / S) - 1; // el marco de pared no se edita
+      const y = Math.floor(p.y / S) - 1;
+      return x >= 0 && y >= 0 && x < labFilas[0].length && y < labFilas.length ? { x, y } : null;
+    }
+
+    function pintarEnLab(e: PointerEvent, arrastre: boolean): void {
+      const c = celdaLab(e);
+      if (!c) return;
+      const clave = `${c.x},${c.y}`;
+      if (arrastre && clave === ultimaCelda) return;
+      ultimaCelda = clave;
+      const nuevas = pintar(labFilas, c.x, c.y, herramienta, arrastre);
+      if (nuevas) aplicarLab(nuevas);
+    }
+
+    function accionLab(a: string): void {
+      const w = labFilas[0].length;
+      const h = labFilas.length;
+      const tamano = (ancho: number, alto: number) => {
+        const n = redimensionar(labFilas, ancho, alto);
+        aviso = n ? "" : `Ese tamaño no se puede: entre ${MIN_ANCHO}×${MIN_ALTO} y ${MAX_ANCHO}×${MAX_ALTO}, y sin dejar fuera el robot ni la meta.`;
+        if (n) aplicarLab(n);
+        pintarMensaje();
+      };
+      const panel = $(".rb-lab-panel");
+      const msg = $(".rb-lab-msg");
+      switch (a) {
+        case "ancho-":
+          return tamano(w - 1, h);
+        case "ancho+":
+          return tamano(w + 1, h);
+        case "alto-":
+          return tamano(w, h - 1);
+        case "alto+":
+          return tamano(w, h + 1);
+        case "vaciar":
+          return aplicarLab(vaciar(labFilas));
+        case "texto":
+          panel.hidden = !panel.hidden;
+          msg.textContent = "";
+          return sincronizarLab();
+        case "copiar":
+          navigator.clipboard
+            ?.writeText(labFilas.join("\n"))
+            .then(() => (msg.textContent = "¡Copiado!"))
+            .catch(() => (msg.textContent = "Selecciona el texto y copia con Ctrl+C."));
+          return;
+        case "aplicar": {
+          const r = desdeTexto(raiz.querySelector<HTMLTextAreaElement>(".rb-lab-texto")!.value);
+          if ("error" in r) {
+            msg.textContent = r.error;
+            return;
+          }
+          msg.textContent = "Mapa aplicado.";
+          return aplicarLab(r.filas);
+        }
+      }
+    }
+
+    raiz.addEventListener("pointerdown", (e) => {
+      if (nivel.tipo !== "laboratorio" || !(e.target as Element).closest(".rb-svg")) return;
+      e.preventDefault();
+      $(".rb-svg").setPointerCapture(e.pointerId);
+      pintando = true;
+      ultimaCelda = "";
+      pintarEnLab(e, false);
+    });
+    raiz.addEventListener("pointermove", (e) => {
+      if (pintando) pintarEnLab(e, true);
+    });
+    const soltarPuntero = () => {
+      pintando = false;
+    };
+    raiz.addEventListener("pointerup", soltarPuntero);
+    raiz.addEventListener("pointercancel", soltarPuntero);
 
     /** sortea 6 mapas de la familia del nivel y prueba en ellos el programa del alumno */
     function probarMapasNuevos(): void {
@@ -472,6 +606,12 @@ export const robotGalileo: AppDef = {
         $(".rb-meter").innerHTML = `<span class="rb-meter-t">🔮 Nivel de predicción: no hay que programar</span>`;
         return;
       }
+      if (nivel.tipo === "laboratorio") {
+        const r = modo === "bloques" ? null : compilar(texto);
+        const n = modo === "bloques" ? contar(prog) : r && "prog" in r ? contar(r.prog) : null;
+        $(".rb-meter").innerHTML = `<span class="rb-meter-t">🧪 Sin límite · instrucciones</span><b>${n ?? "–"}</b>`;
+        return;
+      }
       let usadas = 0;
       let valido = true;
       if (modo === "bloques") usadas = contar(prog);
@@ -652,6 +792,27 @@ export const robotGalileo: AppDef = {
     function mostrarBanner(): void {
       if (!tr) return;
       if (nivel.tipo === "predecir") return mostrarBannerPred();
+      if (nivel.tipo === "laboratorio") {
+        // en el laboratorio no hay progreso ni estrellas: solo se cuenta qué ha pasado
+        const r = tr.ver.mapas[0];
+        const hayObjetivo = !!mundo.meta || mundo.inicial.monedas.length > 0;
+        const c = $(".rb-banner");
+        c.hidden = false;
+        if (r.ejecucion.error) {
+          c.className = "rb-banner pierdes";
+          c.innerHTML = `<div class="rb-tarjeta"><div class="rb-confeti">💥</div><h3>El programa se ha detenido</h3><p>${esc(r.ejecucion.error.mensaje)}</p><div class="rb-tarjeta-bt"><button data-a="cerrar" class="rb-primario">Seguir</button></div></div>`;
+        } else if (!hayObjetivo) {
+          c.className = "rb-banner pierdes";
+          c.innerHTML = `<div class="rb-tarjeta"><div class="rb-confeti">🧪</div><h3>Programa terminado</h3><p>El mapa no tiene meta ni monedas: pon una 🏁 o un 💰 para tener un objetivo.</p><div class="rb-tarjeta-bt"><button data-a="cerrar" class="rb-primario">Seguir</button></div></div>`;
+        } else if (r.ok) {
+          c.className = "rb-banner ganas";
+          c.innerHTML = `<div class="rb-tarjeta"><div class="rb-confeti">🎉</div><h3>¡Mapa resuelto!</h3><p>${tr.ver.instrucciones} instrucciones. ¿Se puede con menos? ¿Y con otro tipo de bucle?</p><div class="rb-tarjeta-bt"><button data-a="repetir">↺ Ver otra vez</button><button data-a="cerrar" class="rb-primario">Seguir</button></div></div>`;
+        } else {
+          c.className = "rb-banner pierdes";
+          c.innerHTML = `<div class="rb-tarjeta"><div class="rb-confeti">🔧</div><h3>Todavía no</h3><p>${esc(r.motivo)}</p><div class="rb-tarjeta-bt"><button data-a="cerrar" class="rb-primario">Seguir</button></div></div>`;
+        }
+        return;
+      }
       if (pruebaAzar) {
         // prueba con mapas sorteados: no toca el progreso, solo dice si el programa es general
         const v = tr.ver;
@@ -1081,6 +1242,11 @@ export const robotGalileo: AppDef = {
         if (ruta) operar(d.op, ruta);
         return;
       }
+      if (d.herr) {
+        herramienta = d.herr as Herramienta;
+        return sincronizarLab();
+      }
+      if (d.lab) return accionLab(d.lab);
       if (d.sug !== undefined) return aceptarSug(Number(d.sug));
       if (d.ins) return insertar(PLANTILLAS[d.ins as BloqueId]);
       if (d.sen) return insertar(`${d.sen}()`);

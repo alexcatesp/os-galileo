@@ -1,5 +1,7 @@
 // Valida los niveles del Robot Galileo: la solución los supera, el programa vacío no, y las trampas típicas fallan.
 import { compilar } from "../src/apps/programacion/robot/lenguaje";
+import { MAPA_INICIAL, conBordes, desdeTexto, pintar, redimensionar, validar, vaciar } from "../src/apps/programacion/robot/lab";
+import { crearMundo } from "../src/apps/programacion/robot/mundo";
 import { NIVELES, azarConSemilla, evaluar, juzgarPrediccion, resultadoReal } from "../src/apps/programacion/robot/niveles";
 
 let incidencias = 0;
@@ -14,6 +16,7 @@ const prog = (t: string) => {
 };
 
 for (const n of NIVELES) {
+  if (n.tipo === "laboratorio") continue; // no tiene solución: el mapa lo crea el alumno
   if (n.tipo === "predecir") {
     // el resultado calculado a mano debe coincidir con el del motor, y una predicción equivocada debe fallar
     const real = resultadoReal(n);
@@ -134,6 +137,39 @@ const errores: [string, RegExp][] = [
 for (const [cod, re] of errores) {
   const r = compilar(cod);
   if (!("error" in r) || !re.test(r.error.mensaje)) mal(`error esperado ${re} para «${cod}»: ${"error" in r ? r.error.mensaje : "compiló"}`);
+}
+
+// laboratorio: lógica del editor de mapas
+{
+  const cuenta = (f: string[], c: string) => f.join("").split(c).length - 1;
+  const ok = (cond: boolean, msg: string) => cond || mal(`laboratorio: ${msg}`);
+  ok(validar(MAPA_INICIAL) === null, "el mapa inicial no es válido");
+  const mundoLab = crearMundo(conBordes(MAPA_INICIAL));
+  ok(mundoLab.ancho === 10 && mundoLab.alto === 7 && mundoLab.meta !== null && mundoLab.inicial.x === 1 && mundoLab.inicial.y === 1, "el mapa inicial no se crea bien con bordes");
+  ok(pintar(MAPA_INICIAL, 0, 0, "pared") === null, "se puede poner una pared sobre el robot");
+  ok(pintar(MAPA_INICIAL, 1, 0, "pared")![0][1] === "#", "no pone la pared");
+  const moneda = pintar(MAPA_INICIAL, 2, 0, "moneda")!;
+  ok(moneda[0][2] === "o" && pintar(moneda, 2, 0, "moneda")![0][2] === ".", "la moneda no alterna con clics");
+  ok(pintar(moneda, 2, 0, "moneda", true) === null, "arrastrando no debe quitar monedas");
+  const meta = pintar(MAPA_INICIAL, 1, 0, "meta")!;
+  ok(cuenta(meta, "G") === 1 && meta[0][1] === "G", "debe haber una única meta al moverla");
+  const rotado = pintar(MAPA_INICIAL, 0, 0, "robot")!;
+  ok(rotado[0][0] === "v", "el robot no gira al pulsarlo (> pasa a v)");
+  const movido = pintar(MAPA_INICIAL, 2, 0, "robot")!;
+  ok(cuenta(movido, ">") === 1 && movido[0][2] === ">" && movido[0][0] === ".", "el robot debe moverse conservando su orientación");
+  ok(pintar(MAPA_INICIAL, 1, 0, "robot", true) === null && pintar(MAPA_INICIAL, 1, 0, "meta", true) === null, "robot y meta no se pintan arrastrando");
+  ok(redimensionar(MAPA_INICIAL, 7, 5) === null, "recortar la columna de la meta debería rechazarse");
+  const grande = redimensionar(MAPA_INICIAL, 10, 6)!;
+  ok(!!grande && grande.length === 6 && grande.every((f) => f.length === 10) && validar(grande) === null, "ampliar el mapa falla");
+  ok(redimensionar(MAPA_INICIAL, 20, 5) === null && redimensionar(MAPA_INICIAL, 8, 1) === null, "no respeta los límites de tamaño");
+  ok(validar(vaciar(MAPA_INICIAL)) === null && cuenta(vaciar(MAPA_INICIAL), "#") === 0, "vaciar deja un mapa raro");
+  const desde = desdeTexto(">..\n.o\n");
+  ok("filas" in desde && desde.filas.join("|") === ">..|.o.", "desdeTexto no rellena las filas cortas");
+  ok("error" in desdeTexto(">>.\n..."), "dos robots deberían ser un error");
+  ok("error" in desdeTexto("...\n..."), "sin robot debería ser un error");
+  ok("error" in desdeTexto(">.x\n..."), "un carácter raro debería ser un error");
+  ok("error" in desdeTexto(">.G\n..G"), "dos metas deberían ser un error");
+  console.log("laboratorio: pruebas del editor de mapas hechas");
 }
 
 console.log(incidencias ? `\n${incidencias} incidencia(s)` : "\nSin incidencias");
