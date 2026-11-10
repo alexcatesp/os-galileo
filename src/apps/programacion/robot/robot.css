@@ -102,6 +102,13 @@
 .rb .rb-chip { font: 12px Consolas, monospace; font-weight: 700; padding: 4px 8px; }
 .rb-ws { min-height: 140px; flex: none; background: #12103a; border: 2px dashed #3a31a0; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 5px; }
 .rb-ws.dest, .rb-hijos.dest { border-color: #f7e26b; box-shadow: 0 0 0 2px rgba(247, 226, 107, 0.25); }
+.rb-asa { cursor: grab; opacity: 0.65; padding: 0 5px 0 0; user-select: none; font-size: 15px; }
+.rb-asa:hover { opacity: 1; }
+.rb .rb-ficha[draggable="true"] { cursor: grab; }
+.rb-b.arrastrando { opacity: 0.35; }
+.rb-sobre { outline: 2px solid rgba(247, 226, 107, 0.55); outline-offset: 1px; }
+.rb-b.ins-antes { box-shadow: 0 -5px 0 0 #f7e26b; }
+.rb-ws.ins-fin, .rb-hijos.ins-fin { box-shadow: inset 0 -5px 0 0 #f7e26b; }
 .rb-vacio { color: #7a73b8; font-size: 12px; text-align: center; padding: 8px; }
 .rb-b { border: 1px solid; border-radius: 10px; padding: 4px 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 700 13px Consolas, "Cascadia Mono", monospace; color: #fff; }
 .rb-b.rb-cont { display: block; padding: 4px 6px 6px; }

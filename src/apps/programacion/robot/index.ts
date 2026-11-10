@@ -105,6 +105,8 @@ export const robotGalileo: AppDef = {
   alto: 720,
   iniciar({ ventana, raiz }) {
     raiz.classList.add("rb");
+    // arrastrar bloques solo con ratón (escritorio); en pantallas táctiles se añaden pulsando
+    const arrastrable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const reg = guardado.leer();
     const primera = NIVELES.findIndex((n) => !reg.hechas.includes(n.id));
     let i = primera < 0 ? 0 : primera;
@@ -304,26 +306,27 @@ export const robotGalileo: AppDef = {
 
     function bloqueHtml(s: Sent, ruta: number[]): string {
       const r = ruta.join(".");
+      const asa = arrastrable ? `<span class="rb-asa" draggable="true" title="Arrastra para mover el bloque" aria-hidden="true">⠿</span>` : "";
       const ctl = `<span class="rb-ctl"><button data-op="sube" title="Subir" aria-label="Subir">↑</button><button data-op="baja" title="Bajar" aria-label="Bajar">↓</button><button data-op="borra" title="Quitar" aria-label="Quitar">✕</button></span>`;
       const esDestino = ruta.length === destino.length && ruta.every((v, k) => v === destino[k]);
       const hijos = (lista: Sent[]) => `<div class="rb-hijos${esDestino ? " dest" : ""}" data-r="${r}">${lista.length ? lista.map((h, k) => bloqueHtml(h, [...ruta, k])).join("") : `<div class="rb-vacio">${esDestino ? "Los bloques nuevos entran aquí" : "vacío · pulsa aquí para añadir dentro"}</div>`}</div>`;
       if (s.t === "accion") {
         const b = BLOQUES[s.n as BloqueId];
-        return `<div class="rb-b ${b?.clase ?? "mov"}" data-r="${r}"><span class="rb-b-txt">${b?.icono ?? ""} ${esc(s.n)}()</span>${ctl}</div>`;
+        return `<div class="rb-b ${b?.clase ?? "mov"}" data-r="${r}"><span class="rb-b-txt">${asa}${b?.icono ?? ""} ${esc(s.n)}()</span>${ctl}</div>`;
       }
       if (s.t === "for") {
         const n = comoRepetir(s) ?? 1;
-        return `<div class="rb-b bucle rb-cont" data-r="${r}"><div class="rb-cab"><span class="rb-b-txt">🔁 repetir <input type="number" min="1" max="99" value="${n}" data-n aria-label="Número de repeticiones"> veces</span>${ctl}</div>${hijos(s.cuerpo)}</div>`;
+        return `<div class="rb-b bucle rb-cont" data-r="${r}"><div class="rb-cab"><span class="rb-b-txt">${asa}🔁 repetir <input type="number" min="1" max="99" value="${n}" data-n aria-label="Número de repeticiones"> veces</span>${ctl}</div>${hijos(s.cuerpo)}</div>`;
       }
       if (s.t === "while" || s.t === "if") {
         const c = condSimple(s.cond);
         const sel = `<select data-c aria-label="Condición">${opcionesCond(c ? (c.negado ? "!" : "") + c.sensor : "")}</select>`;
-        return `<div class="rb-b ${s.t === "while" ? "bucle" : "cond"} rb-cont" data-r="${r}"><div class="rb-cab"><span class="rb-b-txt">${s.t === "while" ? "🔄 mientras" : "❓ si"} ${sel}</span>${ctl}</div>${hijos(s.cuerpo)}</div>`;
+        return `<div class="rb-b ${s.t === "while" ? "bucle" : "cond"} rb-cont" data-r="${r}"><div class="rb-cab"><span class="rb-b-txt">${asa}${s.t === "while" ? "🔄 mientras" : "❓ si"} ${sel}</span>${ctl}</div>${hijos(s.cuerpo)}</div>`;
       }
       if (s.t === "dowhile") {
         const c = condSimple(s.cond);
         const sel = `<select data-c aria-label="Condición">${opcionesCond(c ? (c.negado ? "!" : "") + c.sensor : "")}</select>`;
-        return `<div class="rb-b bucle rb-cont" data-r="${r}"><div class="rb-cab"><span class="rb-b-txt">🔂 hacer</span>${ctl}</div>${hijos(s.cuerpo)}<div class="rb-pie-bloque"><span class="rb-b-txt">mientras ${sel}</span></div></div>`;
+        return `<div class="rb-b bucle rb-cont" data-r="${r}"><div class="rb-cab"><span class="rb-b-txt">${asa}🔂 hacer</span>${ctl}</div>${hijos(s.cuerpo)}<div class="rb-pie-bloque"><span class="rb-b-txt">mientras ${sel}</span></div></div>`;
       }
       return "";
     }
@@ -334,12 +337,12 @@ export const robotGalileo: AppDef = {
       const bloquesDe = nivel.bloques;
       if (modo === "bloques") {
         const paleta = bloquesDe
-          .map((id) => `<button class="rb-ficha ${BLOQUES[id].clase}" data-add="${id}" title="Añadir ${esc(BLOQUES[id].texto)}">${BLOQUES[id].icono} ${esc(BLOQUES[id].texto)}</button>`)
+          .map((id) => `<button class="rb-ficha ${BLOQUES[id].clase}" data-add="${id}"${arrastrable ? ` draggable="true"` : ""} title="${arrastrable ? "Pulsa o arrastra: " : "Añadir "}${esc(BLOQUES[id].texto)}">${BLOQUES[id].icono} ${esc(BLOQUES[id].texto)}</button>`)
           .join("");
         const raizDestino = destino.length === 0;
         cuerpo.innerHTML = `
           <div class="rb-paleta" aria-label="Bloques disponibles">${paleta}</div>
-          <div class="rb-ws${raizDestino ? " dest" : ""}" data-r="" aria-label="Tu programa">${prog.length ? prog.map((s, k) => bloqueHtml(s, [k])).join("") : `<div class="rb-vacio">Pulsa un bloque de arriba para empezar tu programa</div>`}</div>
+          <div class="rb-ws${raizDestino ? " dest" : ""}" data-r="" aria-label="Tu programa">${prog.length ? prog.map((s, k) => bloqueHtml(s, [k])).join("") : `<div class="rb-vacio">${arrastrable ? "Pulsa o arrastra un bloque de arriba para empezar tu programa" : "Pulsa un bloque de arriba para empezar tu programa"}</div>`}</div>
           <div class="rb-java-cab">Así se escribe en Java <span>(se actualiza solo)</span></div>
           <div class="rb-java"></div>`;
       } else {
@@ -563,15 +566,18 @@ export const robotGalileo: AppDef = {
       pintarMensaje();
     }
 
+    function crearBloque(id: BloqueId): Sent {
+      const sensor = nivel.sensores[0] ?? "hayPared";
+      if (id === "repetir") return repetir(3, []);
+      if (id === "mientras") return { t: "while", cond: { k: "no", e: { k: "sensor", n: sensor } }, cuerpo: [], l: 0 };
+      if (id === "hacerMientras") return { t: "dowhile", cond: { k: "no", e: { k: "sensor", n: sensor } }, cuerpo: [], l: 0, lCond: 0 };
+      if (id === "si") return { t: "if", cond: { k: "sensor", n: sensor }, cuerpo: [], sino: null, l: 0, lSino: 0 };
+      return { t: "accion", n: id, l: 0 };
+    }
+
     function anadir(id: BloqueId): void {
       const lista = listaEn(destino) ?? prog;
-      const sensor = nivel.sensores[0] ?? "hayPared";
-      let nuevo: Sent;
-      if (id === "repetir") nuevo = repetir(3, []);
-      else if (id === "mientras") nuevo = { t: "while", cond: { k: "no", e: { k: "sensor", n: sensor } }, cuerpo: [], l: 0 };
-      else if (id === "hacerMientras") nuevo = { t: "dowhile", cond: { k: "no", e: { k: "sensor", n: sensor } }, cuerpo: [], l: 0, lCond: 0 };
-      else if (id === "si") nuevo = { t: "if", cond: { k: "sensor", n: sensor }, cuerpo: [], sino: null, l: 0, lSino: 0 };
-      else nuevo = { t: "accion", n: id, l: 0 };
+      const nuevo = crearBloque(id);
       lista.push(nuevo);
       const esContenedor = "cuerpo" in nuevo;
       if (esContenedor) destino = [...destino, lista.length - 1];
@@ -591,6 +597,96 @@ export const robotGalileo: AppDef = {
       else if (op === "baja" && k < padre.length - 1) [padre[k + 1], padre[k]] = [padre[k], padre[k + 1]];
       destino = [];
       cambio();
+    }
+
+    // ---------------------------------------------------------------- bloques: arrastrar (solo escritorio)
+    type Arrastre = { tipo: "add"; id: BloqueId } | { tipo: "mov"; ruta: number[] };
+    let arrastre: Arrastre | null = null;
+    const rutaDeContenedor = (c: HTMLElement): number[] => (c.dataset.r === "" ? [] : c.dataset.r!.split(".").map(Number));
+    const quitarMarcas = () => raiz.querySelectorAll(".ins-antes, .ins-fin, .rb-sobre").forEach((x) => x.classList.remove("ins-antes", "ins-fin", "rb-sobre"));
+
+    /** contenedor y posición donde caería el bloque, o null si ahí no se puede soltar */
+    function objetivo(e: DragEvent): { cont: HTMLElement; idx: number; ruta: number[] } | null {
+      const cont = (e.target as HTMLElement).closest<HTMLElement>(".rb-hijos, .rb-ws");
+      if (!cont || !arrastre) return null;
+      const ruta = rutaDeContenedor(cont);
+      // un bloque no puede entrar en sí mismo ni en sus propios hijos
+      if (arrastre.tipo === "mov") {
+        const o = arrastre.ruta;
+        if (ruta.length >= o.length && o.every((v, k) => v === ruta[k])) return null;
+      }
+      const hijos = Array.from(cont.querySelectorAll<HTMLElement>(":scope > .rb-b"));
+      let idx = hijos.length;
+      for (let k = 0; k < hijos.length; k++) {
+        const r = hijos[k].getBoundingClientRect();
+        if (e.clientY < r.top + r.height / 2) {
+          idx = k;
+          break;
+        }
+      }
+      return { cont, idx, ruta };
+    }
+
+    function soltar(a: Arrastre, o: { idx: number; ruta: number[] }): void {
+      const lista = listaEn(o.ruta);
+      if (!lista) return;
+      if (a.tipo === "add") {
+        const nuevo = crearBloque(a.id);
+        lista.splice(o.idx, 0, nuevo);
+        destino = "cuerpo" in nuevo ? [...o.ruta, o.idx] : o.ruta;
+      } else {
+        const padre = listaEn(a.ruta.slice(0, -1));
+        if (!padre) return;
+        const k = a.ruta[a.ruta.length - 1];
+        const [nodo] = padre.splice(k, 1);
+        // `lista` es una referencia: sigue valiendo aunque se hayan movido los índices
+        lista.splice(padre === lista && k < o.idx ? o.idx - 1 : o.idx, 0, nodo);
+        destino = [];
+      }
+      cambio();
+    }
+
+    if (arrastrable) {
+      raiz.addEventListener("dragstart", (e) => {
+        const t = e.target as HTMLElement;
+        const dt = e.dataTransfer;
+        if (!dt || !(t instanceof HTMLElement)) return;
+        if (t.dataset.add) arrastre = { tipo: "add", id: t.dataset.add as BloqueId };
+        else if (t.classList.contains("rb-asa")) {
+          const b = t.closest<HTMLElement>(".rb-b")!;
+          arrastre = { tipo: "mov", ruta: rutaDe(b)! };
+          dt.setDragImage(b, 14, 14);
+          window.setTimeout(() => b.classList.add("arrastrando"), 0);
+        } else return;
+        dt.effectAllowed = "copyMove";
+        dt.setData("text/plain", "bloque");
+      });
+      raiz.addEventListener("dragover", (e) => {
+        if (!arrastre) return;
+        quitarMarcas();
+        const o = objetivo(e);
+        if (!o) return; // sin preventDefault el navegador muestra «no se puede soltar»
+        e.preventDefault();
+        e.dataTransfer!.dropEffect = arrastre.tipo === "add" ? "copy" : "move";
+        o.cont.classList.add("rb-sobre");
+        const hijos = o.cont.querySelectorAll(":scope > .rb-b");
+        if (o.idx < hijos.length) hijos[o.idx].classList.add("ins-antes");
+        else o.cont.classList.add("ins-fin");
+      });
+      raiz.addEventListener("drop", (e) => {
+        const a = arrastre;
+        const o = objetivo(e);
+        arrastre = null;
+        quitarMarcas();
+        if (!a || !o) return;
+        e.preventDefault();
+        soltar(a, o);
+      });
+      raiz.addEventListener("dragend", () => {
+        arrastre = null;
+        quitarMarcas();
+        raiz.querySelectorAll(".arrastrando").forEach((x) => x.classList.remove("arrastrando"));
+      });
     }
 
     function condDe(valor: string): Expr {
