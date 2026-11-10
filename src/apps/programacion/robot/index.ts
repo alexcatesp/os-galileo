@@ -7,7 +7,7 @@ import type { AppDef } from "../../../kernel/kernel";
 import { bloqueJava, esc, progreso } from "../comun";
 import { aTexto, comoRepetir, compilar, condSimple, contar, normalizarBloques, repetir, sePuedeEnBloques, type ErrorJava, type Expr, type Sent } from "./lenguaje";
 import { ACCIONES, SENSORES, crearMundo, esPared, type Estado, type Mundo } from "./mundo";
-import { MUNDOS, NIVELES, ejecucionDePrediccion, evaluar, juzgarPrediccion, type BloqueId, type Nivel, type Veredicto } from "./niveles";
+import { MUNDOS, NIVELES, azarConSemilla, ejecucionDePrediccion, evaluar, juzgarPrediccion, type BloqueId, type Nivel, type Veredicto } from "./niveles";
 
 
 interface Registro {
@@ -112,6 +112,9 @@ export const robotGalileo: AppDef = {
     let i = primera < 0 ? 0 : primera;
     let nivel: Nivel = NIVELES[i];
     let mundo: Mundo = crearMundo(nivel.mapas[0]);
+    // mapas con los que se prueba ahora: los del nivel o, tras «🎲 Mapas nuevos», seis sorteados
+    let mapasNivel: string[][] = nivel.mapas;
+    let pruebaAzar = false;
     let modo: "bloques" | "java" = "bloques";
     let texto = "";
     let prog: Sent[] = [];
@@ -157,7 +160,7 @@ export const robotGalileo: AppDef = {
         <section class="rb-editor" aria-label="Programa">
           <div class="rb-ed-cab"><div class="rb-vistas" role="group" aria-label="Vista"><button data-vista="bloques">🧩 Bloques</button><button data-vista="java">⌨ Java</button></div><div class="rb-meter" title="Instrucciones usadas / máximo"></div></div>
           <div class="rb-ed-cuerpo"></div>
-          <div class="rb-ed-pie"><p class="rb-mensaje" aria-live="polite"></p><div class="rb-pie-botones"><button data-a="pista"></button><button data-a="cero" title="Borra tu programa de este nivel">↺ De cero</button></div></div>
+          <div class="rb-ed-pie"><p class="rb-mensaje" aria-live="polite"></p><div class="rb-pie-botones"><button data-a="pista"></button><button data-a="azar" title="Prueba tu programa en 6 mapas nuevos, generados al azar" hidden>🎲 Mapas nuevos</button><button data-a="cero" title="Borra tu programa de este nivel">↺ De cero</button></div></div>
         </section>
       </div>`;
     const $ = <T extends HTMLElement>(sel: string) => raiz.querySelector<T>(sel)!;
@@ -199,6 +202,9 @@ export const robotGalileo: AppDef = {
       detener();
       i = n;
       nivel = NIVELES[i];
+      mapasNivel = nivel.mapas;
+      pruebaAzar = false;
+      raiz.querySelector<HTMLElement>('[data-a="azar"]')!.hidden = !nivel.generar || nivel.tipo === "predecir";
       pedidas = 0;
       aviso = "";
       mapaSel = 0;
@@ -242,22 +248,56 @@ export const robotGalileo: AppDef = {
     // ---------------------------------------------------------------- mapa
     function pintarMapas(): void {
       const caja = $(".rb-mapas");
-      if (nivel.mapas.length < 2) {
+      if (mapasNivel.length < 2) {
         caja.hidden = true;
         return;
       }
       caja.hidden = false;
-      caja.innerHTML = nivel.mapas
+      const pestanas = mapasNivel
         .map((_, k) => {
           const r = tr?.ver.mapas[k];
           return `<button role="tab" data-mapa="${k}" aria-selected="${k === mapaSel}" class="${k === mapaSel ? "on" : ""}${r ? (r.ok ? " ok" : " mal") : ""}">Mapa ${k + 1}${r ? (r.ok ? " ✓" : " ✗") : ""}</button>`;
         })
         .join("");
+      caja.innerHTML = pruebaAzar ? `<span class="rb-azar-etq">🎲 mapas al azar</span>${pestanas}<button data-a="volverMapas" class="rb-azar-volver" title="Volver a los mapas del nivel">↩ Mapas del nivel</button>` : pestanas;
+    }
+
+    /** sortea 6 mapas de la familia del nivel y prueba en ellos el programa del alumno */
+    function probarMapasNuevos(): void {
+      if (!nivel.generar || nivel.tipo === "predecir") return;
+      detener();
+      const previos = { mapas: mapasNivel, azar: pruebaAzar };
+      const azar = azarConSemilla((Math.random() * 4294967296) >>> 0);
+      mapasNivel = Array.from({ length: 6 }, () => nivel.generar!(azar));
+      pruebaAzar = true;
+      mapaSel = 0;
+      tr = null;
+      ocultarBanner();
+      pintarMapas();
+      pintarMapa();
+      if (!preparar()) {
+        // el programa no compila: se deja todo como estaba
+        mapasNivel = previos.mapas;
+        pruebaAzar = previos.azar;
+        pintarMapas();
+        pintarMapa();
+        return;
+      }
+      jugar();
+    }
+
+    function volverAMapasDelNivel(): void {
+      reiniciarTraza();
+      mapasNivel = nivel.mapas;
+      pruebaAzar = false;
+      mapaSel = 0;
+      pintarMapas();
+      pintarMapa();
     }
 
     function pintarMapa(): void {
-      mundo = crearMundo(nivel.mapas[mapaSel]);
-      $(".rb-svg").innerHTML = dibujarMapa(nivel.mapas[mapaSel]);
+      mundo = crearMundo(mapasNivel[mapaSel]);
+      $(".rb-svg").innerHTML = dibujarMapa(mapasNivel[mapaSel]);
       angulo = mundo.inicial.d * 90;
       pintarEscena();
       pintarPrediccion();
@@ -511,9 +551,9 @@ export const robotGalileo: AppDef = {
       errorJava = null;
       aviso = "";
       ocultarBanner();
-      const ver = nivel.tipo === "predecir" ? ejecucionDePrediccion(nivel, r.prog) : evaluar(nivel, r.prog);
+      const ver = nivel.tipo === "predecir" ? ejecucionDePrediccion(nivel, r.prog) : evaluar({ ...nivel, mapas: mapasNivel }, r.prog);
       const fallido = ver.mapas.findIndex((m) => !m.ok);
-      if (nivel.mapas.length > 1 && fallido >= 0) mapaSel = fallido;
+      if (mapasNivel.length > 1 && fallido >= 0) mapaSel = fallido;
       tr = { ver, mapa: mapaSel, k: 0, jugando: false, fin: false };
       pintarMapas();
       pintarMapa();
@@ -612,6 +652,25 @@ export const robotGalileo: AppDef = {
     function mostrarBanner(): void {
       if (!tr) return;
       if (nivel.tipo === "predecir") return mostrarBannerPred();
+      if (pruebaAzar) {
+        // prueba con mapas sorteados: no toca el progreso, solo dice si el programa es general
+        const v = tr.ver;
+        const total = v.mapas.length;
+        const buenos = v.mapas.filter((m) => m.ok).length;
+        const malos = v.mapas.map((m, k) => ({ m, k })).filter((x) => !x.m.ok);
+        const botones = `<div class="rb-tarjeta-bt"><button data-a="azar" class="rb-primario">🎲 Otros mapas nuevos</button><button data-a="volverMapas">↩ Mapas del nivel</button></div>`;
+        const c = $(".rb-banner");
+        c.hidden = false;
+        if (v.superado) {
+          c.className = "rb-banner ganas";
+          c.innerHTML = `<div class="rb-tarjeta"><div class="rb-confeti">🎲</div><h3>¡Tu programa es general!</h3><p>Funciona en los ${total} mapas nuevos: no depende de las medidas de un mapa concreto.</p>${botones}</div>`;
+        } else {
+          const msg = malos.length ? `Funciona en <b>${buenos} de ${total}</b> mapas nuevos. <b>Mapa ${malos[0].k + 1}:</b> ${esc(malos[0].m.motivo)}` : `Funciona en todos, pero usa <b>${v.instrucciones}</b> instrucciones y el máximo es <b>${nivel.limite}</b>.`;
+          c.className = "rb-banner pierdes";
+          c.innerHTML = `<div class="rb-tarjeta"><div class="rb-confeti">🎲</div><h3>Falla en algún mapa</h3><p>${msg}</p>${botones}<p class="rb-pred-ayuda">Mira los mapas marcados con ✗: ¿qué tienen distinto de los del nivel?</p></div>`;
+        }
+        return;
+      }
       const ver = tr.ver;
       const caja = $(".rb-banner");
       caja.hidden = false;
@@ -1058,6 +1117,10 @@ export const robotGalileo: AppDef = {
           return cargarNivel(i + 1);
         case "comprobar":
           return jugar();
+        case "azar":
+          return probarMapasNuevos();
+        case "volverMapas":
+          return volverAMapasDelNivel();
         case "reintentar":
           return reintentarPrediccion();
         case "cero":

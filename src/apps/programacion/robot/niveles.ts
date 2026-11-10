@@ -31,7 +31,25 @@ export interface Nivel {
   preguntas?: { monedas: boolean; error: boolean };
   /** resultado calculado a mano, para que `probar:robot` compruebe que el motor coincide */
   esperado?: { x: number; y: number; monedas: number; error: boolean };
+  /** crea un mapa nuevo al azar de la familia del nivel (la solución de referencia lo resuelve siempre) */
+  generar?: Generador;
 }
+
+export type Azar = () => number;
+export type Generador = (azar: Azar) => string[];
+
+/** sorteador con semilla (mulberry32): mismos números para la misma semilla */
+export function azarConSemilla(semilla: number): Azar {
+  let a = semilla >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const entre = (z: Azar, a: number, b: number) => a + Math.floor(z() * (b - a + 1));
 
 export interface MundoDef {
   n: number;
@@ -550,6 +568,49 @@ export const NIVELES: Nivel[] = [
     aprende: "Con bucles anidados, el de dentro se repite completo en cada vuelta del de fuera y aquí su número de vueltas depende de <code>i</code> (<code>j &lt;= i</code>: 1, 2 y 3 pasos). La forma segura de trazarlo es una tabla con <code>i</code>, <code>j</code> y la posición.",
   },
 ];
+
+// ---------------------------------------------------------------- mapas al azar («🎲 Mapas nuevos»)
+/** pasillo de `n` casillas libres tras el robot, con moneda al azar en cada una (siempre alguna) */
+function pasilloSuelto(z: Azar, n: number, p: number): string[] {
+  const celdas = Array.from({ length: n }, () => (z() < p ? "o" : "."));
+  if (!celdas.includes("o")) celdas[entre(z, 0, n - 1)] = "o";
+  return ["#".repeat(n + 3), `#>${celdas.join("")}#`, "#".repeat(n + 3)];
+}
+
+/** anillo con monedas al azar en sus casillas (menos la de salida) */
+function anilloSuelto(z: Azar, a: number, b: number): string[] {
+  const celdas: [number, number][] = [];
+  for (let x = 1; x <= 1 + a; x++) for (const y of [1, 1 + b]) if (!(x === 1 && y === 1)) celdas.push([x, y]);
+  for (let y = 2; y < 1 + b; y++) for (const x of [1, 1 + a]) celdas.push([x, y]);
+  const monedas = celdas.filter(() => z() < 0.4);
+  if (!monedas.length) monedas.push(celdas[entre(z, 0, celdas.length - 1)]);
+  return anillo(a, b, monedas);
+}
+
+/** almacén al azar: `k` estanterías de 1 a 5 casillas, con monedas en todas o repartidas */
+function almacenSuelto(z: Azar, k: number, p: number): string[] {
+  const largos = Array.from({ length: k }, () => entre(z, 1, 5));
+  const llenas = largos.map((l) => Array.from({ length: l }, () => z() < p));
+  if (!llenas.some((f) => f.some(Boolean))) llenas[0][0] = true;
+  return almacen(largos, (i, j) => llenas[i][j]);
+}
+
+const GENERADORES: Record<string, Generador> = {
+  l1: (z) => pasillo(entre(z, 2, 12)),
+  l2: (z) => pasilloMonedas(entre(z, 1, 10)),
+  l3: (z) => pasilloSuelto(z, entre(z, 3, 10), 0.5),
+  l4: (z) => esquina(entre(z, 1, 8), entre(z, 1, 8)),
+  l5: (z) => escalera(entre(z, 2, 7)),
+  l6: (z) => caracol(entre(z, 5, 11)),
+  m1: (z) => filaMonedas(entre(z, 0, 8)),
+  m2: (z) => puertas(entre(z, 1, 7)),
+  m3: (z) => anillo(entre(z, 2, 7), entre(z, 2, 5)),
+  m4: (z) => anilloSuelto(z, entre(z, 2, 7), entre(z, 2, 5)),
+  a2: (z) => almacenSuelto(z, 3, 1.1),
+  a3: (z) => almacenSuelto(z, entre(z, 1, 4), 1.1),
+  a4: (z) => almacenSuelto(z, entre(z, 1, 4), 0.5),
+};
+for (const n of NIVELES) n.generar = GENERADORES[n.id];
 
 // ---------------------------------------------------------------- evaluación
 export interface ResultadoMapa {

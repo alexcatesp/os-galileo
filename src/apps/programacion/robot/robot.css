@@ -23,7 +23,10 @@
 .rb-mundo-ins { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #a79cf0; }
 .rb-mision-txt p { margin: 4px 0; }
 .rb-objetivo { color: #f7e26b; }
-.rb-mapas { display: flex; gap: 4px; }
+.rb-mapas { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.rb-mapas[hidden] { display: none; }
+.rb-azar-etq { font-size: 12px; font-weight: 700; color: #f7c948; margin-right: 2px; }
+.rb .rb-azar-volver { margin-left: auto; font-size: 12px; padding: 4px 8px; }
 .rb .rb-mapas button.on { background: #8c6dff; border-color: #e8e4ff; }
 .rb .rb-mapas button.ok { border-color: #4cd68a; }
 .rb .rb-mapas button.mal { border-color: #ff7b72; }

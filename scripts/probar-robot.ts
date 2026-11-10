@@ -1,6 +1,6 @@
 // Valida los niveles del Robot Galileo: la solución los supera, el programa vacío no, y las trampas típicas fallan.
 import { compilar } from "../src/apps/programacion/robot/lenguaje";
-import { NIVELES, evaluar, juzgarPrediccion, resultadoReal } from "../src/apps/programacion/robot/niveles";
+import { NIVELES, azarConSemilla, evaluar, juzgarPrediccion, resultadoReal } from "../src/apps/programacion/robot/niveles";
 
 let incidencias = 0;
 const mal = (m: string) => {
@@ -33,6 +33,26 @@ for (const n of NIVELES) {
   console.log(`${n.id} «${n.titulo}»: solución ${v.superado ? "OK" : "FALLA"} (${v.instrucciones}/${n.limite})`);
   if (!v.superado) mal(`la solución no supera ${n.id}: ${v.mapas.map((m) => m.motivo).join(" | ")}`);
   if (evaluar(n, []).superado) mal(`el programa vacío supera ${n.id}`);
+}
+
+// mapas al azar: la solución de referencia debe resolver todos los que sortea cada generador
+for (const n of NIVELES) {
+  if (!n.generar) continue;
+  const solu = prog(n.solucion);
+  const azar = azarConSemilla(2026);
+  const vistos = new Set<string>();
+  let fallos = 0;
+  for (let k = 0; k < 150; k++) {
+    const mapa = n.generar(azar);
+    vistos.add(mapa.join("|"));
+    const v = evaluar({ ...n, mapas: [mapa] }, solu);
+    if (!v.mapas[0].ok) {
+      fallos++;
+      if (fallos <= 2) mal(`${n.id}: la solución falla en un mapa sorteado (${v.mapas[0].motivo}):\n${mapa.join("\n")}`);
+    }
+  }
+  console.log(`${n.id}: 150 mapas al azar, ${vistos.size} distintos, ${fallos} fallos`);
+  if (vistos.size < 3) mal(`${n.id}: el generador apenas varía (${vistos.size} mapas distintos)`);
 }
 
 // trampas concretas
