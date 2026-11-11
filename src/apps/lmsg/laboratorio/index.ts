@@ -2,6 +2,7 @@ import type { AppDef } from "../../../kernel/kernel";
 import { ARCHIVO_CSS, componer, crearMarco, enlazaEstilos, sujetar } from "./documento";
 import { PAGINA_LIBRE, RETOS, TEMAS, evaluar, type Reto } from "./retos";
 import { revisarHtml } from "./revisar";
+import { sugerirCss, sugerirHtml, type Propuesta } from "./autocompletar";
 
 const CLAVE = "osg-lmsg-lab";
 const RUTA_INICIAL = "/home/invitado/Documentos/pagina.html";
@@ -58,6 +59,8 @@ export const laboratorioHtmlCss: AppDef = {
             <button data-t="html" role="tab">index.html</button><button data-t="css" role="tab">${ARCHIVO_CSS}</button>
           </div>
           <textarea class="lab-texto" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Código"></textarea>
+          <div class="lab-sug" role="listbox" aria-label="Sugerencias" hidden></div>
+          <div class="lab-ayuda-ed"><kbd>Tab</kbd> acepta la sugerencia · <kbd>Ctrl</kbd>+<kbd>Espacio</kbd> las muestra</div>
         </section>
         <section class="lab-vista">
           <div class="lab-tabs" role="tablist">
@@ -129,6 +132,7 @@ export const laboratorioHtmlCss: AppDef = {
       raiz.querySelectorAll<HTMLElement>("[data-t]").forEach((b) => b.classList.toggle("on", b.dataset.t === pestana));
       texto.value = pestana === "html" ? trabajo.html : trabajo.css;
       texto.setAttribute("aria-label", pestana === "html" ? "Código HTML" : "Código CSS");
+      ocultar();
     }
 
     function mensaje(html: string): void {
@@ -162,6 +166,42 @@ export const laboratorioHtmlCss: AppDef = {
     }
 
     // ---------- edición ----------
+    // ---- autocompletado ----
+    const caja_sug = q(".lab-sug");
+    let propuesta: Propuesta | null = null;
+    let elegida = 0;
+    const MAX_SUG = 8;
+    function ocultar(): void {
+      propuesta = null;
+      caja_sug.hidden = true;
+    }
+    function pintarSugerencias(): void {
+      if (!propuesta) return void (caja_sug.hidden = true);
+      caja_sug.hidden = false;
+      caja_sug.innerHTML = propuesta.items
+        .slice(0, MAX_SUG)
+        .map((s, k) => `<button type="button" role="option" data-s="${k}" class="${k === elegida ? "on" : ""}" aria-selected="${k === elegida}"><code>${esc(s.firma)}</code><span>${esc(s.doc)}</span></button>`)
+        .join("");
+      caja_sug.querySelector(".on")?.scrollIntoView({ block: "nearest" });
+    }
+    function mostrarPropuesta(forzar = false): void {
+      if (texto.selectionStart !== texto.selectionEnd) return ocultar();
+      const f = pestana === "html" ? sugerirHtml : sugerirCss;
+      propuesta = f(texto.value, texto.selectionStart, pestana === "html" ? trabajo.css : trabajo.html, forzar);
+      elegida = 0;
+      pintarSugerencias();
+    }
+    function aceptar(k: number): void {
+      if (!propuesta) return;
+      const s = propuesta.items[k];
+      texto.setRangeText(s.insertar, propuesta.desde, propuesta.hasta ?? texto.selectionStart, "end");
+      const nuevo = propuesta.desde + s.cursor;
+      texto.setSelectionRange(nuevo, nuevo);
+      ocultar();
+      texto.focus();
+      texto.dispatchEvent(new Event("input"));
+    }
+
     texto.addEventListener("input", () => {
       trabajo[pestana] = texto.value;
       window.clearTimeout(temporizador);
@@ -169,13 +209,37 @@ export const laboratorioHtmlCss: AppDef = {
         refrescarVista();
         persistir();
       }, 300);
+      mostrarPropuesta();
     });
     texto.addEventListener("keydown", (e) => {
+      const visible = propuesta && !caja_sug.hidden;
+      const n = propuesta ? Math.min(MAX_SUG, propuesta.items.length) : 0;
       if (e.key === "Tab" && !e.ctrlKey && !e.altKey && !e.metaKey) {
         e.preventDefault();
-        texto.setRangeText("  ", texto.selectionStart, texto.selectionEnd, "end");
-        texto.dispatchEvent(new Event("input"));
+        if (visible) aceptar(elegida);
+        else {
+          texto.setRangeText("  ", texto.selectionStart, texto.selectionEnd, "end");
+          texto.dispatchEvent(new Event("input"));
+        }
+      } else if (visible && e.key === "ArrowDown") {
+        e.preventDefault();
+        elegida = (elegida + 1) % n;
+        pintarSugerencias();
+      } else if (visible && e.key === "ArrowUp") {
+        e.preventDefault();
+        elegida = (elegida - 1 + n) % n;
+        pintarSugerencias();
+      } else if (e.key === "Escape") ocultar();
+      else if (e.key === " " && e.ctrlKey) {
+        e.preventDefault();
+        mostrarPropuesta(true);
       }
+    });
+    texto.addEventListener("blur", () => window.setTimeout(ocultar, 150));
+    caja_sug.addEventListener("mousedown", (e) => e.preventDefault()); // no quitar el foco al editor
+    caja_sug.addEventListener("click", (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>("button[data-s]");
+      if (b) aceptar(Number(b.dataset.s));
     });
     raiz.addEventListener("click", (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>("button");
