@@ -675,22 +675,38 @@ svg { display: block; }
 .lab-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px; background: #ece8fb; border-bottom: 1px solid #d6cff5; }
 .lab-sep { flex: 1; }
 .lab-ruta { width: 240px; max-width: 100%; font: 12px Consolas, monospace !important; }
-.lab-cuerpo { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; }
-.lab-editor, .lab-vista { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.lab-editor { position: relative; }
-.lab-ayuda-ed { font-size: 11px; color: #6a62a8; padding: 3px 2px 0; }
-.lab-ayuda-ed kbd { font: 10.5px Consolas, monospace; padding: 0 4px; border: 1px solid #c9c2ee; border-radius: 4px; background: #fff; }
-.lab-sug { position: absolute; left: 6px; right: 6px; bottom: 26px; z-index: 5; display: grid; max-height: 60%; overflow: auto; background: #fff; border: 1px solid #c9c2ee; border-radius: 8px; box-shadow: 0 4px 14px rgba(26, 20, 64, 0.22); }
-.lab-sug[hidden] { display: none; }
-.lab .lab-sug button { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px; text-align: left; border: 0; border-radius: 0; border-top: 1px solid #f0edfb; padding: 5px 10px; }
-.lab .lab-sug button.on { background: #ece8fb; }
-.lab-sug code { font: 12.5px Consolas, monospace; word-break: break-word; background: none !important; padding: 0 !important; }
-.lab-sug span { font-size: 12px; color: #5b5486; }
-.lab-tabs { display: flex; gap: 4px; }
+.lab-cuerpo { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 8px; }
+.lab-pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.lab-pane[hidden] { display: none; }
+.lab.sin-reto:not(.estrecho) .lab-pane[data-p="alumno"] { grid-column: 1 / -1; }
+.lab-cab { display: flex; align-items: flex-end; min-height: 26px; }
+.lab-titulo { font-size: 12px; font-weight: 600; padding: 3px 10px; background: var(--morado); color: #fff; border-radius: 8px 8px 0 0; }
+.lab-tabs { display: none; gap: 4px; }
+.lab.estrecho .lab-tabs { display: flex; }
+.lab.estrecho .lab-titulo { display: none; }
 .lab-tabs button { border-radius: 8px 8px 0 0 !important; border-bottom: 0 !important; font-size: 12px !important; }
+.lab-tabs button[hidden] { display: none; }
 .lab-tabs button.on { background: var(--morado) !important; color: #fff !important; border-color: var(--morado) !important; }
-.lab-texto { flex: 1; min-height: 160px; resize: none; border: 1px solid #c9c2ee; border-radius: 0 8px 8px 8px; padding: 10px; font: 13px/1.5 Consolas, "Cascadia Mono", monospace; color: #1a1440; background: #fff; tab-size: 2; white-space: pre; overflow: auto; }
-.lab-marco { flex: 1; min-height: 160px; border: 1px solid #c9c2ee; border-radius: 0 8px 8px 8px; background: #fff; overflow: hidden; display: flex; }
+.lab-hueco { flex: 1; min-height: 0; display: flex; }
+.lab-ayuda-ed { font-size: 11px; color: #6a62a8; padding: 0 10px 4px; }
+.lab-ayuda-ed kbd { font: 10.5px Consolas, monospace; padding: 0 4px; border: 1px solid #c9c2ee; border-radius: 4px; background: #fff; }
+.lab-ayuda-ed code { font: 10.5px Consolas, monospace; }
+/* editor de código */
+.ed { flex: 1; min-width: 0; min-height: 0; display: flex; border: 1px solid #c9c2ee; border-radius: 0 8px 8px 8px; background: #fff; overflow: hidden; }
+.ed-num, .ed-texto, .ed-espejo { font: 13px/1.5 Consolas, "Cascadia Mono", monospace; tab-size: 2; white-space: pre; }
+.ed-num { padding: 10px 8px 24px; min-width: 2.8em; text-align: right; color: #9a93c8; background: #f7f5ff; border-right: 1px solid #ece8fb; overflow: hidden; user-select: none; }
+.ed-zona { position: relative; flex: 1; min-width: 0; }
+.ed-texto, .ed-espejo { position: absolute; inset: 0; margin: 0; padding: 10px; border: 0; }
+.ed-texto { width: 100%; height: 100%; resize: none; color: #1a1440; background: transparent; overflow: auto; outline: none; }
+.ed-espejo { visibility: hidden; pointer-events: none; overflow: hidden; }
+.ed-sug { position: absolute; z-index: 5; display: grid; min-width: 200px; max-height: 190px; overflow: auto; background: #fff; border: 1px solid #c9c2ee; border-radius: 8px; box-shadow: 0 4px 14px rgba(26, 20, 64, 0.22); }
+.ed-sug[hidden] { display: none; }
+.lab .ed-sug button { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; text-align: left; border: 0; border-radius: 0; border-top: 1px solid #f0edfb; padding: 3px 10px; font-size: 12px; white-space: nowrap; }
+.lab .ed-sug button:first-child { border-top: 0; }
+.lab .ed-sug button.on { background: #ece8fb; }
+.ed-sug code { font: 12.5px Consolas, monospace; background: none !important; padding: 0 !important; }
+.ed-sug span { font-size: 11.5px; color: #5b5486; overflow: hidden; text-overflow: ellipsis; }
+.lab-marco { flex: 1; min-height: 0; border: 1px solid #c9c2ee; border-radius: 0 8px 8px 8px; background: #fff; overflow: hidden; display: flex; }
 .lab-marco iframe { flex: 1; width: 100%; height: 100%; border: 0; background: #fff; }
 .lab-marco iframe[hidden] { display: none; }
 .lab-panel { max-height: 34%; overflow: auto; padding: 8px 12px 10px; font-size: 13px; background: #fff; border-top: 1px solid #d6cff5; }
@@ -709,14 +725,13 @@ svg { display: block; }
 .lab-sol { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .lab-sol pre { margin: 0; padding: 8px; background: #f4f1ff; border-radius: 8px; font: 12px/1.45 Consolas, monospace; overflow: auto; }
 @media (max-width: 760px) {
-  .lab-cuerpo { grid-template-columns: 1fr; grid-template-rows: minmax(180px, 1fr) minmax(180px, 1fr); overflow: auto; }
-  .lab-texto { font-size: 16px; }
-  .lab .lab-sug button { grid-template-columns: 1fr; }
+  .ed-num, .ed-texto, .ed-espejo { font-size: 16px; }
+  .lab .ed-sug button { grid-template-columns: 1fr; }
   .lab-ayuda-ed { display: none; }
-  .lab-sug { bottom: 6px; }
   .lab-sol { grid-template-columns: 1fr; }
   .lab-panel { max-height: 40%; }
 }
+.lab.estrecho .lab-cuerpo { grid-template-columns: 1fr; }
 
 /* ---------- LMSG · CSS en juego ---------- */
 .cj { display: flex; flex-direction: column; height: 100%; background: #f4f1ff; color: #1a1440; }

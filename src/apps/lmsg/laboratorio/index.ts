@@ -2,7 +2,8 @@ import type { AppDef } from "../../../kernel/kernel";
 import { ARCHIVO_CSS, componer, crearMarco, enlazaEstilos, sujetar } from "./documento";
 import { PAGINA_LIBRE, RETOS, TEMAS, evaluar, type Reto } from "./retos";
 import { revisarHtml } from "./revisar";
-import { sugerirCss, sugerirHtml, type Propuesta } from "./autocompletar";
+import { sugerirCss, sugerirHtml } from "./autocompletar";
+import { crearEditor } from "./editor";
 
 const CLAVE = "osg-lmsg-lab";
 const RUTA_INICIAL = "/home/invitado/Documentos/pagina.html";
@@ -54,29 +55,30 @@ export const laboratorioHtmlCss: AppDef = {
         <button data-a="abrir">Abrir</button>
       </div>
       <div class="lab-cuerpo">
-        <section class="lab-editor">
-          <div class="lab-tabs" role="tablist">
-            <button data-t="html" role="tab">index.html</button><button data-t="css" role="tab">${ARCHIVO_CSS}</button>
-          </div>
-          <textarea class="lab-texto" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Código"></textarea>
-          <div class="lab-sug" role="listbox" aria-label="Sugerencias" hidden></div>
-          <div class="lab-ayuda-ed"><kbd>Tab</kbd> acepta la sugerencia · <kbd>Ctrl</kbd>+<kbd>Espacio</kbd> las muestra</div>
+        <section class="lab-pane" data-p="html">
+          <div class="lab-cab"><span class="lab-titulo">index.html</span><div class="lab-tabs" role="tablist"><button data-t="html" role="tab">index.html</button><button data-t="css" role="tab">${ARCHIVO_CSS}</button></div></div>
+          <div class="lab-hueco" data-h="html"></div>
         </section>
-        <section class="lab-vista">
-          <div class="lab-tabs" role="tablist">
-            <button data-v="alumno" role="tab">Tu página</button><button data-v="objetivo" role="tab" hidden>Objetivo</button>
-          </div>
-          <div class="lab-marco"></div>
+        <section class="lab-pane" data-p="css">
+          <div class="lab-cab"><span class="lab-titulo">${ARCHIVO_CSS}</span><div class="lab-tabs" role="tablist"><button data-t="html" role="tab">index.html</button><button data-t="css" role="tab">${ARCHIVO_CSS}</button></div></div>
+          <div class="lab-hueco" data-h="css"></div>
+        </section>
+        <section class="lab-pane" data-p="alumno">
+          <div class="lab-cab"><span class="lab-titulo">Tu página</span><div class="lab-tabs" role="tablist"><button data-v="alumno" role="tab">Tu página</button><button data-v="objetivo" role="tab" class="lab-t-obj">Objetivo</button></div></div>
+          <div class="lab-marco" data-m="alumno"></div>
+        </section>
+        <section class="lab-pane" data-p="objetivo">
+          <div class="lab-cab"><span class="lab-titulo">Objetivo</span><div class="lab-tabs" role="tablist"><button data-v="alumno" role="tab">Tu página</button><button data-v="objetivo" role="tab">Objetivo</button></div></div>
+          <div class="lab-marco" data-m="objetivo"></div>
         </section>
       </div>
+      <div class="lab-ayuda-ed"><kbd>Tab</kbd> o <kbd>Intro</kbd> aceptan la sugerencia · <kbd>Ctrl</kbd>+<kbd>Espacio</kbd> las muestra · <kbd>Tab</kbd> expande Emmet (<code>ul&gt;li*3</code>, <code>!</code>, <code>m10</code>) · <kbd>Ctrl</kbd>+<kbd>/</kbd> comenta</div>
       <div class="lab-panel" aria-live="polite"></div>`;
 
     const q = <T extends HTMLElement>(s: string) => raiz.querySelector<T>(s)!;
     const g = cargar();
     const selModo = q<HTMLSelectElement>('[data-a="modo"]');
-    const texto = q<HTMLTextAreaElement>(".lab-texto");
     const panel = q(".lab-panel");
-    const caja = q(".lab-marco");
     const ruta = q<HTMLInputElement>(".lab-ruta");
     ruta.value = RUTA_INICIAL;
 
@@ -92,7 +94,23 @@ export const laboratorioHtmlCss: AppDef = {
       m.title = titulo;
       m.addEventListener("load", () => sujetar(m));
     }
-    caja.append(marcoAlumno, marcoObjetivo);
+    q('[data-m="alumno"]').append(marcoAlumno);
+    q('[data-m="objetivo"]').append(marcoObjetivo);
+
+    const edHtml = crearEditor({
+      lenguaje: "html",
+      etiqueta: "Código HTML",
+      sugerir: (t, pos, forzar) => sugerirHtml(t, pos, trabajo.css, forzar),
+      alCambiar: (t) => cambio("html", t),
+    });
+    const edCss = crearEditor({
+      lenguaje: "css",
+      etiqueta: "Código CSS",
+      sugerir: (t, pos, forzar) => sugerirCss(t, pos, trabajo.html, forzar),
+      alCambiar: (t) => cambio("css", t),
+    });
+    q('[data-h="html"]').append(edHtml.el);
+    q('[data-h="css"]').append(edCss.el);
 
     function opciones(): void {
       selModo.innerHTML =
@@ -118,21 +136,38 @@ export const laboratorioHtmlCss: AppDef = {
       guardarTodo(g);
     }
 
-    function pintarVista(): void {
-      marcoAlumno.hidden = vista !== "alumno";
-      marcoObjetivo.hidden = vista !== "objetivo";
+    /** en pantalla ancha se ve todo a la vez (código arriba, resultados abajo); en estrecha, por pestañas */
+    function pintarPaneles(): void {
+      const estrecho = raiz.classList.contains("estrecho");
+      const pane = (n: string) => raiz.querySelector<HTMLElement>(`[data-p="${n}"]`)!;
+      pane("html").hidden = estrecho && pestana !== "html";
+      pane("css").hidden = estrecho && pestana !== "css";
+      pane("alumno").hidden = estrecho && vista !== "alumno";
+      pane("objetivo").hidden = !reto || (estrecho && vista !== "objetivo");
+      raiz.classList.toggle("sin-reto", !reto);
       raiz.querySelectorAll<HTMLElement>("[data-v]").forEach((b) => b.classList.toggle("on", b.dataset.v === vista));
+      raiz.querySelectorAll<HTMLElement>("[data-t]").forEach((b) => b.classList.toggle("on", b.dataset.t === pestana));
+      raiz.querySelectorAll<HTMLElement>(".lab-t-obj").forEach((b) => (b.hidden = !reto));
     }
+    const pintarVista = pintarPaneles;
 
     function refrescarVista(): void {
       marcoAlumno.srcdoc = componer(trabajo.html, trabajo.css);
     }
 
     function pintarPestana(): void {
-      raiz.querySelectorAll<HTMLElement>("[data-t]").forEach((b) => b.classList.toggle("on", b.dataset.t === pestana));
-      texto.value = pestana === "html" ? trabajo.html : trabajo.css;
-      texto.setAttribute("aria-label", pestana === "html" ? "Código HTML" : "Código CSS");
-      ocultar();
+      edHtml.poner(trabajo.html);
+      edCss.poner(trabajo.css);
+      pintarPaneles();
+    }
+
+    function cambio(k: "html" | "css", t: string): void {
+      trabajo[k] = t;
+      window.clearTimeout(temporizador);
+      temporizador = window.setTimeout(() => {
+        refrescarVista();
+        persistir();
+      }, 300);
     }
 
     function mensaje(html: string): void {
@@ -143,7 +178,6 @@ export const laboratorioHtmlCss: AppDef = {
       raiz.querySelector<HTMLElement>('[data-a="comprobar"]')!.hidden = !reto;
       raiz.querySelector<HTMLElement>('[data-a="solucion"]')!.hidden = !reto;
       raiz.querySelector<HTMLElement>('[data-a="reiniciar"]')!.hidden = !reto;
-      raiz.querySelector<HTMLElement>('[data-v="objetivo"]')!.hidden = !reto;
       if (!reto) vista = "alumno";
       if (reto) marcoObjetivo.srcdoc = componer(reto.solHtml, reto.solCss);
       pintarVista();
@@ -165,89 +199,13 @@ export const laboratorioHtmlCss: AppDef = {
       refrescarVista();
     }
 
-    // ---------- edición ----------
-    // ---- autocompletado ----
-    const caja_sug = q(".lab-sug");
-    let propuesta: Propuesta | null = null;
-    let elegida = 0;
-    const MAX_SUG = 8;
-    function ocultar(): void {
-      propuesta = null;
-      caja_sug.hidden = true;
-    }
-    function pintarSugerencias(): void {
-      if (!propuesta) return void (caja_sug.hidden = true);
-      caja_sug.hidden = false;
-      caja_sug.innerHTML = propuesta.items
-        .slice(0, MAX_SUG)
-        .map((s, k) => `<button type="button" role="option" data-s="${k}" class="${k === elegida ? "on" : ""}" aria-selected="${k === elegida}"><code>${esc(s.firma)}</code><span>${esc(s.doc)}</span></button>`)
-        .join("");
-      caja_sug.querySelector(".on")?.scrollIntoView({ block: "nearest" });
-    }
-    function mostrarPropuesta(forzar = false): void {
-      if (texto.selectionStart !== texto.selectionEnd) return ocultar();
-      const f = pestana === "html" ? sugerirHtml : sugerirCss;
-      propuesta = f(texto.value, texto.selectionStart, pestana === "html" ? trabajo.css : trabajo.html, forzar);
-      elegida = 0;
-      pintarSugerencias();
-    }
-    function aceptar(k: number): void {
-      if (!propuesta) return;
-      const s = propuesta.items[k];
-      texto.setRangeText(s.insertar, propuesta.desde, propuesta.hasta ?? texto.selectionStart, "end");
-      const nuevo = propuesta.desde + s.cursor;
-      texto.setSelectionRange(nuevo, nuevo);
-      ocultar();
-      texto.focus();
-      texto.dispatchEvent(new Event("input"));
-    }
-
-    texto.addEventListener("input", () => {
-      trabajo[pestana] = texto.value;
-      window.clearTimeout(temporizador);
-      temporizador = window.setTimeout(() => {
-        refrescarVista();
-        persistir();
-      }, 300);
-      mostrarPropuesta();
-    });
-    texto.addEventListener("keydown", (e) => {
-      const visible = propuesta && !caja_sug.hidden;
-      const n = propuesta ? Math.min(MAX_SUG, propuesta.items.length) : 0;
-      if (e.key === "Tab" && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        e.preventDefault();
-        if (visible) aceptar(elegida);
-        else {
-          texto.setRangeText("  ", texto.selectionStart, texto.selectionEnd, "end");
-          texto.dispatchEvent(new Event("input"));
-        }
-      } else if (visible && e.key === "ArrowDown") {
-        e.preventDefault();
-        elegida = (elegida + 1) % n;
-        pintarSugerencias();
-      } else if (visible && e.key === "ArrowUp") {
-        e.preventDefault();
-        elegida = (elegida - 1 + n) % n;
-        pintarSugerencias();
-      } else if (e.key === "Escape") ocultar();
-      else if (e.key === " " && e.ctrlKey) {
-        e.preventDefault();
-        mostrarPropuesta(true);
-      }
-    });
-    texto.addEventListener("blur", () => window.setTimeout(ocultar, 150));
-    caja_sug.addEventListener("mousedown", (e) => e.preventDefault()); // no quitar el foco al editor
-    caja_sug.addEventListener("click", (e) => {
-      const b = (e.target as HTMLElement).closest<HTMLElement>("button[data-s]");
-      if (b) aceptar(Number(b.dataset.s));
-    });
     raiz.addEventListener("click", (e) => {
       const b = (e.target as HTMLElement).closest<HTMLElement>("button");
       if (!b) return;
       if (b.dataset.t) {
         pestana = b.dataset.t as typeof pestana;
-        pintarPestana();
-        texto.focus();
+        pintarPaneles();
+        (pestana === "html" ? edHtml : edCss).foco();
       } else if (b.dataset.v) {
         vista = b.dataset.v as typeof vista;
         pintarVista();
@@ -329,6 +287,16 @@ export const laboratorioHtmlCss: AppDef = {
       }
     }
 
+    const observador = new ResizeObserver(() => {
+      const estrecho = raiz.clientWidth < 900;
+      if (estrecho !== raiz.classList.contains("estrecho")) {
+        raiz.classList.toggle("estrecho", estrecho);
+        pintarPaneles();
+      }
+    });
+    raiz.classList.toggle("estrecho", raiz.clientWidth < 900);
+    observador.observe(raiz);
+
     opciones();
     if (args.ruta) {
       ruta.value = args.ruta;
@@ -340,6 +308,7 @@ export const laboratorioHtmlCss: AppDef = {
     }
 
     return () => {
+      observador.disconnect();
       window.clearTimeout(temporizador);
       persistir();
     };

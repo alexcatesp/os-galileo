@@ -98,6 +98,7 @@ const ETIQUETAS: [string, string, string][] = [
   ["summary", "título de un details", "summary>|</summary>"],
 ];
 
+export const etiquetasConocidas = new Set(ETIQUETAS.map(([n]) => n));
 const VACIAS = new Set(["br", "hr", "img", "input", "link", "meta", "area", "base", "col", "embed", "source", "track", "wbr"]);
 
 const GLOBALES: [string, string][] = [
@@ -409,7 +410,7 @@ function valorSug(v: string, doc: string): Sugerencia {
   return sug(v, doc, v);
 }
 
-interface Contexto {
+export interface Contexto {
   /** tipo de bloque que contiene el cursor, de fuera adentro */
   pila: ("regla" | "at" | "keyframes")[];
   /** texto de la sentencia en curso (desde el último `{`, `}` o `;`) */
@@ -417,7 +418,7 @@ interface Contexto {
 }
 
 /** Recorre el CSS hasta el cursor. Devuelve null si el cursor está en un comentario. */
-function contextoCss(antes: string): Contexto | null {
+export function contextoCss(antes: string): Contexto | null {
   const pila: Contexto["pila"] = [];
   let seg = "";
   let parentesis = 0;

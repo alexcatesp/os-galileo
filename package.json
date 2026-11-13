@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "probar:robot": "esbuild scripts/probar-robot.ts --bundle --platform=node --format=cjs --outfile=.tmp/probar-robot.cjs --log-level=error && node .tmp/probar-robot.cjs",
     "probar:autocompletar-lab": "esbuild scripts/probar-autocompletar-lab.ts --bundle --platform=node --format=cjs --outfile=.tmp/pal.cjs --log-level=error && node .tmp/pal.cjs",
+    "probar:emmet-lab": "esbuild scripts/probar-emmet-lab.ts --bundle --platform=node --format=cjs --outfile=.tmp/pel.cjs --log-level=error && node .tmp/pel.cjs",
     "probar:isla": "esbuild scripts/probar-isla.ts --bundle --platform=node --format=cjs --outfile=.tmp/probar-isla.cjs --log-level=error && node .tmp/probar-isla.cjs"
   },
   "devDependencies": {
